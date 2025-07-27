@@ -27,42 +27,78 @@
 
     <header class="hero">
         <div class="hero-content">
-            <h1 class="hero-title">gosh</h1>
-            <p class="hero-subtitle">A basic command-line shell written in Go with sh-style scripting support</p>
-            <p class="hero-description">Designed for macOS compatibility. Gosh, it's good to have a reliable shell!</p>
-            <div class="hero-buttons">
-                <a href="#getting-started" class="btn btn-primary">Get Started</a>
-                <a href="command-reference.html" class="btn btn-secondary">View Commands</a>
+            <div class="hero-text">
+                <h1 class="hero-title">gosh</h1>
+                <p class="hero-subtitle">A basic command-line shell written in Go with sh-style scripting support</p>
+                <p class="hero-description">Designed for macOS compatibility. Gosh, it's good to have a reliable shell!</p>
+                <div class="hero-buttons">
+                    <a href="#getting-started" class="btn btn-primary">Get Started</a>
+                    <a href="command-reference.html" class="btn btn-secondary">View Commands</a>
+                </div>
+            </div>
+            <div class="hero-code">
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-buttons">
+                            <span class="btn-close"></span>
+                            <span class="btn-minimize"></span>
+                            <span class="btn-maximize"></span>
+                        </div>
+                        <div class="terminal-title">gosh</div>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="prompt">$ </span>
+                            <span class="command">./gosh</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="prompt">gosh> </span>
+                            <span class="command">echo "Hello, World!"</span>
+                        </div>
+                        <div class="terminal-line output">Hello, World!</div>
+                        <div class="terminal-line">
+                            <span class="prompt">gosh> </span>
+                            <span class="command">ls | grep ".go" | wc -l</span>
+                        </div>
+                        <div class="terminal-line output">8</div>
+                        <div class="terminal-line">
+                            <span class="prompt">gosh> </span>
+                            <span class="cursor">_</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="hero-code">
-            <div class="terminal">
-                <div class="terminal-header">
-                    <div class="terminal-buttons">
-                        <span class="btn-close"></span>
-                        <span class="btn-minimize"></span>
-                        <span class="btn-maximize"></span>
+        <div class="hero-terminal-mobile">
+            <div class="container">
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-buttons">
+                            <span class="btn-close"></span>
+                            <span class="btn-minimize"></span>
+                            <span class="btn-maximize"></span>
+                        </div>
+                        <div class="terminal-title">gosh</div>
                     </div>
-                    <div class="terminal-title">gosh</div>
-                </div>
-                <div class="terminal-body">
-                    <div class="terminal-line">
-                        <span class="prompt">$ </span>
-                        <span class="command">./gosh</span>
-                    </div>
-                    <div class="terminal-line">
-                        <span class="prompt">gosh> </span>
-                        <span class="command">echo "Hello, World!"</span>
-                    </div>
-                    <div class="terminal-line output">Hello, World!</div>
-                    <div class="terminal-line">
-                        <span class="prompt">gosh> </span>
-                        <span class="command">ls | grep ".go" | wc -l</span>
-                    </div>
-                    <div class="terminal-line output">8</div>
-                    <div class="terminal-line">
-                        <span class="prompt">gosh> </span>
-                        <span class="cursor">_</span>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="prompt">$ </span>
+                            <span class="command">./gosh</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="prompt">gosh> </span>
+                            <span class="command">echo "Hello, World!"</span>
+                        </div>
+                        <div class="terminal-line output">Hello, World!</div>
+                        <div class="terminal-line">
+                            <span class="prompt">gosh> </span>
+                            <span class="command">ls | grep ".go" | wc -l</span>
+                        </div>
+                        <div class="terminal-line output">8</div>
+                        <div class="terminal-line">
+                            <span class="prompt">gosh> </span>
+                            <span class="cursor">_</span>
+                        </div>
                     </div>
                 </div>
             </div>
