@@ -23,6 +23,7 @@ func init() {
 		"echo":     cmdEcho,
 		"env":      cmdEnv,
 		"export":   cmdExport,
+		"local":    cmdLocal,
 		"unset":    cmdUnset,
 		"alias":    cmdAlias,
 		"unalias":  cmdUnalias,
@@ -175,6 +176,45 @@ func cmdExport(s *Shell, cmd *Command) error {
 	return nil
 }
 
+// cmdLocal implements the local command
+func cmdLocal(s *Shell, cmd *Command) error {
+	if len(cmd.Args) == 0 {
+		return fmt.Errorf("local: missing variable assignment")
+	}
+
+	for _, arg := range cmd.Args {
+		parts := strings.SplitN(arg, "=", 2)
+		if len(parts) != 2 {
+			return fmt.Errorf("local: invalid assignment: %s", arg)
+		}
+		key, value := parts[0], parts[1]
+		
+		// Remove quotes if present
+		if len(value) >= 2 {
+			if (strings.HasPrefix(value, "\"") && strings.HasSuffix(value, "\"")) ||
+			   (strings.HasPrefix(value, "'") && strings.HasSuffix(value, "'")) {
+				value = value[1 : len(value)-1]
+			}
+		}
+		
+		// Handle command substitution if present
+		if strings.Contains(value, "$(") {
+			expandedValue, err := s.expandToken(value)
+			if err != nil {
+				return fmt.Errorf("error expanding variable value: %v", err)
+			}
+			if len(expandedValue) == 1 {
+				value = expandedValue[0]
+			}
+		}
+		
+		// Set the variable in the shell environment only (not system environment)
+		s.env[key] = value
+	}
+
+	return nil
+}
+
 // cmdUnset implements the unset command
 func cmdUnset(s *Shell, cmd *Command) error {
 	if len(cmd.Args) == 0 {
@@ -262,6 +302,7 @@ func cmdHelp(s *Shell, cmd *Command) error {
 	fmt.Println("  echo [args...]  - Print arguments")
 	fmt.Println("  env             - Show environment variables")
 	fmt.Println("  export VAR=val  - Set environment variable")
+	fmt.Println("  local VAR=val   - Set local variable (shell only)")
 	fmt.Println("  unset VAR       - Unset environment variable or function")
 	fmt.Println("  unset -f FUNC   - Unset function")
 	fmt.Println("  alias name=cmd  - Create command alias")

@@ -18,21 +18,23 @@ Gosh is organized into multiple modules for maximum readability and maintainabil
 
 ### Complex Variable Substitution
 ```bash
-# Nested variable expansion
-export BASE_DIR="/home/user"
-export PROJECT_DIR="${BASE_DIR}/projects"
-export CURRENT_PROJECT="${PROJECT_DIR}/gosh"
+# Nested variable expansion with proper declarations
+export BASE_DIR="/home/user"          # Environment variable
+local PROJECT_DIR="${BASE_DIR}/projects" # Local variable
+export CURRENT_PROJECT="${PROJECT_DIR}/gosh" # Environment variable
 
 echo "Working in: $CURRENT_PROJECT"
 ```
 
 ### Variable Expansion in Command Substitution
 ```bash
-export SEARCH_TERM="error"
-export LOG_FILE="/var/log/system.log"
+# Proper variable declarations
+local SEARCH_TERM="error"              # Local search term
+export LOG_FILE="/var/log/system.log"  # Environment variable for log file
 
 # Use variables within command substitution
-echo "Found $(grep "$SEARCH_TERM" "$LOG_FILE" | wc -l) occurrences"
+local ERROR_COUNT="$(grep "$SEARCH_TERM" "$LOG_FILE" | wc -l)"
+echo "Found $ERROR_COUNT occurrences"
 ```
 
 ## Advanced Glob Patterns
@@ -151,22 +153,34 @@ echo "Starting process..."; \
 
 ## Environment Management
 
+### Variable Declaration Requirements
+Gosh enforces explicit variable declarations to improve script clarity and prevent accidental variable creation:
+
+```bash
+# ✅ Correct: Use explicit declarations
+local TEMP_VAR="temporary"     # Local to current shell
+export GLOBAL_VAR="global"     # Available to child processes
+
+# ❌ Error: Bare assignments are not allowed
+# TEMP_VAR="temporary"  # This will cause an error
+```
+
 ### Advanced Environment Variable Techniques
 ```bash
-# Save and restore environment
-export OLD_PATH="$PATH"
-export PATH="/custom/bin:$PATH"
+# Save and restore environment with proper declarations
+local OLD_PATH="$PATH"          # Save current PATH locally
+export PATH="/custom/bin:$PATH" # Modify PATH for child processes
 # ... do work with custom PATH ...
-export PATH="$OLD_PATH"
-unset OLD_PATH
+export PATH="$OLD_PATH"         # Restore original PATH
+unset OLD_PATH                   # Clean up
 ```
 
 ### Dynamic Environment Setup
 ```bash
-# Set environment based on conditions
-export ENVIRONMENT="development"
-export CONFIG_FILE="config_${ENVIRONMENT}.json"
-export LOG_LEVEL="debug"
+# Set environment based on conditions with proper declarations
+export ENVIRONMENT="development"                    # Environment variable
+local CONFIG_FILE="config_${ENVIRONMENT}.json"     # Local variable
+export LOG_LEVEL="debug"                           # Environment variable
 
 echo "Using config: $CONFIG_FILE"
 echo "Log level: $LOG_LEVEL"

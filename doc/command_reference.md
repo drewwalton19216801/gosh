@@ -50,12 +50,22 @@ env
 ```
 
 ### `export VAR=value`
-Set an environment variable.
+Set an environment variable that will be available to child processes.
 
 **Usage:**
 ```bash
 export MY_VAR="Hello"
 export PATH="$PATH:/new/path"
+```
+
+### `local VAR=value`
+Set a local variable that exists only within the current shell session (not exported to child processes).
+
+**Usage:**
+```bash
+local TEMP_VAR="temporary value"
+local COUNT=42
+local RESULT="$(date +%Y%m%d)"
 ```
 
 ### `unset VAR`
@@ -191,9 +201,18 @@ show_info arg1 arg2
 ### Variable Expansion
 Expand variables and command substitution:
 ```bash
+# Environment variables (available to child processes)
 export NAME="World"
 echo "Hello, $NAME!"
-echo "Current dir: $(pwd)"
+
+# Local variables (shell-only)
+local TEMP_DIR="/tmp/myapp"
+echo "Using temp dir: $TEMP_DIR"
+
+# Command substitution
+local CURRENT_DIR="$(pwd)"
+export BUILD_DATE="$(date +%Y%m%d)"
+echo "Current dir: $CURRENT_DIR"
 echo "Files: `ls | wc -l`"
 ```
 

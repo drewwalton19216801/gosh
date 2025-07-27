@@ -6,7 +6,7 @@ echo "Current directory:"
 pwd
 
 echo "Setting environment variable:"
-export TEST_VAR=hello_world
+local TEST_VAR=hello_world
 echo "TEST_VAR is set to: $TEST_VAR"
 
 echo "Creating alias:"

@@ -105,6 +105,11 @@ func (s *Shell) Run() {
 
 // ExecuteLine processes a single command line
 func (s *Shell) ExecuteLine(line string) error {
+	// Check for variable assignment (VAR=value)
+	if s.isVariableAssignment(line) {
+		return s.handleVariableAssignment(line)
+	}
+
 	commandChain, err := ParseLine(line)
 	if err != nil {
 		return err
@@ -1083,4 +1088,57 @@ func (s *Shell) executeFunction(funcName string, args []string) error {
 	}
 	
 	return err
+}
+
+// isVariableAssignment checks if a line is a variable assignment (VAR=value)
+func (s *Shell) isVariableAssignment(line string) bool {
+	trimmed := strings.TrimSpace(line)
+	
+	// Must contain an equals sign
+	if !strings.Contains(trimmed, "=") {
+		return false
+	}
+	
+	// Find the first equals sign
+	eqIndex := strings.Index(trimmed, "=")
+	if eqIndex == 0 {
+		return false // Can't start with =
+	}
+	
+	// Extract variable name (everything before =)
+	varName := trimmed[:eqIndex]
+	
+	// Variable name must be valid (alphanumeric + underscore, can't start with digit)
+	if len(varName) == 0 {
+		return false
+	}
+	
+	// Check if it's a valid variable name
+	for i, char := range varName {
+		if i == 0 {
+			// First character: must be letter or underscore
+			if !((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || char == '_') {
+				return false
+			}
+		} else {
+			// Subsequent characters: letter, digit, or underscore
+			if !((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9') || char == '_') {
+				return false
+			}
+		}
+	}
+	
+	return true
+}
+
+// handleVariableAssignment processes a variable assignment
+func (s *Shell) handleVariableAssignment(line string) error {
+	trimmed := strings.TrimSpace(line)
+	
+	// Find the first equals sign
+	eqIndex := strings.Index(trimmed, "=")
+	varName := trimmed[:eqIndex]
+	
+	// Reject bare variable assignments - require 'local' or 'export'
+	return fmt.Errorf("variable assignment without declaration: %s\nUse 'local %s' for local variables or 'export %s' for environment variables", varName, trimmed, trimmed)
 }

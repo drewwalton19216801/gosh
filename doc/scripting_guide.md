@@ -31,8 +31,13 @@ chmod +x script.sh
 
 echo "Hello from gosh!"
 pwd
-export MY_VAR=test
+
+# Proper variable declarations
+export MY_VAR="test"  # Environment variable
+local TEMP_COUNT=42   # Local variable
+
 echo "MY_VAR is: $MY_VAR"
+echo "Temp count: $TEMP_COUNT"
 
 # Pipe examples - gosh, pipes are powerful!
 echo "testing pipe functionality" | wc -w
@@ -42,6 +47,39 @@ cat /etc/passwd | grep root | wc -l
 # Gosh darn it, that's some fine scripting!
 ```
 
+## Variable Declarations
+
+Gosh requires explicit variable declarations using either `local` or `export` commands. Bare variable assignments (e.g., `VAR=value`) are not allowed.
+
+### Local Variables
+Use `local` for variables that should only exist within the current shell session:
+```bash
+# Local variables (shell-only)
+local TEMP_DIR="/tmp/myapp"
+local COUNT=42
+local RESULT="$(date +%Y%m%d)"
+
+echo "Temp directory: $TEMP_DIR"
+echo "Count: $COUNT"
+```
+
+### Environment Variables
+Use `export` for variables that should be available to child processes:
+```bash
+# Environment variables (inherited by child processes)
+export MY_VAR="Hello"
+export PATH="$PATH:/new/path"
+export BUILD_ENV="production"
+
+echo "MY_VAR: $MY_VAR"
+echo "Current PATH: $PATH"
+```
+
+### Key Differences
+- **`local`**: Variables exist only in the current shell session
+- **`export`**: Variables are passed to child processes and subshells
+- **Error**: Bare assignments like `VAR=value` will result in an error
+
 ## Variable Expansion
 
 Gosh supports several forms of variable expansion:
@@ -49,19 +87,9 @@ Gosh supports several forms of variable expansion:
 ### Basic Variable Expansion
 ```bash
 export NAME="World"
-echo "Hello, $NAME!"
+local GREETING="Hello"
+echo "$GREETING, $NAME!"
 echo "Path: ${HOME}/Documents"
-```
-
-### Environment Variables
-```bash
-# Set environment variables
-export MY_VAR="Hello"
-export PATH="$PATH:/new/path"
-
-# Use environment variables
-echo $MY_VAR
-echo "Current PATH: $PATH"
 ```
 
 ## Command Substitution
@@ -70,15 +98,33 @@ Execute commands and use their output in your scripts:
 
 ### Using `$(command)` Syntax
 ```bash
+# Direct command substitution in output
 echo "Current directory: $(pwd)"
 echo "Today is $(date +%Y-%m-%d)"
 echo "Found $(ls *.txt | wc -l) text files in $(pwd)"
+
+# Storing command output in variables
+local CURRENT_DIR="$(pwd)"
+export BUILD_DATE="$(date +%Y-%m-%d)"
+local FILE_COUNT="$(ls *.txt | wc -l)"
+
+echo "Working in: $CURRENT_DIR"
+echo "Build date: $BUILD_DATE"
+echo "Text files: $FILE_COUNT"
 ```
 
 ### Using Backticks
 ```bash
+# Direct command substitution in output
 echo "Files: `ls | wc -l`"
 echo "Current user: `whoami`"
+
+# Storing command output in variables
+local FILE_COUNT="`ls | wc -l`"
+export CURRENT_USER="`whoami`"
+
+echo "Total files: $FILE_COUNT"
+echo "Running as: $CURRENT_USER"
 ```
 
 ## Tilde Expansion
@@ -246,6 +292,7 @@ backup_file() {
         return 1
     fi
     
+    # Local variables (function scope)
     local file="$1"
     local backup_name="${file}.backup.$(date +%Y%m%d)"
     
@@ -372,10 +419,10 @@ unalias ll
 #!/usr/bin/env gosh
 # File backup script
 
-# Set variables
-export BACKUP_DIR="$HOME/backups"
-export DATE=$(date +%Y%m%d)
-export BACKUP_FILE="backup_$DATE.tar.gz"
+# Set variables with proper declarations
+export BACKUP_DIR="$HOME/backups"           # Environment variable
+local DATE="$(date +%Y%m%d)"                # Local variable
+export BACKUP_FILE="backup_$DATE.tar.gz"    # Environment variable
 
 # Create backup directory if it doesn't exist
 echo "Creating backup directory: $BACKUP_DIR"

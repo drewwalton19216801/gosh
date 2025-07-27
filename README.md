@@ -80,6 +80,10 @@ pwd
 export MY_VAR=test
 echo "MY_VAR is: $MY_VAR"
 
+# Local variables (shell-only)
+local TEMP_VAR="temporary value"
+echo "TEMP_VAR is: $TEMP_VAR"
+
 # Pipe examples - gosh, pipes are powerful!
 echo "testing pipe functionality" | wc -w
 ls -la | head -5
@@ -100,8 +104,10 @@ ls | grep ".go" > go_files.txt
 echo "Hello" >> output.txt
 
 # Variables and expansion
-export MY_VAR="Hello"
+export MY_VAR="Hello"          # Environment variable
+local TEMP_VAR="temporary"     # Local variable (shell-only)
 echo "$MY_VAR, $(whoami)!"
+echo "Temp: $TEMP_VAR"
 
 # Command chaining
 echo "Starting..."; pwd; echo "Done!"
