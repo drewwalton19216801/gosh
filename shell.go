@@ -501,15 +501,26 @@ func (s *Shell) expandCommandChain(chain *CommandChain) error {
 
 // expandCommand applies expansions to a single command
 func (s *Shell) expandCommand(cmd *Command) error {
-	// Expand command name
-	expandedNames, err := s.expandToken(cmd.Name)
-	if err != nil {
-		return err
+	// For builtin commands, don't apply glob expansion to the command name
+	// Only expand variables and command substitutions
+	if _, isBuiltin := builtins[cmd.Name]; isBuiltin {
+		// Only expand variables and command substitutions, not globs
+		expandedName, err := s.expandVariablesAndCommands(cmd.Name)
+		if err != nil {
+			return err
+		}
+		cmd.Name = expandedName
+	} else {
+		// For external commands, apply full expansion including globs
+		expandedNames, err := s.expandToken(cmd.Name)
+		if err != nil {
+			return err
+		}
+		if len(expandedNames) != 1 {
+			return fmt.Errorf("command name expansion resulted in %d tokens, expected 1", len(expandedNames))
+		}
+		cmd.Name = expandedNames[0]
 	}
-	if len(expandedNames) != 1 {
-		return fmt.Errorf("command name expansion resulted in %d tokens, expected 1", len(expandedNames))
-	}
-	cmd.Name = expandedNames[0]
 
 	// Expand arguments
 	expandedArgs, err := s.expandTokens(cmd.Args)

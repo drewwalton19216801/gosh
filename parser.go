@@ -526,8 +526,67 @@ func ParseIfFromLines(lines []string) (*CommandChain, error) {
 	}, nil
 }
 
+// stripInlineComment removes inline comments from a line, respecting quotes
+func stripInlineComment(line string) string {
+	inQuotes := false
+	quoteChar := byte(0)
+	escaped := false
+	inCommandSubst := false
+	parenDepth := 0
+
+	for i := 0; i < len(line); i++ {
+		c := line[i]
+
+		if escaped {
+			escaped = false
+			continue
+		}
+
+		if c == '\\' {
+			escaped = true
+			continue
+		}
+
+		if inQuotes {
+			if c == quoteChar {
+				inQuotes = false
+				quoteChar = 0
+			}
+		} else if inCommandSubst {
+			if c == '(' {
+				parenDepth++
+			} else if c == ')' {
+				parenDepth--
+				if parenDepth == 0 {
+					inCommandSubst = false
+				}
+			}
+		} else {
+			if c == '"' || c == '\'' {
+				inQuotes = true
+				quoteChar = c
+			} else if c == '$' && i+1 < len(line) && line[i+1] == '(' {
+				// Start of command substitution
+				inCommandSubst = true
+				parenDepth = 1
+				i++ // Skip the opening parenthesis
+			} else if c == '#' {
+				// Found unquoted comment, return line up to this point
+				return strings.TrimRightFunc(line[:i], func(r rune) bool {
+					return r == ' ' || r == '\t'
+				})
+			}
+		}
+	}
+
+	return line
+}
+
 // tokenize splits a command line into tokens, handling quotes and command substitution
 func tokenize(line string) ([]string, error) {
+	// Strip inline comments first
+	line = stripInlineComment(line)
+	
 	var tokens []string
 	var current strings.Builder
 	inQuotes := false
