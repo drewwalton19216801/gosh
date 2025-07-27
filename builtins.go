@@ -31,6 +31,14 @@ func init() {
 		"which":    cmdWhich,
 		"case":     cmdCase,
 		"declare":  cmdDeclare,
+		"test":     cmdTest,
+		"[":        cmdTest,
+		"return":   cmdReturn,
+		"if":       cmdIf,
+		"then":     cmdThen,
+		"else":     cmdElse,
+		"elif":     cmdElif,
+		"fi":       cmdFi,
 	}
 }
 
@@ -360,4 +368,229 @@ func cmdDeclare(s *Shell, cmd *Command) error {
 	}
 	
 	return fmt.Errorf("declare: unsupported option")
+}
+
+// TestFailureError represents a test command failure (exit code 1)
+type TestFailureError struct{}
+
+func (e TestFailureError) Error() string {
+	return "test failed"
+}
+
+// cmdTest implements the test command (and [ command)
+func cmdTest(s *Shell, cmd *Command) error {
+	args := cmd.Args
+	
+	// Handle [ command - remove trailing ] if present
+	if cmd.Name == "[" {
+		if len(args) == 0 || args[len(args)-1] != "]" {
+			return fmt.Errorf("[: missing closing ']'")
+		}
+		args = args[:len(args)-1]
+	}
+	
+	// No arguments means false
+	if len(args) == 0 {
+		return TestFailureError{}
+	}
+	
+	// Single argument means test if non-empty
+	if len(args) == 1 {
+		if args[0] != "" {
+			return nil // success
+		} else {
+			return TestFailureError{}
+		}
+	}
+	
+	// Two arguments with unary operator
+	if len(args) == 2 {
+		operator := args[0]
+		operand := args[1]
+		
+		switch operator {
+		case "-z":
+			// String is empty
+			if operand == "" {
+				return nil
+			} else {
+				return TestFailureError{}
+			}
+		case "-n":
+			// String is non-empty
+			if operand != "" {
+				return nil
+			} else {
+				return TestFailureError{}
+			}
+		case "-f":
+			// File exists and is regular file
+			if info, err := os.Stat(operand); err == nil && info.Mode().IsRegular() {
+				return nil
+			} else {
+				return TestFailureError{}
+			}
+		case "-d":
+			// Directory exists
+			if info, err := os.Stat(operand); err == nil && info.IsDir() {
+				return nil
+			} else {
+				return TestFailureError{}
+			}
+		case "-e":
+			// File or directory exists
+			if _, err := os.Stat(operand); err == nil {
+				return nil
+			} else {
+				return TestFailureError{}
+			}
+		default:
+			return fmt.Errorf("test: unknown unary operator: %s", operator)
+		}
+	}
+	
+	// Three arguments with binary operator
+	if len(args) == 3 {
+		left := args[0]
+		operator := args[1]
+		right := args[2]
+		
+		switch operator {
+		case "=", "==":
+			// String equality
+			if left == right {
+				return nil
+			} else {
+				return TestFailureError{}
+			}
+		case "!=":
+			// String inequality
+			if left != right {
+				return nil
+			} else {
+				return TestFailureError{}
+			}
+		case "-eq":
+			// Numeric equality
+			leftNum, err1 := strconv.Atoi(left)
+			rightNum, err2 := strconv.Atoi(right)
+			if err1 != nil || err2 != nil {
+				return fmt.Errorf("test: non-numeric argument")
+			}
+			if leftNum == rightNum {
+				return nil
+			} else {
+				return TestFailureError{}
+			}
+		case "-ne":
+			// Numeric inequality
+			leftNum, err1 := strconv.Atoi(left)
+			rightNum, err2 := strconv.Atoi(right)
+			if err1 != nil || err2 != nil {
+				return fmt.Errorf("test: non-numeric argument")
+			}
+			if leftNum != rightNum {
+				return nil
+			} else {
+				return TestFailureError{}
+			}
+		case "-lt":
+			// Numeric less than
+			leftNum, err1 := strconv.Atoi(left)
+			rightNum, err2 := strconv.Atoi(right)
+			if err1 != nil || err2 != nil {
+				return fmt.Errorf("test: non-numeric argument")
+			}
+			if leftNum < rightNum {
+				return nil
+			} else {
+				return TestFailureError{}
+			}
+		case "-le":
+			// Numeric less than or equal
+			leftNum, err1 := strconv.Atoi(left)
+			rightNum, err2 := strconv.Atoi(right)
+			if err1 != nil || err2 != nil {
+				return fmt.Errorf("test: non-numeric argument")
+			}
+			if leftNum <= rightNum {
+				return nil
+			} else {
+				return TestFailureError{}
+			}
+		case "-gt":
+			// Numeric greater than
+			leftNum, err1 := strconv.Atoi(left)
+			rightNum, err2 := strconv.Atoi(right)
+			if err1 != nil || err2 != nil {
+				return fmt.Errorf("test: non-numeric argument")
+			}
+			if leftNum > rightNum {
+				return nil
+			} else {
+				return TestFailureError{}
+			}
+		case "-ge":
+			// Numeric greater than or equal
+			leftNum, err1 := strconv.Atoi(left)
+			rightNum, err2 := strconv.Atoi(right)
+			if err1 != nil || err2 != nil {
+				return fmt.Errorf("test: non-numeric argument")
+			}
+			if leftNum >= rightNum {
+				return nil
+			} else {
+				return TestFailureError{}
+			}
+		default:
+			return fmt.Errorf("test: unknown binary operator: %s", operator)
+		}
+	}
+	
+	return fmt.Errorf("test: too many arguments")
+}
+
+// ReturnError represents a function return with exit code
+type ReturnError struct {
+	Code int
+}
+
+func (e ReturnError) Error() string {
+	return fmt.Sprintf("return %d", e.Code)
+}
+
+// cmdReturn implements the return command for functions
+func cmdReturn(s *Shell, cmd *Command) error {
+	code := 0
+	if len(cmd.Args) > 0 {
+		if c, err := strconv.Atoi(cmd.Args[0]); err == nil {
+			code = c
+		}
+	}
+	return ReturnError{Code: code}
+}
+
+// cmdIf implements the if command (for interactive use)
+func cmdIf(s *Shell, cmd *Command) error {
+	return fmt.Errorf("if statements are only supported in scripts, not interactive mode")
+}
+
+// cmdThen implements the then command (for interactive use)
+func cmdThen(s *Shell, cmd *Command) error {
+	return fmt.Errorf("then statements are only supported in scripts, not interactive mode")
+}
+
+// cmdElse implements the else command (for interactive use)
+func cmdElse(s *Shell, cmd *Command) error {
+	return fmt.Errorf("else statements are only supported in scripts, not interactive mode")
+}
+
+// cmdElif implements the elif command (for interactive use)
+func cmdElif(s *Shell, cmd *Command) error {
+	return fmt.Errorf("elif statements are only supported in scripts, not interactive mode")
+}
+
+// cmdFi implements the fi command (for interactive use)
+func cmdFi(s *Shell, cmd *Command) error {
+	return fmt.Errorf("fi statements are only supported in scripts, not interactive mode")
 }

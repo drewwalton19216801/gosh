@@ -138,8 +138,8 @@ func (s *Shell) ExecuteLine(line string) error {
 	return nil
 }
 
-// ExecuteScript runs a script file
-func (s *Shell) ExecuteScript(filename string) error {
+// ExecuteScript runs a script file with arguments
+func (s *Shell) ExecuteScript(filename string, args []string) error {
 	file, err := os.Open(filename)
 	if err != nil {
 		return fmt.Errorf("cannot open script file: %v", err)
@@ -155,6 +155,21 @@ func (s *Shell) ExecuteScript(filename string) error {
 	if err := scanner.Err(); err != nil {
 		return err
 	}
+
+	// Set up script context for positional parameters
+	scriptCtx := &FunctionContext{
+		Name: filename,
+		Args: args,
+	}
+
+	// Push script context onto function stack
+	s.functionStack = append(s.functionStack, scriptCtx)
+	defer func() {
+		// Pop script context when script exits
+		if len(s.functionStack) > 0 {
+			s.functionStack = s.functionStack[:len(s.functionStack)-1]
+		}
+	}()
 
 	return s.executeScriptLines(allLines)
 }
@@ -202,6 +217,23 @@ func (s *Shell) executeScriptLines(allLines []string) error {
 			
 			// Execute case statement
 			if err := s.executeCaseStatement(caseLines); err != nil {
+				return fmt.Errorf("line %d: %v", lineNum, err)
+			}
+			
+			lineNum = endLine + 1
+			continue
+		}
+
+		// Check for if statement
+		if fullLine.Len() == 0 && strings.HasPrefix(trimmed, "if ") {
+			// Parse multi-line if statement
+			ifLines, endLine, err := s.extractIfStatement(allLines, lineNum-1)
+			if err != nil {
+				return fmt.Errorf("line %d: %v", lineNum, err)
+			}
+			
+			// Execute if statement
+			if err := s.executeIfStatement(ifLines); err != nil {
 				return fmt.Errorf("line %d: %v", lineNum, err)
 			}
 			
@@ -272,6 +304,24 @@ func (s *Shell) extractCaseStatement(allLines []string, startLine int) ([]string
 	return nil, i, fmt.Errorf("case statement not properly closed with 'esac'")
 }
 
+// extractIfStatement extracts a complete if statement from script lines
+func (s *Shell) extractIfStatement(allLines []string, startLine int) ([]string, int, error) {
+	var ifLines []string
+	i := startLine
+	
+	for i < len(allLines) {
+		line := strings.TrimSpace(allLines[i])
+		ifLines = append(ifLines, allLines[i])
+		
+		if line == "fi" {
+			return ifLines, i, nil
+		}
+		i++
+	}
+	
+	return nil, i, fmt.Errorf("if statement not properly closed with 'fi'")
+}
+
 // executeCaseStatement executes a case statement
 func (s *Shell) executeCaseStatement(caseLines []string) error {
 	commandChain, err := ParseCaseFromLines(caseLines)
@@ -324,6 +374,97 @@ func (s *Shell) executeCaseStatement(caseLines []string) error {
 	}
 	
 	return nil // No pattern matched
+}
+
+// executeIfStatement executes an if statement
+func (s *Shell) executeIfStatement(ifLines []string) error {
+	commandChain, err := ParseIfFromLines(ifLines)
+	if err != nil {
+		return err
+	}
+	
+	if len(commandChain.Controls) == 0 {
+		return fmt.Errorf("no if statement found")
+	}
+	
+	ifStmt := commandChain.Controls[0].If
+	if ifStmt == nil {
+		return fmt.Errorf("invalid if statement")
+	}
+	
+	// Execute the condition
+	conditionPassed := false
+	for _, condCmd := range ifStmt.Condition {
+		// Expand the condition command before executing
+		if err := s.expandCommand(condCmd); err != nil {
+			return err
+		}
+		if err := s.ExecuteCommand(condCmd); err != nil {
+			// If condition command fails, condition is false
+			conditionPassed = false
+			break
+		} else {
+			// If condition command succeeds, condition is true
+			conditionPassed = true
+		}
+	}
+	
+	if conditionPassed {
+		// Execute then commands
+		for _, cmd := range ifStmt.ThenCommands {
+			if err := s.expandCommand(cmd); err != nil {
+				return err
+			}
+			if err := s.ExecuteCommand(cmd); err != nil {
+				return err
+			}
+		}
+	} else {
+		// Check elif branches
+		elifExecuted := false
+		for _, elifBranch := range ifStmt.ElifBranches {
+			elifConditionPassed := false
+			for _, condCmd := range elifBranch.Condition {
+				if err := s.expandCommand(condCmd); err != nil {
+					return err
+				}
+				if err := s.ExecuteCommand(condCmd); err != nil {
+					elifConditionPassed = false
+					break
+				} else {
+					elifConditionPassed = true
+				}
+			}
+			
+			if elifConditionPassed {
+				// Execute elif commands
+				for _, cmd := range elifBranch.Commands {
+					if err := s.expandCommand(cmd); err != nil {
+						return err
+					}
+					if err := s.ExecuteCommand(cmd); err != nil {
+						return err
+					}
+				}
+				elifExecuted = true
+				break
+			}
+		}
+		
+		// If no elif was executed, execute else commands
+		if !elifExecuted {
+			for _, cmd := range ifStmt.ElseCommands {
+				if err := s.expandCommand(cmd); err != nil {
+					return err
+				}
+				if err := s.ExecuteCommand(cmd); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	
+	return nil
 }
 
 // matchPattern checks if a value matches a shell pattern
@@ -930,5 +1071,16 @@ func (s *Shell) executeFunction(funcName string, args []string) error {
 	}()
 	
 	// Execute function body
-	return s.executeScriptLines(func_.Body)
+	err := s.executeScriptLines(func_.Body)
+	
+	// Handle return statements
+	if returnErr, ok := err.(ReturnError); ok {
+		// Return statements are normal function exits, not errors
+		// For now, we'll just return nil (success) regardless of return code
+		// In a full shell implementation, you might want to set an exit status
+		_ = returnErr.Code // Use the return code if needed
+		return nil
+	}
+	
+	return err
 }

@@ -29,10 +29,25 @@ type CaseStatement struct {
 	Patterns []*CasePattern
 }
 
+// IfStatement represents an if control structure
+type IfStatement struct {
+	Condition []*Command
+	ThenCommands []*Command
+	ElseCommands []*Command
+	ElifBranches []*ElifBranch
+}
+
+// ElifBranch represents an elif branch in an if statement
+type ElifBranch struct {
+	Condition []*Command
+	Commands []*Command
+}
+
 // ControlStructure represents different control flow structures
 type ControlStructure struct {
-	Type string // "case"
+	Type string // "case" or "if"
 	Case *CaseStatement
+	If *IfStatement
 }
 
 // CommandChain represents a sequence of command pipelines and control structures
@@ -51,6 +66,11 @@ func ParseLine(line string) (*CommandChain, error) {
 	// Check if this is a case statement
 	if strings.HasPrefix(line, "case ") {
 		return parseCaseStatement(line)
+	}
+
+	// Check if this is an if statement
+	if strings.HasPrefix(line, "if ") {
+		return parseIfStatement(line)
 	}
 
 	// Split by semicolons first to handle command chaining
@@ -279,6 +299,14 @@ func parseCaseStatement(line string) (*CommandChain, error) {
 	return nil, errors.New("case statements require multi-line parsing - use ParseCaseFromLines instead")
 }
 
+// parseIfStatement parses an if statement from a multi-line input
+func parseIfStatement(line string) (*CommandChain, error) {
+	// This is a simplified parser for if statements
+	// In a real implementation, this would need to handle multi-line parsing
+	// For now, we'll return an error indicating if statements need multi-line support
+	return nil, errors.New("if statements require multi-line parsing - use ParseIfFromLines instead")
+}
+
 // ParseCaseFromLines parses a case statement from multiple lines
 func ParseCaseFromLines(lines []string) (*CommandChain, error) {
 	if len(lines) == 0 {
@@ -367,6 +395,129 @@ func ParseCaseFromLines(lines []string) (*CommandChain, error) {
 	control := &ControlStructure{
 		Type: "case",
 		Case: caseStmt,
+	}
+
+	return &CommandChain{
+		Pipelines: [][]*Command{},
+		Controls: []*ControlStructure{control},
+	}, nil
+}
+
+// ParseIfFromLines parses an if statement from multiple lines
+func ParseIfFromLines(lines []string) (*CommandChain, error) {
+	if len(lines) == 0 {
+		return nil, errors.New("empty if statement")
+	}
+
+	firstLine := strings.TrimSpace(lines[0])
+	if !strings.HasPrefix(firstLine, "if ") {
+		return nil, errors.New("not an if statement")
+	}
+
+	// Extract the condition from "if condition; then"
+	conditionStr := strings.TrimPrefix(firstLine, "if ")
+	conditionStr = strings.TrimSuffix(conditionStr, "; then")
+	conditionStr = strings.TrimSuffix(conditionStr, ";then")
+	conditionStr = strings.TrimSpace(conditionStr)
+
+	// Parse the condition as a command
+	conditionCmd, err := parseCommand(conditionStr)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing if condition: %v", err)
+	}
+
+	ifStmt := &IfStatement{
+		Condition: []*Command{conditionCmd},
+		ThenCommands: []*Command{},
+		ElseCommands: []*Command{},
+		ElifBranches: []*ElifBranch{},
+	}
+
+	// Parse the body
+	i := 1
+	currentSection := "then"
+	var currentElifBranch *ElifBranch
+
+	for i < len(lines) {
+		line := strings.TrimSpace(lines[i])
+		
+		if line == "fi" {
+			break
+		}
+
+		// Skip empty lines and comments
+		if line == "" || strings.HasPrefix(line, "#") {
+			i++
+			continue
+		}
+
+		if line == "then" {
+			currentSection = "then"
+			i++
+			continue
+		}
+
+		if line == "else" {
+			currentSection = "else"
+			i++
+			continue
+		}
+
+		if strings.HasPrefix(line, "elif ") {
+			// Save previous elif branch if exists
+			if currentElifBranch != nil {
+				ifStmt.ElifBranches = append(ifStmt.ElifBranches, currentElifBranch)
+			}
+
+			// Parse elif condition
+			elifConditionStr := strings.TrimPrefix(line, "elif ")
+			elifConditionStr = strings.TrimSuffix(elifConditionStr, "; then")
+			elifConditionStr = strings.TrimSuffix(elifConditionStr, ";then")
+			elifConditionStr = strings.TrimSpace(elifConditionStr)
+
+			elifConditionCmd, err := parseCommand(elifConditionStr)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing elif condition: %v", err)
+			}
+
+			currentElifBranch = &ElifBranch{
+				Condition: []*Command{elifConditionCmd},
+				Commands: []*Command{},
+			}
+			currentSection = "elif"
+			i++
+			continue
+		}
+
+		// Parse command
+		if line != "" && !strings.HasPrefix(line, "#") {
+			cmd, err := parseCommand(line)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing command in if: %v", err)
+			}
+
+			switch currentSection {
+			case "then":
+				ifStmt.ThenCommands = append(ifStmt.ThenCommands, cmd)
+			case "else":
+				ifStmt.ElseCommands = append(ifStmt.ElseCommands, cmd)
+			case "elif":
+				if currentElifBranch != nil {
+					currentElifBranch.Commands = append(currentElifBranch.Commands, cmd)
+				}
+			}
+		}
+		i++
+	}
+
+	// Save final elif branch if exists
+	if currentElifBranch != nil {
+		ifStmt.ElifBranches = append(ifStmt.ElifBranches, currentElifBranch)
+	}
+
+	control := &ControlStructure{
+		Type: "if",
+		If: ifStmt,
 	}
 
 	return &CommandChain{

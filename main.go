@@ -21,7 +21,9 @@ func main() {
 		}
 	} else if flag.NArg() > 0 {
 		// Script mode
-		if err := shell.ExecuteScript(flag.Arg(0)); err != nil {
+		scriptFile := flag.Arg(0)
+		scriptArgs := flag.Args()[1:] // Get all arguments after the script filename
+		if err := shell.ExecuteScript(scriptFile, scriptArgs); err != nil {
 			fmt.Fprintf(os.Stderr, "gosh: %v\n", err)
 			os.Exit(1)
 		}
