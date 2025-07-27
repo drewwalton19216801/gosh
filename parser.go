@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"unicode"
 )
@@ -16,9 +17,28 @@ type Command struct {
 	Background bool
 }
 
-// CommandChain represents a sequence of command pipelines
+// CasePattern represents a pattern in a case statement
+type CasePattern struct {
+	Patterns []string // Multiple patterns separated by |
+	Commands []*Command
+}
+
+// CaseStatement represents a case control structure
+type CaseStatement struct {
+	Variable string
+	Patterns []*CasePattern
+}
+
+// ControlStructure represents different control flow structures
+type ControlStructure struct {
+	Type string // "case"
+	Case *CaseStatement
+}
+
+// CommandChain represents a sequence of command pipelines and control structures
 type CommandChain struct {
 	Pipelines [][]*Command
+	Controls []*ControlStructure
 }
 
 // ParseLine parses a command line into command chains (semicolon-separated pipelines)
@@ -26,6 +46,11 @@ func ParseLine(line string) (*CommandChain, error) {
 	line = strings.TrimSpace(line)
 	if line == "" {
 		return nil, nil
+	}
+
+	// Check if this is a case statement
+	if strings.HasPrefix(line, "case ") {
+		return parseCaseStatement(line)
 	}
 
 	// Split by semicolons first to handle command chaining
@@ -246,6 +271,110 @@ func splitByPipes(line string) ([]string, error) {
 	return segments, nil
 }
 
+// parseCaseStatement parses a case statement from a multi-line input
+func parseCaseStatement(line string) (*CommandChain, error) {
+	// This is a simplified parser for case statements
+	// In a real implementation, this would need to handle multi-line parsing
+	// For now, we'll return an error indicating case statements need multi-line support
+	return nil, errors.New("case statements require multi-line parsing - use ParseCaseFromLines instead")
+}
+
+// ParseCaseFromLines parses a case statement from multiple lines
+func ParseCaseFromLines(lines []string) (*CommandChain, error) {
+	if len(lines) == 0 {
+		return nil, errors.New("empty case statement")
+	}
+
+	firstLine := strings.TrimSpace(lines[0])
+	if !strings.HasPrefix(firstLine, "case ") {
+		return nil, errors.New("not a case statement")
+	}
+
+	// Extract the variable from "case $var in"
+	parts := strings.Fields(firstLine)
+	if len(parts) < 3 || parts[2] != "in" {
+		return nil, errors.New("invalid case syntax: expected 'case $var in'")
+	}
+
+	variable := parts[1]
+	caseStmt := &CaseStatement{
+		Variable: variable,
+		Patterns: []*CasePattern{},
+	}
+
+	// Parse patterns and commands
+	i := 1
+	for i < len(lines) {
+		line := strings.TrimSpace(lines[i])
+		if line == "esac" {
+			break
+		}
+
+		// Skip empty lines and comments
+		if line == "" || strings.HasPrefix(line, "#") {
+			i++
+			continue
+		}
+
+		// Parse pattern line (e.g., "pattern1|pattern2)")
+		if strings.HasSuffix(line, ")") {
+			patternStr := strings.TrimSuffix(line, ")")
+			patterns := strings.Split(patternStr, "|")
+			for j := range patterns {
+				patterns[j] = strings.TrimSpace(patterns[j])
+				// Remove quotes from patterns
+				patterns[j] = removeQuotes(patterns[j])
+			}
+
+			casePattern := &CasePattern{
+				Patterns: patterns,
+				Commands: []*Command{},
+			}
+
+			// Parse commands until we hit ";;" or next pattern
+			i++
+			for i < len(lines) {
+				cmdLine := strings.TrimSpace(lines[i])
+				if cmdLine == ";;" {
+					i++
+					break
+				}
+				if cmdLine == "esac" {
+					break
+				}
+				if strings.HasSuffix(cmdLine, ")") {
+					// Next pattern, don't increment i
+					break
+				}
+
+				// Parse command
+				if cmdLine != "" && !strings.HasPrefix(cmdLine, "#") {
+					cmd, err := parseCommand(cmdLine)
+					if err != nil {
+						return nil, fmt.Errorf("error parsing command in case: %v", err)
+					}
+					casePattern.Commands = append(casePattern.Commands, cmd)
+				}
+				i++
+			}
+
+			caseStmt.Patterns = append(caseStmt.Patterns, casePattern)
+		} else {
+			i++
+		}
+	}
+
+	control := &ControlStructure{
+		Type: "case",
+		Case: caseStmt,
+	}
+
+	return &CommandChain{
+		Pipelines: [][]*Command{},
+		Controls: []*ControlStructure{control},
+	}, nil
+}
+
 // tokenize splits a command line into tokens, handling quotes and command substitution
 func tokenize(line string) ([]string, error) {
 	var tokens []string
@@ -275,9 +404,8 @@ func tokenize(line string) ([]string, error) {
 			if c == quoteChar {
 				inQuotes = false
 				quoteChar = 0
-			} else {
-				current.WriteByte(c)
 			}
+			current.WriteByte(c)
 		} else if inCommandSubst {
 			current.WriteByte(c)
 			if c == '(' {
@@ -325,4 +453,14 @@ func tokenize(line string) ([]string, error) {
 	}
 
 	return tokens, nil
+}
+
+// removeQuotes removes surrounding quotes from a string if present
+func removeQuotes(s string) string {
+	if len(s) >= 2 {
+		if (s[0] == '"' && s[len(s)-1] == '"') || (s[0] == '\'' && s[len(s)-1] == '\'') {
+			return s[1 : len(s)-1]
+		}
+	}
+	return s
 }

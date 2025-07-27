@@ -129,18 +129,49 @@ func (s *Shell) ExecuteScript(filename string) error {
 	}
 	defer file.Close()
 
+	// Read all lines first to handle multi-line constructs like case statements
+	var allLines []string
 	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		allLines = append(allLines, scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	return s.executeScriptLines(allLines)
+}
+
+// executeScriptLines processes script lines, handling multi-line constructs
+func (s *Shell) executeScriptLines(allLines []string) error {
 	lineNum := 0
 	var fullLine strings.Builder
 	startLineNum := 0
 
-	for scanner.Scan() {
+	for lineNum < len(allLines) {
+		line := allLines[lineNum]
 		lineNum++
-		line := scanner.Text()
 
 		// Skip empty lines and comments (only if not in continuation)
 		trimmed := strings.TrimSpace(line)
 		if fullLine.Len() == 0 && (trimmed == "" || strings.HasPrefix(trimmed, "#")) {
+			continue
+		}
+
+		// Check for case statement
+		if fullLine.Len() == 0 && strings.HasPrefix(trimmed, "case ") {
+			// Parse multi-line case statement
+			caseLines, endLine, err := s.extractCaseStatement(allLines, lineNum-1)
+			if err != nil {
+				return fmt.Errorf("line %d: %v", lineNum, err)
+			}
+			
+			// Execute case statement
+			if err := s.executeCaseStatement(caseLines); err != nil {
+				return fmt.Errorf("line %d: %v", lineNum, err)
+			}
+			
+			lineNum = endLine + 1
 			continue
 		}
 
@@ -186,7 +217,93 @@ func (s *Shell) ExecuteScript(filename string) error {
 		}
 	}
 
-	return scanner.Err()
+	return nil
+}
+
+// extractCaseStatement extracts a complete case statement from script lines
+func (s *Shell) extractCaseStatement(allLines []string, startLine int) ([]string, int, error) {
+	var caseLines []string
+	i := startLine
+	
+	for i < len(allLines) {
+		line := strings.TrimSpace(allLines[i])
+		caseLines = append(caseLines, allLines[i])
+		
+		if line == "esac" {
+			return caseLines, i, nil
+		}
+		i++
+	}
+	
+	return nil, i, fmt.Errorf("case statement not properly closed with 'esac'")
+}
+
+// executeCaseStatement executes a case statement
+func (s *Shell) executeCaseStatement(caseLines []string) error {
+	commandChain, err := ParseCaseFromLines(caseLines)
+	if err != nil {
+		return err
+	}
+	
+	if len(commandChain.Controls) == 0 {
+		return fmt.Errorf("no case statement found")
+	}
+	
+	caseStmt := commandChain.Controls[0].Case
+	if caseStmt == nil {
+		return fmt.Errorf("invalid case statement")
+	}
+	
+	// Expand the variable
+	expandedVar, err := s.expandToken(caseStmt.Variable)
+	if err != nil {
+		return fmt.Errorf("error expanding case variable: %v", err)
+	}
+	
+	if len(expandedVar) != 1 {
+		return fmt.Errorf("case variable expansion resulted in %d tokens, expected 1", len(expandedVar))
+	}
+	
+	varValue := expandedVar[0]
+	// Remove quotes if present in the expanded value
+	if len(varValue) >= 2 && ((varValue[0] == '"' && varValue[len(varValue)-1] == '"') || (varValue[0] == '\'' && varValue[len(varValue)-1] == '\'')) {
+		varValue = varValue[1 : len(varValue)-1]
+	}
+	
+	// Match patterns and execute commands
+	for _, pattern := range caseStmt.Patterns {
+		for _, patternStr := range pattern.Patterns {
+			if s.matchPattern(varValue, patternStr) {
+				// Execute commands for this pattern
+				for _, cmd := range pattern.Commands {
+					// Expand the command before executing
+					if err := s.expandCommand(cmd); err != nil {
+						return err
+					}
+					if err := s.ExecuteCommand(cmd); err != nil {
+						return err
+					}
+				}
+				return nil // Exit after first match
+			}
+		}
+	}
+	
+	return nil // No pattern matched
+}
+
+// matchPattern checks if a value matches a shell pattern
+func (s *Shell) matchPattern(value, pattern string) bool {
+	// Expand variables in the pattern first
+	expandedPattern := s.expandVariables(pattern)
+	
+	// Handle wildcard patterns
+	matched, err := filepath.Match(expandedPattern, value)
+	if err != nil {
+		// If pattern matching fails, fall back to exact match
+		return value == expandedPattern
+	}
+	return matched
 }
 
 // expandCommandChain applies expansions to all commands in a command chain

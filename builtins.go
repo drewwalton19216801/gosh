@@ -29,6 +29,7 @@ func init() {
 		"history": cmdHistory,
 		"help":    cmdHelp,
 		"which":   cmdWhich,
+		"case":    cmdCase,
 	}
 }
 
@@ -107,6 +108,10 @@ func cmdExport(s *Shell, cmd *Command) error {
 			return fmt.Errorf("export: invalid assignment: %s", arg)
 		}
 		key, value := parts[0], parts[1]
+		// Remove quotes if present
+		if len(value) >= 2 && ((value[0] == '"' && value[len(value)-1] == '"') || (value[0] == '\'' && value[len(value)-1] == '\'')) {
+			value = value[1 : len(value)-1]
+		}
 		s.env[key] = value
 		os.Setenv(key, value)
 	}
@@ -200,6 +205,7 @@ func cmdHelp(s *Shell, cmd *Command) error {
 	fmt.Println("  - Input/output redirection: cmd < input.txt > output.txt")
 	fmt.Println("  - Background execution: cmd &")
 	fmt.Println("  - Script execution: gosh script.sh")
+	fmt.Println("  - Case statements: case $var in pattern) commands ;; esac")
 	fmt.Println("  - Environment variables and aliases")
 	fmt.Println("  - Variable expansion: $VAR, ${VAR}")
 	fmt.Println("  - Command substitution: $(cmd), `cmd`")
@@ -243,4 +249,9 @@ func cmdWhich(s *Shell, cmd *Command) error {
 	}
 
 	return nil
+}
+
+// cmdCase implements the case command (for interactive use)
+func cmdCase(s *Shell, cmd *Command) error {
+	return fmt.Errorf("case statements are only supported in scripts, not interactive mode")
 }
