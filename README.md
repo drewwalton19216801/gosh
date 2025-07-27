@@ -21,6 +21,10 @@ A basic command-line shell written in Go with sh-style scripting support, design
 ### Shell Features
 - **Interactive Mode**: Run `./gosh` for an interactive shell session
 - **Script Mode**: Run `./gosh script.sh` to execute shell scripts
+- **Unix Pipes**: Connect commands with `|` to chain operations
+  - `cmd1 | cmd2` - Pass output of cmd1 as input to cmd2
+  - `cmd1 | cmd2 | cmd3` - Chain multiple commands together
+  - Works with input/output redirection: `cat file.txt | grep pattern > results.txt`
 - **Input/Output Redirection**: 
   - `cmd < input.txt` - Redirect input from file
   - `cmd > output.txt` - Redirect output to file (overwrite)
@@ -61,6 +65,12 @@ echo "Hello from gosh!"
 pwd
 export MY_VAR=test
 echo "MY_VAR is: $MY_VAR"
+
+# Pipe examples - gosh, pipes are powerful!
+echo "testing pipe functionality" | wc -w
+ls -la | head -5
+cat /etc/passwd | grep root | wc -l
+
 # Gosh darn it, that's some fine scripting!
 ```
 

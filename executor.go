@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -96,6 +97,126 @@ func (s *Shell) executeExternal(cmd *Command) error {
 	}
 
 	return execCmd.Run()
+}
+
+// ExecutePipeline executes a series of commands connected by pipes
+func (s *Shell) ExecutePipeline(commands []*Command) error {
+	if len(commands) == 0 {
+		return fmt.Errorf("no commands in pipeline")
+	}
+
+	if len(commands) == 1 {
+		return s.ExecuteCommand(commands[0])
+	}
+
+	// Check for background execution - only last command can be background
+	for i := 0; i < len(commands)-1; i++ {
+		if commands[i].Background {
+			return fmt.Errorf("only the last command in a pipeline can run in background")
+		}
+	}
+
+	// Create pipes for connecting commands
+	var pipes []io.ReadCloser
+	var execCmds []*exec.Cmd
+
+	for i, cmd := range commands {
+		// Resolve command path
+		cmdPath, err := s.resolvePath(cmd.Name)
+		if err != nil {
+			// Check if it's a builtin
+			if _, exists := builtins[cmd.Name]; !exists {
+				return err
+			}
+			// Builtins in pipelines are not supported for now
+			return fmt.Errorf("builtin commands not supported in pipelines: %s", cmd.Name)
+		}
+
+		// Create the command
+		execCmd := exec.Command(cmdPath, cmd.Args...)
+
+		// Set environment
+		execCmd.Env = os.Environ()
+		for key, value := range s.env {
+			execCmd.Env = append(execCmd.Env, fmt.Sprintf("%s=%s", key, value))
+		}
+
+		// Handle input
+		if i == 0 {
+			// First command - use stdin or input redirection
+			if cmd.Input != "" {
+				inputFile, err := os.Open(cmd.Input)
+				if err != nil {
+					return fmt.Errorf("cannot open input file %s: %v", cmd.Input, err)
+				}
+				execCmd.Stdin = inputFile
+				defer inputFile.Close()
+			} else {
+				execCmd.Stdin = os.Stdin
+			}
+		} else {
+			// Middle/last commands - use pipe from previous command
+			execCmd.Stdin = pipes[i-1]
+		}
+
+		// Handle output
+		if i == len(commands)-1 {
+			// Last command - use stdout or output redirection
+			if cmd.Output != "" {
+				var outputFile *os.File
+				var err error
+				if cmd.Append {
+					outputFile, err = os.OpenFile(cmd.Output, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+				} else {
+					outputFile, err = os.Create(cmd.Output)
+				}
+				if err != nil {
+					return fmt.Errorf("cannot create output file %s: %v", cmd.Output, err)
+				}
+				execCmd.Stdout = outputFile
+				defer outputFile.Close()
+			} else {
+				execCmd.Stdout = os.Stdout
+			}
+			execCmd.Stderr = os.Stderr
+		} else {
+			// Middle commands - create pipe to next command
+			stdoutPipe, err := execCmd.StdoutPipe()
+			if err != nil {
+				return fmt.Errorf("failed to create pipe: %v", err)
+			}
+			pipes = append(pipes, stdoutPipe)
+			execCmd.Stderr = os.Stderr
+		}
+
+		execCmds = append(execCmds, execCmd)
+	}
+
+	// Start all commands
+	for i, execCmd := range execCmds {
+		if err := execCmd.Start(); err != nil {
+			return fmt.Errorf("failed to start command %s: %v", commands[i].Name, err)
+		}
+	}
+
+	// Close pipe read ends that we created
+	for _, pipe := range pipes {
+		defer pipe.Close()
+	}
+
+	// Wait for all commands to complete
+	var lastErr error
+	for i, execCmd := range execCmds {
+		if commands[len(commands)-1].Background && i == len(execCmds)-1 {
+			// Last command is background - don't wait
+			continue
+		}
+		if err := execCmd.Wait(); err != nil {
+			lastErr = fmt.Errorf("command %s failed: %v", commands[i].Name, err)
+		}
+	}
+
+	return lastErr
 }
 
 // resolvePath finds the full path to a command

@@ -89,13 +89,13 @@ func (s *Shell) ExecuteLine(line string) error {
 		return err
 	}
 
-	for _, cmd := range commands {
-		if err := s.ExecuteCommand(cmd); err != nil {
-			return err
-		}
+	if len(commands) == 1 {
+		// Single command - execute normally
+		return s.ExecuteCommand(commands[0])
+	} else {
+		// Pipeline - execute as connected commands
+		return s.ExecutePipeline(commands)
 	}
-
-	return nil
 }
 
 // ExecuteScript runs a script file

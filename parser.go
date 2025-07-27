@@ -23,14 +23,22 @@ func ParseLine(line string) ([]*Command, error) {
 		return nil, nil
 	}
 
-	// Handle pipes and command chaining later
-	// For now, just parse a single command
-	cmd, err := parseCommand(line)
+	// Split by pipes first
+	pipeSegments, err := splitByPipes(line)
 	if err != nil {
 		return nil, err
 	}
 
-	return []*Command{cmd}, nil
+	var commands []*Command
+	for _, segment := range pipeSegments {
+		cmd, err := parseCommand(segment)
+		if err != nil {
+			return nil, err
+		}
+		commands = append(commands, cmd)
+	}
+
+	return commands, nil
 }
 
 // parseCommand parses a single command string
@@ -97,6 +105,68 @@ func parseCommand(cmdStr string) (*Command, error) {
 	}
 
 	return cmd, nil
+}
+
+// splitByPipes splits a command line by pipe characters, respecting quotes
+func splitByPipes(line string) ([]string, error) {
+	var segments []string
+	var current strings.Builder
+	inQuotes := false
+	quoteChar := byte(0)
+	escaped := false
+
+	for i := 0; i < len(line); i++ {
+		c := line[i]
+
+		if escaped {
+			current.WriteByte(c)
+			escaped = false
+			continue
+		}
+
+		if c == '\\' {
+			escaped = true
+			current.WriteByte(c)
+			continue
+		}
+
+		if inQuotes {
+			if c == quoteChar {
+				inQuotes = false
+				quoteChar = 0
+			}
+			current.WriteByte(c)
+		} else {
+			if c == '"' || c == '\'' {
+				inQuotes = true
+				quoteChar = c
+				current.WriteByte(c)
+			} else if c == '|' {
+				// Found a pipe - split here
+				segment := strings.TrimSpace(current.String())
+				if segment == "" {
+					return nil, errors.New("empty command before pipe")
+				}
+				segments = append(segments, segment)
+				current.Reset()
+			} else {
+				current.WriteByte(c)
+			}
+		}
+	}
+
+	if inQuotes {
+		return nil, errors.New("unclosed quote in pipeline")
+	}
+
+	// Add the last segment
+	lastSegment := strings.TrimSpace(current.String())
+	if lastSegment == "" {
+		return nil, errors.New("empty command after pipe")
+	}
+	segments = append(segments, lastSegment)
+
+	return segments, nil
 }
 
 // tokenize splits a command line into tokens, handling quotes
