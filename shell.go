@@ -577,13 +577,22 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 		return s.getGlobCompletions(prefix)
 	}
 
+	// Expand tilde in the prefix first
+	expandedPrefix := prefix
+	if strings.HasPrefix(prefix, "~") {
+		expanded, err := s.expandTilde(prefix)
+		if err == nil {
+			expandedPrefix = expanded
+		}
+	}
+
 	// Handle different path types
 	var searchDir, filePrefix string
 
-	if strings.Contains(prefix, "/") {
+	if strings.Contains(expandedPrefix, "/") {
 		// Path contains directory separator
-		searchDir = filepath.Dir(prefix)
-		filePrefix = filepath.Base(prefix)
+		searchDir = filepath.Dir(expandedPrefix)
+		filePrefix = filepath.Base(expandedPrefix)
 
 		// Handle absolute vs relative paths
 		if !filepath.IsAbs(searchDir) {
@@ -600,7 +609,7 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 			return completions
 		}
 		searchDir = cwd
-		filePrefix = prefix
+		filePrefix = expandedPrefix
 	}
 
 	// Read directory entries
@@ -629,7 +638,26 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 					completion = filepath.Join(prefixDir, name)
 				}
 			} else {
-				completion = name
+				// Handle tilde expansion case
+				if strings.HasPrefix(prefix, "~") && prefix != expandedPrefix {
+					// We expanded a tilde, so we need to reconstruct with the original tilde prefix
+					if prefix == "~" {
+						completion = "~/" + name
+					} else if strings.HasPrefix(prefix, "~/") {
+						// Extract the part after ~/ from the original prefix
+						originalSuffix := prefix[2:]
+						if originalSuffix == "" {
+							completion = "~/" + name
+						} else {
+							completion = "~/" + filepath.Join(originalSuffix, name)
+						}
+					} else {
+						// Handle ~user case
+						completion = prefix + "/" + name
+					}
+				} else {
+					completion = name
+				}
 			}
 
 			// Add trailing slash for directories
@@ -648,16 +676,25 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 func (s *Shell) getGlobCompletions(pattern string) []string {
 	var completions []string
 
+	// Expand tilde in the pattern first
+	expandedPattern := pattern
+	if strings.HasPrefix(pattern, "~") {
+		expanded, err := s.expandTilde(pattern)
+		if err == nil {
+			expandedPattern = expanded
+		}
+	}
+
 	// Use filepath.Glob to expand the pattern
 	var globPattern string
-	if filepath.IsAbs(pattern) {
-		globPattern = pattern
+	if filepath.IsAbs(expandedPattern) {
+		globPattern = expandedPattern
 	} else {
 		cwd, err := os.Getwd()
 		if err != nil {
 			return completions
 		}
-		globPattern = filepath.Join(cwd, pattern)
+		globPattern = filepath.Join(cwd, expandedPattern)
 	}
 
 	matches, err := filepath.Glob(globPattern)
@@ -672,6 +709,19 @@ func (s *Shell) getGlobCompletions(pattern string) []string {
 			// Keep the path structure from the original pattern
 			if filepath.IsAbs(pattern) {
 				completion = match
+			} else if strings.HasPrefix(pattern, "~") && pattern != expandedPattern {
+				// Handle tilde expansion case - convert back to tilde format
+				if strings.HasPrefix(pattern, "~/") {
+					home, err := os.UserHomeDir()
+					if err == nil && strings.HasPrefix(match, home) {
+						completion = "~" + match[len(home):]
+					} else {
+						completion = match
+					}
+				} else {
+					// Handle ~user case - this is more complex, for now just return the match
+					completion = match
+				}
 			} else {
 				cwd, err := os.Getwd()
 				if err != nil {

@@ -17,6 +17,14 @@ This guide demonstrates the tab completion functionality in gosh.
 3. Type `cat README` and press TAB - should complete to `README.md`
 4. Navigate to `examples/` directory and type `./case` then press TAB - should complete to `./case_statement_demo.sh`
 
+## Testing Tilde Expansion Completion
+
+1. Type `ls ~/` and press TAB - should show files and directories in your home directory
+2. Type `cd ~/D` and press TAB - should complete to directories starting with 'D' in your home
+3. Type `ls ~/Documents/` and press TAB - should show contents of ~/Documents/ directory
+4. Type `echo ~` and press TAB - should complete to `~/`
+5. Type `cat ~/.*` and press TAB - should show hidden files in home directory
+
 ## Testing Glob Pattern Completion
 
 1. Create test files: `touch file1. file2. test.`
@@ -37,6 +45,7 @@ This guide demonstrates the tab completion functionality in gosh.
 - ✅ External command completion from PATH
 - ✅ File and directory completion
 - ✅ File path completion (including ./ and ../ prefixes)
+- ✅ Tilde expansion completion (~ and ~/path)
 - ✅ Alias completion
 - ✅ Context-aware completion (commands vs arguments)
 - ✅ Hidden file completion (when prefix starts with dot)
