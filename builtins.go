@@ -194,6 +194,8 @@ func cmdHelp(s *Shell, cmd *Command) error {
 	fmt.Println("  help            - Show this help")
 	fmt.Println("")
 	fmt.Println("Features:")
+	fmt.Println("  - Command chaining: cmd1; cmd2; cmd3")
+	fmt.Println("  - Unix pipes: cmd1 | cmd2 | cmd3")
 	fmt.Println("  - Input/output redirection: cmd < input.txt > output.txt")
 	fmt.Println("  - Background execution: cmd &")
 	fmt.Println("  - Script execution: gosh script.sh")

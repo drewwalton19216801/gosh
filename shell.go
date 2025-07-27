@@ -84,18 +84,31 @@ func (s *Shell) Run() {
 
 // ExecuteLine processes a single command line
 func (s *Shell) ExecuteLine(line string) error {
-	commands, err := ParseLine(line)
+	commandChain, err := ParseLine(line)
 	if err != nil {
 		return err
 	}
 
-	if len(commands) == 1 {
-		// Single command - execute normally
-		return s.ExecuteCommand(commands[0])
-	} else {
-		// Pipeline - execute as connected commands
-		return s.ExecutePipeline(commands)
+	if commandChain == nil {
+		return nil
 	}
+
+	// Execute each pipeline in the chain sequentially
+	for _, commands := range commandChain.Pipelines {
+		if len(commands) == 1 {
+			// Single command - execute normally
+			if err := s.ExecuteCommand(commands[0]); err != nil {
+				return err
+			}
+		} else {
+			// Pipeline - execute as connected commands
+			if err := s.ExecutePipeline(commands); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // ExecuteScript runs a script file

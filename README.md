@@ -22,6 +22,10 @@ A basic command-line shell written in Go with sh-style scripting support, design
 - **Interactive Mode**: Run `./gosh` for an interactive shell session
 - **Command Mode**: Run `./gosh -c "command"` to execute a single command and exit
 - **Script Mode**: Run `./gosh script.sh` to execute shell scripts
+- **Command Chaining**: Execute multiple commands sequentially with `;`
+  - `cmd1; cmd2; cmd3` - Run commands one after another
+  - `ls; pwd; echo "Done"` - List files, show directory, then print message
+  - Works with pipes and redirection: `ls > files.txt; cat files.txt | wc -l`
 - **Unix Pipes**: Connect commands with `|` to chain operations
   - `cmd1 | cmd2` - Pass output of cmd1 as input to cmd2
   - `cmd1 | cmd2 | cmd3` - Chain multiple commands together
@@ -61,7 +65,8 @@ Examples:
 ```bash
 ./gosh -c "echo 'Hello World'"
 ./gosh -c "ls -la | grep .go"
-./gosh -c "pwd && echo 'Current directory listed above'"
+./gosh -c "pwd; echo 'Current directory listed above'"
+./gosh -c "ls; echo 'Files listed'; pwd"
 ```
 
 ### Script Mode

@@ -16,29 +16,44 @@ type Command struct {
 	Background bool
 }
 
-// ParseLine parses a command line into individual commands
-func ParseLine(line string) ([]*Command, error) {
+// CommandChain represents a sequence of command pipelines
+type CommandChain struct {
+	Pipelines [][]*Command
+}
+
+// ParseLine parses a command line into command chains (semicolon-separated pipelines)
+func ParseLine(line string) (*CommandChain, error) {
 	line = strings.TrimSpace(line)
 	if line == "" {
 		return nil, nil
 	}
 
-	// Split by pipes first
-	pipeSegments, err := splitByPipes(line)
+	// Split by semicolons first to handle command chaining
+	chainSegments, err := splitBySemicolons(line)
 	if err != nil {
 		return nil, err
 	}
 
-	var commands []*Command
-	for _, segment := range pipeSegments {
-		cmd, err := parseCommand(segment)
+	var pipelines [][]*Command
+	for _, segment := range chainSegments {
+		// For each segment, split by pipes
+		pipeSegments, err := splitByPipes(segment)
 		if err != nil {
 			return nil, err
 		}
-		commands = append(commands, cmd)
+
+		var commands []*Command
+		for _, pipeSegment := range pipeSegments {
+			cmd, err := parseCommand(pipeSegment)
+			if err != nil {
+				return nil, err
+			}
+			commands = append(commands, cmd)
+		}
+		pipelines = append(pipelines, commands)
 	}
 
-	return commands, nil
+	return &CommandChain{Pipelines: pipelines}, nil
 }
 
 // parseCommand parses a single command string
@@ -105,6 +120,68 @@ func parseCommand(cmdStr string) (*Command, error) {
 	}
 
 	return cmd, nil
+}
+
+// splitBySemicolons splits a command line by semicolon characters, respecting quotes
+func splitBySemicolons(line string) ([]string, error) {
+	var segments []string
+	var current strings.Builder
+	inQuotes := false
+	quoteChar := byte(0)
+	escaped := false
+
+	for i := 0; i < len(line); i++ {
+		c := line[i]
+
+		if escaped {
+			current.WriteByte(c)
+			escaped = false
+			continue
+		}
+
+		if c == '\\' {
+			escaped = true
+			current.WriteByte(c)
+			continue
+		}
+
+		if inQuotes {
+			if c == quoteChar {
+				inQuotes = false
+				quoteChar = 0
+			}
+			current.WriteByte(c)
+		} else {
+			if c == '"' || c == '\'' {
+				inQuotes = true
+				quoteChar = c
+				current.WriteByte(c)
+			} else if c == ';' {
+				// Found a semicolon - split here
+				segment := strings.TrimSpace(current.String())
+				if segment == "" {
+					return nil, errors.New("empty command before semicolon")
+				}
+				segments = append(segments, segment)
+				current.Reset()
+			} else {
+				current.WriteByte(c)
+			}
+		}
+	}
+
+	if inQuotes {
+		return nil, errors.New("unclosed quote in command chain")
+	}
+
+	// Add the last segment
+	lastSegment := strings.TrimSpace(current.String())
+	if lastSegment == "" {
+		return nil, errors.New("empty command after semicolon")
+	}
+	segments = append(segments, lastSegment)
+
+	return segments, nil
 }
 
 // splitByPipes splits a command line by pipe characters, respecting quotes
