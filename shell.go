@@ -103,11 +103,17 @@ func (s *Shell) Run() {
 	}
 }
 
-// ExecuteLine processes a single command line
+// ExecuteLine processes a single command line or multi-line construct
 func (s *Shell) ExecuteLine(line string) error {
 	// Check for variable assignment (VAR=value)
 	if s.isVariableAssignment(line) {
 		return s.handleVariableAssignment(line)
+	}
+
+	// Check if this is a multi-line construct
+	lines := strings.Split(line, "\n")
+	if len(lines) > 1 {
+		return s.executeMultiLineConstruct(lines)
 	}
 
 	commandChain, err := ParseLine(line)
@@ -177,6 +183,33 @@ func (s *Shell) ExecuteScript(filename string, args []string) error {
 	}()
 
 	return s.executeScriptLines(allLines)
+}
+
+// executeMultiLineConstruct handles multi-line constructs in interactive mode
+func (s *Shell) executeMultiLineConstruct(lines []string) error {
+	// Check for case statement
+	if len(lines) > 0 && strings.HasPrefix(strings.TrimSpace(lines[0]), "case ") {
+		return s.executeCaseStatement(lines)
+	}
+	
+	// Check for if statement
+	if len(lines) > 0 && strings.HasPrefix(strings.TrimSpace(lines[0]), "if ") {
+		return s.executeIfStatement(lines)
+	}
+	
+	// If not a recognized multi-line construct, execute each line separately
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		
+		if err := s.ExecuteLine(line); err != nil {
+			return fmt.Errorf("line %d: %v", i+1, err)
+		}
+	}
+	
+	return nil
 }
 
 // executeScriptLines processes script lines, handling multi-line constructs
@@ -557,6 +590,7 @@ func (s *Shell) expandCommand(cmd *Command) error {
 }
 
 // readLineWithContinuation reads a command line with support for backslash line continuation
+// and multi-line constructs like if and case statements
 func (s *Shell) readLineWithContinuation(cwd string) (string, error) {
 	var fullLine strings.Builder
 	isFirstLine := true
@@ -587,13 +621,74 @@ func (s *Shell) readLineWithContinuation(cwd string) (string, error) {
 			isFirstLine = false
 			continue
 		} else {
-			// No continuation, add this line and finish
+			// Add this line
 			fullLine.WriteString(line)
+			
+			// Check if we need to read more lines for multi-line constructs
+			currentContent := fullLine.String()
+			if s.needsMoreLines(currentContent) {
+				fullLine.WriteString("\n")
+				isFirstLine = false
+				continue
+			}
+			
 			break
 		}
 	}
 	
 	return fullLine.String(), nil
+}
+
+// needsMoreLines determines if the current input requires more lines to complete
+// a multi-line construct like if or case statements
+func (s *Shell) needsMoreLines(input string) bool {
+	lines := strings.Split(input, "\n")
+	
+	// Check for incomplete if statement
+	if s.isIncompleteIfStatement(lines) {
+		return true
+	}
+	
+	// Check for incomplete case statement
+	if s.isIncompleteCaseStatement(lines) {
+		return true
+	}
+	
+	return false
+}
+
+// isIncompleteIfStatement checks if we have an incomplete if statement
+func (s *Shell) isIncompleteIfStatement(lines []string) bool {
+	ifCount := 0
+	fiCount := 0
+	
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "if ") {
+			ifCount++
+		} else if trimmed == "fi" {
+			fiCount++
+		}
+	}
+	
+	return ifCount > fiCount
+}
+
+// isIncompleteCaseStatement checks if we have an incomplete case statement
+func (s *Shell) isIncompleteCaseStatement(lines []string) bool {
+	caseCount := 0
+	esacCount := 0
+	
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "case ") {
+			caseCount++
+		} else if trimmed == "esac" {
+			esacCount++
+		}
+	}
+	
+	return caseCount > esacCount
 }
 
 // Exit sets the shell to stop running

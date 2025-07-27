@@ -122,7 +122,7 @@ check_grade() {
 
 ## Important Notes
 
-1. **Script-only feature**: If statements are only supported in script files, not in interactive mode.
+1. **Multi-line support**: If statements are supported in both script files and interactive mode. In interactive mode, the shell will automatically detect when you start an if statement and continue reading lines until you type `fi`.
 
 2. **Multi-line format**: If statements must use the multi-line format with separate `then`, `else`, and `fi` keywords on their own lines.
 

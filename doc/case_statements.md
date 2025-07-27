@@ -124,7 +124,7 @@ esac
 
 ## Important Notes
 
-1. **Script-only feature**: Case statements are only supported in script files, not in interactive mode.
+1. **Multi-line support**: Case statements are supported in both script files and interactive mode. In interactive mode, the shell will automatically detect when you start a case statement and continue reading lines until you type `esac`.
 
 2. **First match wins**: The case statement executes the commands for the first matching pattern and then exits.
 
