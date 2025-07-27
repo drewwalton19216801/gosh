@@ -589,6 +589,12 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 	// Handle different path types
 	var searchDir, filePrefix string
 
+	// Special case: if the original prefix is just "~", we want to complete to "~/"
+	if prefix == "~" {
+		// Return just "~/" as the completion
+		return []string{"~/"}
+	}
+
 	if strings.Contains(expandedPrefix, "/") {
 		// Path contains directory separator
 		searchDir = filepath.Dir(expandedPrefix)
