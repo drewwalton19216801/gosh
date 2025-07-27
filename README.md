@@ -11,6 +11,7 @@ Gosh provides a comprehensive set of built-in commands for shell operations. See
 - **Interactive Mode**: Run `./gosh` for an interactive shell session
 - **Command Mode**: Run `./gosh -c "command"` to execute a single command and exit
 - **Script Mode**: Run `./gosh script.sh` to execute shell scripts
+- **Functions**: Define and use shell functions with positional parameters
 - **Command Chaining**: Execute multiple commands sequentially with `;`
 - **Unix Pipes**: Connect commands with `|` to chain operations
 - **Input/Output Redirection**: Support for `<`, `>`, and `>>` operators

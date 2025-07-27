@@ -190,6 +190,155 @@ echo "This is not a comment"  # Inline comment
 # like this
 ```
 
+## Functions
+
+Gosh supports shell functions for code reusability and organization:
+
+### Function Definition
+```bash
+# Basic function syntax
+function_name() {
+    # function body
+    echo "Hello from function"
+}
+
+# Alternative syntax
+function function_name {
+    echo "Hello from function"
+}
+```
+
+### Calling Functions
+```bash
+# Define a function
+greet() {
+    echo "Hello, $1!"
+}
+
+# Call the function
+greet "World"  # Output: Hello, World!
+greet "Gosh"   # Output: Hello, Gosh!
+```
+
+### Positional Parameters
+Functions can access arguments through positional parameters:
+
+```bash
+show_params() {
+    echo "Function name: $0"
+    echo "First argument: $1"
+    echo "Second argument: $2"
+    echo "Number of arguments: $#"
+    echo "All arguments: $@"
+    echo "All arguments as string: $*"
+}
+
+show_params arg1 arg2 arg3
+```
+
+### Practical Examples
+
+#### File Processing Function
+```bash
+backup_file() {
+    if [ $# -eq 0 ]; then
+        echo "Usage: backup_file <filename>"
+        return 1
+    fi
+    
+    local file="$1"
+    local backup_name="${file}.backup.$(date +%Y%m%d)"
+    
+    cp "$file" "$backup_name"
+    echo "Backed up $file to $backup_name"
+}
+
+# Usage
+backup_file important.txt
+```
+
+#### System Information Function
+```bash
+system_info() {
+    echo "=== System Information ==="
+    echo "Current directory: $(pwd)"
+    echo "Current user: $(whoami)"
+    echo "Date: $(date)"
+    echo "Disk usage: $(df -h . | tail -1 | awk '{print $5}')"
+}
+
+system_info
+```
+
+### Nested Function Calls
+```bash
+log_message() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+}
+
+process_file() {
+    local file="$1"
+    log_message "Processing file: $file"
+    
+    if [ -f "$file" ]; then
+        log_message "File exists, processing..."
+        wc -l "$file"
+        log_message "File processed successfully"
+    else
+        log_message "Error: File not found"
+    fi
+}
+
+process_file "example.txt"
+```
+
+### Function Management
+```bash
+# List all defined functions
+functions
+
+# Check if something is a function
+type greet
+type ls  # Shows it's not a function
+```
+
+### Complete Example: Project Management Script
+```bash
+#!/usr/bin/env gosh
+# Project management utilities
+
+# Initialize project structure
+init_project() {
+    local project_name="$1"
+    if [ -z "$project_name" ]; then
+        echo "Usage: init_project <project_name>"
+        return 1
+    fi
+    
+    mkdir -p "$project_name"/{src,docs,tests}
+    echo "# $project_name" > "$project_name/README.md"
+    echo "Project $project_name initialized!"
+}
+
+# Count lines of code
+count_code() {
+    echo "Lines of code in project:"
+    find . -name "*.go" -o -name "*.sh" | xargs wc -l | tail -1
+}
+
+# Clean temporary files
+clean_temp() {
+    echo "Cleaning temporary files..."
+    find . -name "*.tmp" -o -name "*.log" | xargs rm -f
+    echo "Cleanup complete!"
+}
+
+# Usage examples
+init_project "my-gosh-project"
+count_code
+clean_temp
+```
+
 ## Aliases in Scripts
 
 Create and use aliases within scripts:
