@@ -160,6 +160,7 @@ Gosh, we've organized the shell into multiple modules for maximum readability:
 - `shell.go` - Core shell structure and main loop
 - `parser.go` - Command line parsing and tokenization
 - `executor.go` - Command execution logic
+- `expansion.go` - Variable and command expansion
 - `builtins.go` - Built-in command implementations
 - `utils.go` - Utility functions
 
