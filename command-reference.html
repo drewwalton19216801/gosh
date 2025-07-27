@@ -102,6 +102,15 @@ which python</code></pre>
             <h3><code>help</code></h3>
             <p>Show help information.</p>
             <pre><code>help</code></pre>
+
+            <h3><code>functions</code></h3>
+            <p>List all defined functions.</p>
+            <pre><code>functions</code></pre>
+
+            <h3><code>type name</code></h3>
+            <p>Show the definition of a function or command type.</p>
+            <pre><code>type my_function
+type ls</code></pre>
         </section>
 
         <section id="command-features">
@@ -180,6 +189,24 @@ rm temp_file_?.txt
 # Character classes
 echo [Hh]ello*
 ls [abc]*</code></pre>
+
+            <h3>Functions</h3>
+            <p>Define and use custom functions with positional parameters:</p>
+            <pre><code># Define a function
+greet() {
+    echo "Hello, $1!"
+    echo "You passed $# arguments"
+}
+
+# Call the function
+greet "World"
+greet "Alice" "Bob" "Charlie"
+
+# List functions
+functions
+
+# Show function definition
+type greet</code></pre>
         </section>
 
         <section id="examples">
@@ -221,6 +248,22 @@ which my_script</code></pre>
 echo "Backup created: backup_$(date +%Y%m%d).tar"
 mkdir "project_$(whoami)"
 echo "Found $(ls *.go | wc -l) Go files"</code></pre>
+
+            <h3>Functions</h3>
+            <pre><code># Define utility functions
+backup_file() {
+    cp "$1" "$1.backup.$(date +%Y%m%d)"
+    echo "Backed up $1"
+}
+
+log_message() {
+    echo "[$(date '+%H:%M:%S')] $@"
+}
+
+# Use functions
+backup_file "important.txt"
+log_message "Process started"
+log_message "Processing" "multiple" "arguments"</code></pre>
 
             <h3>Complex Workflows</h3>
             <pre><code># Backup and compress

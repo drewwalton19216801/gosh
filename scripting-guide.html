@@ -48,6 +48,7 @@
                 <li><a href="#pipes-chaining">Pipes and Command Chaining</a></li>
                 <li><a href="#background-execution">Background Execution</a></li>
                 <li><a href="#comments">Comments</a></li>
+                <li><a href="#functions">Functions</a></li>
                 <li><a href="#aliases">Aliases in Scripts</a></li>
                 <li><a href="#best-practices">Best Practices</a></li>
             </ul>
@@ -320,6 +321,223 @@ export LOG_LEVEL=info
 if [ "$DEBUG" = "true" ]; then
     echo "Debug mode enabled"
 fi</code></pre>
+        </section>
+
+        <section id="functions">
+            <h2>Functions</h2>
+
+            <p>Gosh supports user-defined functions with full positional parameter support, enabling you to create reusable code blocks within your scripts.</p>
+
+            <h3>Function Definition</h3>
+            <p>Define functions using the standard shell syntax:</p>
+            <pre><code># Basic function definition
+function_name() {
+    # Function body
+    echo "Hello from function!"
+}
+
+# Alternative syntax
+function function_name {
+    echo "Hello from function!"
+}</code></pre>
+
+            <h3>Calling Functions</h3>
+            <p>Call functions by name, optionally passing arguments:</p>
+            <pre><code># Call function without arguments
+function_name
+
+# Call function with arguments
+greet "World" "from" "gosh"</code></pre>
+
+            <h3>Positional Parameters</h3>
+            <p>Functions have access to special variables for handling parameters:</p>
+            <pre><code>greet() {
+    echo "Function name: $0"
+    echo "First parameter: $1"
+    echo "Second parameter: $2"
+    echo "All parameters: $@"
+    echo "Parameter count: $#"
+}
+
+# Call the function
+greet "Alice" "Bob" "Charlie"
+# Output:
+# Function name: greet
+# First parameter: Alice
+# Second parameter: Bob
+# All parameters: Alice Bob Charlie
+# Parameter count: 3</code></pre>
+
+            <h4>Parameter Variables</h4>
+            <ul>
+                <li><code>$0</code> - Function name</li>
+                <li><code>$1, $2, $3, ...</code> - Individual positional parameters</li>
+                <li><code>$#</code> - Number of parameters passed</li>
+                <li><code>$@</code> - All parameters as separate words</li>
+                <li><code>$*</code> - All parameters as a single string</li>
+            </ul>
+
+            <h3>Practical Examples</h3>
+
+            <h4>File Processing Function</h4>
+            <pre><code>process_file() {
+    if [ $# -eq 0 ]; then
+        echo "Usage: $0 <filename>"
+        return 1
+    fi
+    
+    local file="$1"
+    echo "Processing file: $file"
+    
+    if [ -f "$file" ]; then
+        wc -l "$file"
+        grep -c "TODO" "$file" || echo "No TODOs found"
+    else
+        echo "Error: File '$file' not found"
+        return 1
+    fi
+}
+
+# Usage
+process_file "script.sh"
+process_file "README.md"</code></pre>
+
+            <h4>Backup Function</h4>
+            <pre><code>backup_file() {
+    local source="$1"
+    local backup_dir="${2:-./backups}"
+    
+    if [ $# -eq 0 ]; then
+        echo "Usage: $0 <source_file> [backup_directory]"
+        return 1
+    fi
+    
+    mkdir -p "$backup_dir"
+    cp "$source" "$backup_dir/$(basename $source).$(date +%Y%m%d_%H%M%S)"
+    echo "Backed up $source to $backup_dir"
+}
+
+# Usage
+backup_file "important.txt"
+backup_file "config.ini" "/home/user/backups"</code></pre>
+
+            <h4>System Information Function</h4>
+            <pre><code>system_info() {
+    echo "=== System Information ==="
+    echo "Date: $(date)"
+    echo "User: $(whoami)"
+    echo "Directory: $(pwd)"
+    echo "Disk usage: $(df -h . | tail -1 | awk '{print $5}')"
+    
+    if [ $# -gt 0 ]; then
+        echo "Additional info requested: $@"
+    fi
+}
+
+# Usage
+system_info
+system_info "memory" "processes"</code></pre>
+
+            <h3>Nested Function Calls</h3>
+            <p>Functions can call other functions, with each maintaining its own parameter context:</p>
+            <pre><code>log_message() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+}
+
+process_with_logging() {
+    log_message "Starting process: $1"
+    
+    # Simulate processing
+    echo "Processing $1..."
+    sleep 1
+    
+    log_message "Completed process: $1"
+}
+
+# Usage
+process_with_logging "data_file.csv"
+process_with_logging "config_update"</code></pre>
+
+            <h3>Function Management</h3>
+
+            <h4>List Defined Functions</h4>
+            <pre><code># List all defined functions
+functions
+
+# Show function definitions
+type function_name</code></pre>
+
+            <h4>Complete Function Example</h4>
+            <pre><code>#!/usr/bin/env gosh
+# Project management script with functions
+
+# Configuration
+export PROJECT_ROOT="$(pwd)"
+export LOG_FILE="project.log"
+
+# Logging function
+log() {
+    echo "[$(date '+%H:%M:%S')] $@" | tee -a "$LOG_FILE"
+}
+
+# Error handling function
+error_exit() {
+    log "ERROR: $1"
+    exit 1
+}
+
+# Build function
+build_project() {
+    local target="${1:-all}"
+    log "Building target: $target"
+    
+    case "$target" in
+        "clean")
+            rm -rf build/
+            log "Clean completed"
+            ;;
+        "compile")
+            mkdir -p build
+            log "Compilation started"
+            # Add compilation commands here
+            log "Compilation completed"
+            ;;
+        "all")
+            build_project clean
+            build_project compile
+            ;;
+        *)
+            error_exit "Unknown build target: $target"
+            ;;
+    esac
+}
+
+# Test function
+run_tests() {
+    log "Running tests with $# test files"
+    
+    for test_file in "$@"; do
+        if [ -f "$test_file" ]; then
+            log "Running test: $test_file"
+            # Execute test file
+            ."/$test_file" || error_exit "Test failed: $test_file"
+        else
+            log "Warning: Test file not found: $test_file"
+        fi
+    done
+    
+    log "All tests completed successfully"
+}
+
+# Main execution
+log "Project script started"
+build_project "$1"
+
+if [ "$2" = "test" ]; then
+    run_tests test_*.sh
+fi
+
+log "Project script completed"</code></pre>
         </section>
 
         <section id="aliases">
