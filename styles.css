@@ -413,18 +413,54 @@ body {
         display: none;
     }
     
+    .hero {
+        padding: 2rem 0;
+        min-height: auto;
+    }
+    
     .hero-content {
         grid-template-columns: 1fr;
         text-align: center;
         gap: 2rem;
+        padding: 0 15px;
     }
     
     .hero-title {
-        font-size: 3rem;
+        font-size: 2.5rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.1rem;
     }
     
     .hero-buttons {
         justify-content: center;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .btn {
+        width: 100%;
+        max-width: 280px;
+        text-align: center;
+    }
+    
+    .terminal {
+        margin: 0 auto;
+        max-width: 100%;
+        overflow: hidden;
+    }
+    
+    .terminal-body {
+        padding: 0.75rem;
+        font-size: 0.75rem;
+        overflow-x: auto;
+    }
+    
+    .terminal-line {
+        white-space: nowrap;
+        margin-bottom: 0.25rem;
     }
     
     .step {
@@ -436,6 +472,42 @@ body {
     .features-grid,
     .docs-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 15px;
+    }
+    
+    .hero-content {
+        padding: 0 10px;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    
+    .hero-description {
+        font-size: 0.9rem;
+    }
+    
+    .terminal-body {
+        padding: 0.5rem;
+        font-size: 0.7rem;
+    }
+    
+    .terminal-header {
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .terminal-buttons span {
+        width: 10px;
+        height: 10px;
     }
 }
 
