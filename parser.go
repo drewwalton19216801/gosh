@@ -246,13 +246,15 @@ func splitByPipes(line string) ([]string, error) {
 	return segments, nil
 }
 
-// tokenize splits a command line into tokens, handling quotes
+// tokenize splits a command line into tokens, handling quotes and command substitution
 func tokenize(line string) ([]string, error) {
 	var tokens []string
 	var current strings.Builder
 	inQuotes := false
 	quoteChar := byte(0)
 	escaped := false
+	inCommandSubst := false
+	parenDepth := 0
 
 	for i := 0; i < len(line); i++ {
 		c := line[i]
@@ -265,6 +267,7 @@ func tokenize(line string) ([]string, error) {
 
 		if c == '\\' {
 			escaped = true
+			current.WriteByte(c)
 			continue
 		}
 
@@ -275,10 +278,29 @@ func tokenize(line string) ([]string, error) {
 			} else {
 				current.WriteByte(c)
 			}
+		} else if inCommandSubst {
+			current.WriteByte(c)
+			if c == '(' {
+				parenDepth++
+			} else if c == ')' {
+				parenDepth--
+				if parenDepth == 0 {
+					inCommandSubst = false
+				}
+			}
 		} else {
 			if c == '"' || c == '\'' {
 				inQuotes = true
 				quoteChar = c
+				current.WriteByte(c)
+			} else if c == '$' && i+1 < len(line) && line[i+1] == '(' {
+				// Start of command substitution
+				inCommandSubst = true
+				parenDepth = 1
+				current.WriteByte(c)
+				// Also add the opening parenthesis
+				i++
+				current.WriteByte('(')
 			} else if unicode.IsSpace(rune(c)) {
 				if current.Len() > 0 {
 					tokens = append(tokens, current.String())
@@ -292,6 +314,10 @@ func tokenize(line string) ([]string, error) {
 
 	if inQuotes {
 		return nil, errors.New("unclosed quote")
+	}
+
+	if inCommandSubst {
+		return nil, errors.New("unclosed command substitution")
 	}
 
 	if current.Len() > 0 {
