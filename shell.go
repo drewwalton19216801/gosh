@@ -620,8 +620,14 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 		if strings.HasPrefix(name, filePrefix) {
 			var completion string
 			if strings.Contains(prefix, "/") {
-				// Reconstruct the full path
-				completion = filepath.Join(filepath.Dir(prefix), name)
+				// Reconstruct the full path, preserving the original prefix format
+				prefixDir := filepath.Dir(prefix)
+				if prefixDir == "." && strings.HasPrefix(prefix, "./") {
+					// Preserve './' prefix format
+					completion = "./" + name
+				} else {
+					completion = filepath.Join(prefixDir, name)
+				}
 			} else {
 				completion = name
 			}
