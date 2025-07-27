@@ -364,6 +364,11 @@ func (s *Shell) getPathCompletions(prefix string) []string {
 func (s *Shell) getFileCompletions(prefix string) []string {
 	var completions []string
 	
+	// Check if the prefix contains glob patterns
+	if strings.ContainsAny(prefix, "*?[]") {
+		return s.getGlobCompletions(prefix)
+	}
+	
 	// Handle different path types
 	var searchDir, filePrefix string
 	
@@ -420,6 +425,87 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 			
 			completions = append(completions, completion)
 		}
+	}
+	
+	return completions
+}
+
+// getGlobCompletions handles glob pattern completions
+func (s *Shell) getGlobCompletions(pattern string) []string {
+	var completions []string
+	
+	// Determine the directory to search in
+	var searchDir string
+	if strings.Contains(pattern, "/") {
+		searchDir = filepath.Dir(pattern)
+		if !filepath.IsAbs(searchDir) {
+			cwd, err := os.Getwd()
+			if err != nil {
+				return completions
+			}
+			searchDir = filepath.Join(cwd, searchDir)
+		}
+	} else {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return completions
+		}
+		searchDir = cwd
+	}
+	
+	// Use filepath.Glob to expand the pattern
+	var globPattern string
+	if filepath.IsAbs(pattern) {
+		globPattern = pattern
+	} else if strings.Contains(pattern, "/") {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return completions
+		}
+		globPattern = filepath.Join(cwd, pattern)
+	} else {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return completions
+		}
+		globPattern = filepath.Join(cwd, pattern)
+	}
+	
+	matches, err := filepath.Glob(globPattern)
+	if err != nil {
+		return completions
+	}
+	
+	// Convert absolute paths back to relative if needed
+	for _, match := range matches {
+		var completion string
+		if strings.Contains(pattern, "/") {
+			// Keep the path structure from the original pattern
+			if filepath.IsAbs(pattern) {
+				completion = match
+			} else {
+				cwd, err := os.Getwd()
+				if err != nil {
+					continue
+				}
+				relPath, err := filepath.Rel(cwd, match)
+				if err != nil {
+					completion = match
+				} else {
+					completion = relPath
+				}
+			}
+		} else {
+			// Just the filename
+			completion = filepath.Base(match)
+		}
+		
+		// Add trailing slash for directories
+		if info, err := os.Stat(match); err == nil && info.IsDir() {
+			completion += "/"
+		}
+		
+		completions = append(completions, completion)
 	}
 	
 	return completions

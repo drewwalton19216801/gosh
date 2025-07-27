@@ -12,14 +12,32 @@ This guide demonstrates the tab completion functionality in gosh.
 
 ## Bug Fixes
 
-- ✅ Fixed duplicate prefix bug where "qu" + TAB resulted in "ququota"
-- ✅ Tab completion now correctly returns only the suffix needed to complete words
+### Fixed: Duplicate Prefix Issue
+- **Problem**: Typing "qu" and pressing TAB resulted in "ququota"
+- **Root Cause**: The `TabCompleter.Do()` method was returning full completion strings instead of just the suffix
+- **Fix**: Modified the method to return only the suffix that extends beyond the current word
+- **Test**: Type "qu" and press TAB - should complete to "quota" (not "ququota")
+
+### Fixed: Glob Pattern Completion
+- **Problem**: Typing "ls *." and pressing TAB showed no completions
+- **Root Cause**: The file completion logic didn't handle glob patterns like `*`, `?`, `[]`
+- **Fix**: Added `getGlobCompletions()` function that uses `filepath.Glob()` to expand patterns
+- **Test**: Create files ending with dots (e.g., `touch file1. file2.`) then type "ls *." and press TAB
 
 ## Testing File/Directory Completion
 
 1. Type `cd ` (with space) and press TAB - should show directories in current folder
 2. Type `ls *.` and press TAB - should show files starting with dot
 3. Type `cat README` and press TAB - should complete to `README.md`
+
+## Testing Glob Pattern Completion
+
+1. Create test files: `touch file1. file2. test.`
+2. Type `ls *.` and press TAB - should show files ending with dots
+3. Create test files: `touch test.txt example.txt sample.go`
+4. Type `ls *.txt` and press TAB - should show .txt files
+5. Type `ls test.*` and press TAB - should show files starting with "test"
+6. Test with directories: `mkdir dir1 dir2` then `ls dir*` + TAB
 
 ## Testing PATH Command Completion
 
