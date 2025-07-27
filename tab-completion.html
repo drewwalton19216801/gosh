@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tab Completion - gosh</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><a href="index.html" style="color: inherit; text-decoration: none;">gosh</a></h1>
+                <span class="tagline">A Simple Shell</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="command-reference.html">Commands</a></li>
+                <li><a href="scripting-guide.html">Scripting</a></li>
+                <li><a href="https://github.com/drewwalton/gosh" target="_blank">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="page-header">
+        <div class="container">
+            <h1>Tab Completion</h1>
+            <p>Test and verify tab completion features in gosh</p>
+        </div>
+    </header>
+
+    <main class="page-content">
+        <a href="index.html" class="back-link">← Back to Home</a>
+        
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#command-completion">Testing Command Completion</a></li>
+                <li><a href="#file-completion">Testing File/Directory Completion</a></li>
+                <li><a href="#tilde-expansion">Testing Tilde Expansion Completion</a></li>
+                <li><a href="#glob-patterns">Testing Glob Pattern Completion</a></li>
+                <li><a href="#path-completion">Testing PATH Command Completion</a></li>
+                <li><a href="#features">Features Implemented</a></li>
+            </ul>
+        </div>
+
+        <p>This guide demonstrates the tab completion functionality in gosh. Tab completion helps you work more efficiently by automatically completing commands, file names, and paths.</p>
+
+        <section id="command-completion">
+            <h2>Testing Command Completion</h2>
+            <p>Test built-in command completion by following these steps:</p>
+            
+            <ol>
+                <li>Start the shell: <code>./gosh</code></li>
+                <li>Type <code>ec</code> and press <kbd>TAB</kbd> - should complete to <code>echo</code></li>
+                <li>Type <code>ex</code> and press <kbd>TAB</kbd> - should complete to <code>exit</code> and <code>export</code></li>
+                <li>Type <code>h</code> and press <kbd>TAB</kbd> - should show <code>help</code> and <code>history</code></li>
+                <li>Type <code>qu</code> and press <kbd>TAB</kbd> - should complete to <code>quota</code> (not <code>ququota</code>)</li>
+            </ol>
+
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-buttons">
+                        <span class="btn-close"></span>
+                        <span class="btn-minimize"></span>
+                        <span class="btn-maximize"></span>
+                    </div>
+                    <div class="terminal-title">gosh - Command Completion</div>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">ec[TAB]</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">echo</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">ex[TAB]</span>
+                    </div>
+                    <div class="terminal-line output">exit    export</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="file-completion">
+            <h2>Testing File/Directory Completion</h2>
+            <p>Test file and directory completion:</p>
+            
+            <ol>
+                <li>Type <code>cd </code> (with space) and press <kbd>TAB</kbd> - should show directories in current folder</li>
+                <li>Type <code>ls *.</code> and press <kbd>TAB</kbd> - should show files starting with dot</li>
+                <li>Type <code>cat README</code> and press <kbd>TAB</kbd> - should complete to <code>README.md</code></li>
+                <li>Navigate to <code>examples/</code> directory and type <code>./case</code> then press <kbd>TAB</kbd> - should complete to <code>./case_statement_demo.sh</code></li>
+            </ol>
+
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-buttons">
+                        <span class="btn-close"></span>
+                        <span class="btn-minimize"></span>
+                        <span class="btn-maximize"></span>
+                    </div>
+                    <div class="terminal-title">gosh - File Completion</div>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">cd [TAB]</span>
+                    </div>
+                    <div class="terminal-line output">doc/    examples/</div>
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">cat README[TAB]</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">cat README.md</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tilde-expansion">
+            <h2>Testing Tilde Expansion Completion</h2>
+            <p>Test tilde expansion and home directory completion:</p>
+            
+            <ol>
+                <li>Type <code>ls ~/</code> and press <kbd>TAB</kbd> - should show files and directories in your home directory</li>
+                <li>Type <code>cd ~/D</code> and press <kbd>TAB</kbd> - should complete to directories starting with 'D' in your home</li>
+                <li>Type <code>ls ~/Documents/</code> and press <kbd>TAB</kbd> - should show contents of ~/Documents/ directory</li>
+                <li>Type <code>echo ~</code> and press <kbd>TAB</kbd> - should complete to <code>echo ~/</code></li>
+                <li>Type <code>cd ~/</code> and press <kbd>TAB</kbd> - should not expand further (no completions shown)</li>
+                <li>Type <code>cat ~/.*</code> and press <kbd>TAB</kbd> - should show hidden files in home directory</li>
+            </ol>
+
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-buttons">
+                        <span class="btn-close"></span>
+                        <span class="btn-minimize"></span>
+                        <span class="btn-maximize"></span>
+                    </div>
+                    <div class="terminal-title">gosh - Tilde Expansion</div>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">ls ~/[TAB]</span>
+                    </div>
+                    <div class="terminal-line output">Desktop/    Documents/    Downloads/    Pictures/</div>
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">cd ~/D[TAB]</span>
+                    </div>
+                    <div class="terminal-line output">Desktop/    Documents/    Downloads/</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="glob-patterns">
+            <h2>Testing Glob Pattern Completion</h2>
+            <p>Test glob pattern matching and completion:</p>
+            
+            <ol>
+                <li>Create test files: <code>touch file1. file2. test.</code></li>
+                <li>Type <code>ls .</code> and press <kbd>TAB</kbd> - should show files ending with dots</li>
+                <li>Create test files: <code>touch test.txt example.txt sample.go</code></li>
+                <li>Type <code>ls *.txt</code> and press <kbd>TAB</kbd> - should show .txt files</li>
+                <li>Type <code>ls test.*</code> and press <kbd>TAB</kbd> - should show files starting with "test"</li>
+                <li>Test with directories: <code>mkdir dir1 dir2</code> then <code>ls dir*</code> + <kbd>TAB</kbd></li>
+            </ol>
+
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-buttons">
+                        <span class="btn-close"></span>
+                        <span class="btn-minimize"></span>
+                        <span class="btn-maximize"></span>
+                    </div>
+                    <div class="terminal-title">gosh - Glob Patterns</div>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">touch test.txt example.txt sample.go</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">ls *.txt[TAB]</span>
+                    </div>
+                    <div class="terminal-line output">example.txt    test.txt</div>
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">ls test.*[TAB]</span>
+                    </div>
+                    <div class="terminal-line output">test.txt</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="path-completion">
+            <h2>Testing PATH Command Completion</h2>
+            <p>Test completion of external commands from your PATH:</p>
+            
+            <ol>
+                <li>Type <code>l</code> and press <kbd>TAB</kbd> - should show commands like <code>ls</code>, <code>ln</code>, etc.</li>
+                <li>Type <code>g</code> and press <kbd>TAB</kbd> - should show commands like <code>git</code>, <code>grep</code>, etc.</li>
+            </ol>
+
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-buttons">
+                        <span class="btn-close"></span>
+                        <span class="btn-minimize"></span>
+                        <span class="btn-maximize"></span>
+                    </div>
+                    <div class="terminal-title">gosh - PATH Completion</div>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">l[TAB]</span>
+                    </div>
+                    <div class="terminal-line output">ls    ln    less    locate</div>
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">g[TAB]</span>
+                    </div>
+                    <div class="terminal-line output">git    grep    gunzip    gzip</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features">
+            <h2>Features Implemented</h2>
+            <p>Gosh includes comprehensive tab completion support:</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3>Built-in Commands</h3>
+                    <p>Complete built-in commands like exit, cd, pwd, echo, etc.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3>External Commands</h3>
+                    <p>Complete external commands from your PATH environment</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3>File & Directory</h3>
+                    <p>Complete file and directory names with proper context awareness</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3>Path Completion</h3>
+                    <p>Complete file paths including ./ and ../ prefixes</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3>Tilde Expansion</h3>
+                    <p>Complete ~ and ~/path with home directory expansion</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3>Alias Completion</h3>
+                    <p>Complete user-defined aliases and their expansions</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3>Context Awareness</h3>
+                    <p>Smart completion based on command context (commands vs arguments)</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3>Hidden Files</h3>
+                    <p>Complete hidden files when prefix starts with dot</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3>Directory Indicators</h3>
+                    <p>Automatically add trailing slash for directories</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3>Smart Sorting</h3>
+                    <p>Remove duplicates and sort completions alphabetically</p>
+                </div>
+            </div>
+
+            <h3>Tips for Effective Tab Completion</h3>
+            <ul>
+                <li><strong>Double TAB</strong>: Press TAB twice to see all available completions when there are multiple matches</li>
+                <li><strong>Partial Typing</strong>: Type a few characters before pressing TAB to narrow down completions</li>
+                <li><strong>Context Matters</strong>: The shell understands whether you're typing a command or an argument</li>
+                <li><strong>Case Sensitivity</strong>: Tab completion respects case sensitivity on file systems that support it</li>
+                <li><strong>Hidden Files</strong>: Start with a dot (.) to complete hidden files and directories</li>
+            </ul>
+
+            <h3>Keyboard Shortcuts</h3>
+            <div class="code-block">
+                <code>TAB        - Complete current word
+TAB TAB    - Show all possible completions
+Ctrl+C     - Cancel current completion
+Ctrl+L     - Clear screen (preserves current line)</code>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 gosh. Open source and available under the MIT License.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

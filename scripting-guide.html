@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scripting Guide - gosh</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><a href="index.html" style="color: inherit; text-decoration: none;">gosh</a></h1>
+                <span class="tagline">A Simple Shell</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="command-reference.html">Commands</a></li>
+                <li><a href="scripting-guide.html">Scripting</a></li>
+                <li><a href="https://github.com/drewwalton/gosh" target="_blank">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="page-header">
+        <div class="container">
+            <h1>Scripting Guide</h1>
+            <p>Learn how to write powerful shell scripts using gosh</p>
+        </div>
+    </header>
+
+    <main class="page-content">
+        <a href="index.html" class="back-link">← Back to Home</a>
+        
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#getting-started">Getting Started</a></li>
+                <li><a href="#basic-structure">Basic Script Structure</a></li>
+                <li><a href="#variable-expansion">Variable Expansion</a></li>
+                <li><a href="#command-substitution">Command Substitution</a></li>
+                <li><a href="#tilde-expansion">Tilde Expansion</a></li>
+                <li><a href="#glob-patterns">Glob Patterns</a></li>
+                <li><a href="#redirection">Input/Output Redirection</a></li>
+                <li><a href="#pipes-chaining">Pipes and Command Chaining</a></li>
+                <li><a href="#background-execution">Background Execution</a></li>
+                <li><a href="#comments">Comments</a></li>
+                <li><a href="#aliases">Aliases in Scripts</a></li>
+                <li><a href="#best-practices">Best Practices</a></li>
+            </ul>
+        </div>
+
+        <section id="getting-started">
+            <h2>Getting Started</h2>
+
+            <h3>Script Mode</h3>
+            <p>Run gosh scripts by passing the script file as an argument:</p>
+            <pre><code>./gosh script.sh</code></pre>
+
+            <h3>Shebang Line</h3>
+            <p>Start your scripts with a shebang line to make them executable:</p>
+            <pre><code>#!/usr/bin/env gosh</code></pre>
+
+            <p>Then make the script executable:</p>
+            <pre><code>chmod +x script.sh
+./script.sh</code></pre>
+        </section>
+
+        <section id="basic-structure">
+            <h2>Basic Script Structure</h2>
+
+            <h3>Example Script</h3>
+            <pre><code>#!/usr/bin/env gosh
+# Example gosh script - gosh, this is neat!
+
+echo "Hello from gosh!"
+pwd
+export MY_VAR=test
+echo "MY_VAR is: $MY_VAR"
+
+# Pipe examples - gosh, pipes are powerful!
+echo "testing pipe functionality" | wc -w
+ls -la | head -5
+cat /etc/passwd | grep root | wc -l
+
+# Gosh darn it, that's some fine scripting!</code></pre>
+        </section>
+
+        <section id="variable-expansion">
+            <h2>Variable Expansion</h2>
+
+            <p>Gosh supports several forms of variable expansion:</p>
+
+            <h3>Basic Variable Expansion</h3>
+            <pre><code>export NAME="World"
+echo "Hello, $NAME!"
+echo "Path: ${HOME}/Documents"</code></pre>
+
+            <h3>Environment Variables</h3>
+            <pre><code># Set environment variables
+export MY_VAR="Hello"
+export PATH="$PATH:/new/path"
+
+# Use environment variables
+echo $MY_VAR
+echo "Current PATH: $PATH"</code></pre>
+
+            <h3>Variable Usage Examples</h3>
+            <pre><code># Project configuration
+export PROJECT_NAME="my-app"
+export PROJECT_DIR="$HOME/projects/$PROJECT_NAME"
+export BUILD_DIR="$PROJECT_DIR/build"
+
+# Create directory structure
+mkdir -p $BUILD_DIR
+cd $PROJECT_DIR
+echo "Working on $PROJECT_NAME in $PROJECT_DIR"</code></pre>
+        </section>
+
+        <section id="command-substitution">
+            <h2>Command Substitution</h2>
+
+            <p>Execute commands and use their output in your scripts:</p>
+
+            <h3>Using <code>$(command)</code> Syntax</h3>
+            <pre><code>echo "Current directory: $(pwd)"
+echo "Today is $(date +%Y-%m-%d)"
+echo "Found $(ls *.txt | wc -l) text files in $(pwd)"</code></pre>
+
+            <h3>Using Backticks</h3>
+            <pre><code>echo "Files: `ls | wc -l`"
+echo "Current user: `whoami`"</code></pre>
+
+            <h3>Practical Examples</h3>
+            <pre><code># Backup with timestamp
+cp important.txt "backup_$(date +%Y%m%d_%H%M%S).txt"
+
+# Dynamic file processing
+for file in $(ls *.log); do
+    echo "Processing $file..."
+    grep "ERROR" $file > "errors_$(basename $file .log).txt"
+done
+
+# System information
+echo "System: $(uname -s)"
+echo "User: $(whoami)"
+echo "Home: $(echo $HOME)"</code></pre>
+        </section>
+
+        <section id="tilde-expansion">
+            <h2>Tilde Expansion</h2>
+
+            <p>Gosh expands tilde (<code>~</code>) to represent home directories:</p>
+
+            <pre><code># Expand to current user's home
+ls ~/Documents
+cp file.txt ~/backup/
+cd ~
+
+# Expand to specific user's home
+cd ~user/projects
+ls ~admin/logs</code></pre>
+
+            <h3>Practical Examples</h3>
+            <pre><code># Backup to home directory
+tar -czf ~/backups/project_$(date +%Y%m%d).tar.gz .
+
+# Configuration files
+cp config.ini ~/.config/myapp/
+echo "export PATH=\$PATH:~/bin" >> ~/.bashrc</code></pre>
+        </section>
+
+        <section id="glob-patterns">
+            <h2>Glob Patterns</h2>
+
+            <p>Use wildcards for filename matching:</p>
+
+            <pre><code># Match all .go files
+ls *.go
+
+# Match single character
+rm temp_file_?.txt
+
+# Character classes
+echo [Hh]ello*
+ls [abc]*
+
+# More complex patterns
+find . -name "*.{js,ts,jsx,tsx}"
+ls test_[0-9][0-9].log</code></pre>
+
+            <h3>Practical Examples</h3>
+            <pre><code># Process all source files
+for file in *.{c,cpp,h}; do
+    echo "Compiling $file..."
+    gcc -c $file
+done
+
+# Clean temporary files
+rm -f *.tmp *.bak *~
+rm -f test_*.log debug_[0-9]*.txt</code></pre>
+        </section>
+
+        <section id="redirection">
+            <h2>Input/Output Redirection</h2>
+
+            <h3>Input Redirection</h3>
+            <pre><code># Read from file
+cat < input.txt
+sort < unsorted.txt
+wc -l < data.csv</code></pre>
+
+            <h3>Output Redirection</h3>
+            <pre><code># Overwrite file
+echo "Hello" > output.txt
+ls -la > file_list.txt
+date > timestamp.txt
+
+# Append to file
+echo "World" >> output.txt
+date >> log.txt
+echo "Process completed" >> status.log</code></pre>
+
+            <h3>Combining Redirection</h3>
+            <pre><code># Sort a file and save result
+sort < input.txt > sorted.txt
+
+# Process and save
+grep "ERROR" < application.log > errors.txt
+cut -d',' -f1,3 < data.csv > names_scores.csv</code></pre>
+
+            <h3>Practical Examples</h3>
+            <pre><code># Log script execution
+echo "Script started at $(date)" > script.log
+echo "Processing files..." >> script.log
+
+# Generate reports
+echo "Daily Report - $(date)" > daily_report.txt
+echo "===================" >> daily_report.txt
+ps aux | grep myapp >> daily_report.txt
+df -h >> daily_report.txt</code></pre>
+        </section>
+
+        <section id="pipes-chaining">
+            <h2>Pipes and Command Chaining</h2>
+
+            <h3>Using Pipes</h3>
+            <pre><code># Chain commands with pipes
+ls | grep ".go" | wc -l
+cat file.txt | sort | uniq
+ps aux | grep gosh | head -5</code></pre>
+
+            <h3>Command Chaining with Semicolons</h3>
+            <pre><code># Execute commands sequentially
+echo "First command"; echo "Second command"; pwd
+ls; echo "Files listed"; pwd
+
+# Combine with pipes and redirection
+ls *.go > go_files.txt; cat go_files.txt | wc -l</code></pre>
+
+            <h3>Complex Pipeline Examples</h3>
+            <pre><code># Log analysis
+cat access.log | grep "$(date +%Y-%m-%d)" | cut -d' ' -f1 | sort | uniq -c | sort -nr
+
+# File processing
+find . -name "*.txt" | xargs grep "TODO" | cut -d: -f1 | sort | uniq
+
+# System monitoring
+ps aux | awk '{print $3, $11}' | sort -nr | head -10</code></pre>
+        </section>
+
+        <section id="background-execution">
+            <h2>Background Execution</h2>
+
+            <p>Run commands in the background:</p>
+
+            <pre><code># Run command in background
+sleep 10 &
+long_running_process &
+
+# Continue with other commands
+echo "Background job started"
+ps aux | grep sleep</code></pre>
+
+            <h3>Practical Examples</h3>
+            <pre><code># Start multiple background tasks
+echo "Starting background tasks..."
+./data_processor input1.csv &
+./data_processor input2.csv &
+./data_processor input3.csv &
+
+# Wait for completion
+echo "Waiting for tasks to complete..."
+wait
+echo "All tasks completed"</code></pre>
+        </section>
+
+        <section id="comments">
+            <h2>Comments</h2>
+
+            <p>Use comments to document your scripts:</p>
+
+            <pre><code>#!/usr/bin/env gosh
+
+# This is a comment
+echo "This is not a comment"  # Inline comment
+
+# Multi-line comments
+# can span multiple lines
+# like this
+
+# Script configuration
+export DEBUG=true
+export LOG_LEVEL=info
+
+# Main processing logic
+if [ "$DEBUG" = "true" ]; then
+    echo "Debug mode enabled"
+fi</code></pre>
+        </section>
+
+        <section id="aliases">
+            <h2>Aliases in Scripts</h2>
+
+            <p>Create and use aliases within scripts:</p>
+
+            <pre><code># Create aliases
+alias ll="ls -la"
+alias grep="grep --color=auto"
+alias ..="cd .."
+
+# Use aliases
+ll
+grep "pattern" file.txt
+..</code></pre>
+        </section>
+
+        <section id="best-practices">
+            <h2>Best Practices</h2>
+
+            <h3>Script Structure</h3>
+            <ul>
+                <li>Always start with a shebang line</li>
+                <li>Add comments to explain complex logic</li>
+                <li>Use meaningful variable names</li>
+                <li>Group related commands together</li>
+            </ul>
+
+            <h3>Error Handling</h3>
+            <pre><code># Check if file exists before processing
+if [ -f "input.txt" ]; then
+    cat input.txt | process_data
+else
+    echo "Error: input.txt not found"
+    exit 1
+fi</code></pre>
+
+            <h3>Variable Usage</h3>
+            <pre><code># Use quotes to handle spaces in filenames
+FILE_NAME="my document.txt"
+cp "$FILE_NAME" "backup_$FILE_NAME"
+
+# Use braces for clarity
+echo "Processing ${FILE_NAME} at $(date)"</code></pre>
+
+            <h3>Complete Example Script</h3>
+            <pre><code>#!/usr/bin/env gosh
+# Project build script
+# Usage: ./build.sh [clean|build|test]
+
+# Configuration
+export PROJECT_NAME="my-project"
+export BUILD_DIR="./build"
+export SRC_DIR="./src"
+
+# Functions
+clean_build() {
+    echo "Cleaning build directory..."
+    rm -rf "$BUILD_DIR"
+    mkdir -p "$BUILD_DIR"
+}
+
+build_project() {
+    echo "Building $PROJECT_NAME..."
+    # Copy source files
+    cp -r "$SRC_DIR"/* "$BUILD_DIR"/
+    
+    # Process files
+    find "$BUILD_DIR" -name "*.template" | while read file; do
+        echo "Processing template: $file"
+        sed "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" "$file" > "${file%.template}"
+        rm "$file"
+    done
+    
+    echo "Build completed at $(date)"
+}
+
+run_tests() {
+    echo "Running tests..."
+    find "$BUILD_DIR" -name "*_test.sh" -exec {} \;
+}
+
+# Main script logic
+case "$1" in
+    clean)
+        clean_build
+        ;;
+    build)
+        clean_build
+        build_project
+        ;;
+    test)
+        run_tests
+        ;;
+    *)
+        echo "Usage: $0 {clean|build|test}"
+        exit 1
+        ;;
+esac
+
+echo "Script completed successfully!"</code></pre>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 gosh. Open source and available under the MIT License.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

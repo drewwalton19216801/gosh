@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Reference - gosh</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><a href="index.html" style="color: inherit; text-decoration: none;">gosh</a></h1>
+                <span class="tagline">A Simple Shell</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="command-reference.html">Commands</a></li>
+                <li><a href="scripting-guide.html">Scripting</a></li>
+                <li><a href="https://github.com/drewwalton/gosh" target="_blank">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="page-header">
+        <div class="container">
+            <h1>Command Reference</h1>
+            <p>Complete reference for all built-in commands available in gosh</p>
+        </div>
+    </header>
+
+    <main class="page-content">
+        <a href="index.html" class="back-link">← Back to Home</a>
+        
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#built-in-commands">Built-in Commands</a></li>
+                <li><a href="#command-features">Command Features</a></li>
+                <li><a href="#examples">Examples</a></li>
+            </ul>
+        </div>
+
+        <section id="built-in-commands">
+            <h2>Built-in Commands</h2>
+
+            <h3><code>exit [code]</code></h3>
+            <p>Exit the shell with optional exit code.</p>
+            <pre><code>exit          # Exit with code 0
+exit 1        # Exit with code 1</code></pre>
+
+            <h3><code>cd [dir]</code></h3>
+            <p>Change directory. Defaults to home directory if no argument provided.</p>
+            <pre><code>cd            # Change to home directory
+cd /path/to/dir  # Change to specific directory
+cd ..         # Change to parent directory</code></pre>
+
+            <h3><code>pwd</code></h3>
+            <p>Print the current working directory.</p>
+            <pre><code>pwd</code></pre>
+
+            <h3><code>echo [args...]</code></h3>
+            <p>Print arguments to standard output.</p>
+            <pre><code>echo "Hello World"
+echo $MY_VAR
+echo "Multiple" "arguments"</code></pre>
+
+            <h3><code>env</code></h3>
+            <p>Show all environment variables.</p>
+            <pre><code>env</code></pre>
+
+            <h3><code>export VAR=value</code></h3>
+            <p>Set an environment variable.</p>
+            <pre><code>export MY_VAR="Hello"
+export PATH="$PATH:/new/path"</code></pre>
+
+            <h3><code>unset VAR</code></h3>
+            <p>Unset (remove) an environment variable.</p>
+            <pre><code>unset MY_VAR</code></pre>
+
+            <h3><code>alias name=command</code></h3>
+            <p>Create a command alias.</p>
+            <pre><code>alias ll="ls -la"
+alias grep="grep --color=auto"</code></pre>
+
+            <h3><code>unalias name</code></h3>
+            <p>Remove an alias.</p>
+            <pre><code>unalias ll</code></pre>
+
+            <h3><code>history</code></h3>
+            <p>Show command history.</p>
+            <pre><code>history</code></pre>
+
+            <h3><code>which cmd</code></h3>
+            <p>Show the path to a command.</p>
+            <pre><code>which ls
+which python</code></pre>
+
+            <h3><code>help</code></h3>
+            <p>Show help information.</p>
+            <pre><code>help</code></pre>
+        </section>
+
+        <section id="command-features">
+            <h2>Command Features</h2>
+
+            <h3>Command Chaining</h3>
+            <p>Execute multiple commands sequentially with <code>;</code>:</p>
+            <pre><code>cmd1; cmd2; cmd3
+ls; pwd; echo "Done"</code></pre>
+
+            <h3>Unix Pipes</h3>
+            <p>Connect commands with <code>|</code> to chain operations:</p>
+            <pre><code>cmd1 | cmd2
+ls | grep ".go" | wc -l</code></pre>
+
+            <h3>Input/Output Redirection</h3>
+            <ul>
+                <li><code>cmd &lt; input.txt</code> - Redirect input from file</li>
+                <li><code>cmd &gt; output.txt</code> - Redirect output to file (overwrite)</li>
+                <li><code>cmd &gt;&gt; output.txt</code> - Redirect output to file (append)</li>
+            </ul>
+            <pre><code># Input redirection
+cat < input.txt
+sort < unsorted.txt
+
+# Output redirection
+echo "Hello" > output.txt
+ls -la > file_list.txt
+
+# Append to file
+echo "World" >> output.txt
+date >> log.txt</code></pre>
+
+            <h3>Background Execution</h3>
+            <p>Run commands in background with <code>&</code>:</p>
+            <pre><code>sleep 10 &
+long_running_process &</code></pre>
+
+            <h3>Quote Handling</h3>
+            <p>Support for single and double quotes:</p>
+            <pre><code>echo "Hello World"
+echo 'Single quotes'
+echo "Variable: $HOME"</code></pre>
+
+            <h3>Comment Support</h3>
+            <p>Lines starting with <code>#</code> are treated as comments in scripts:</p>
+            <pre><code># This is a comment
+echo "This is not a comment"</code></pre>
+
+            <h3>Variable Expansion</h3>
+            <p>Expand environment variables with <code>$VAR</code> and <code>${VAR}</code> syntax:</p>
+            <pre><code>echo $HOME
+echo ${HOME}/Documents
+echo "Path: $PATH"</code></pre>
+
+            <h3>Command Substitution</h3>
+            <p>Execute commands and use their output with <code>$(command)</code> and <code>`command`</code>:</p>
+            <pre><code>echo "Current directory: $(pwd)"
+echo "Today is $(date +%Y-%m-%d)"
+echo "Files: `ls | wc -l`"</code></pre>
+
+            <h3>Tilde Expansion</h3>
+            <p>Expand <code>~</code> to home directory and user paths:</p>
+            <pre><code>ls ~/Documents
+cp file.txt ~/backup/
+cd ~user/projects</code></pre>
+
+            <h3>Glob Patterns</h3>
+            <p>Use wildcards for filename matching:</p>
+            <pre><code># Match all .go files
+ls *.go
+
+# Match single character
+rm temp_file_?.txt
+
+# Character classes
+echo [Hh]ello*
+ls [abc]*</code></pre>
+        </section>
+
+        <section id="examples">
+            <h2>Examples</h2>
+
+            <h3>Basic Operations</h3>
+            <pre><code># Navigate and list files
+cd /usr/local
+ls -la
+pwd
+
+# Work with files
+echo "Hello" > greeting.txt
+cat greeting.txt
+cp greeting.txt backup.txt</code></pre>
+
+            <h3>Pipes and Redirection</h3>
+            <pre><code># Count Go files
+ls | grep ".go" | wc -l
+
+# Find and sort
+find . -name "*.txt" | sort > text_files.txt
+
+# Process logs
+cat access.log | grep "ERROR" | tail -10</code></pre>
+
+            <h3>Environment Variables</h3>
+            <pre><code># Set and use variables
+export PROJECT_DIR="/Users/dev/projects"
+cd $PROJECT_DIR
+echo "Working in: $PROJECT_DIR"
+
+# Modify PATH
+export PATH="$PATH:$HOME/bin"
+which my_script</code></pre>
+
+            <h3>Command Substitution</h3>
+            <pre><code># Use command output
+echo "Backup created: backup_$(date +%Y%m%d).tar"
+mkdir "project_$(whoami)"
+echo "Found $(ls *.go | wc -l) Go files"</code></pre>
+
+            <h3>Complex Workflows</h3>
+            <pre><code># Backup and compress
+tar -czf "backup_$(date +%Y%m%d).tar.gz" ~/Documents
+
+# Search and replace
+grep -r "old_function" . | cut -d: -f1 | sort | uniq
+
+# System monitoring
+ps aux | grep gosh | awk '{print $2, $11}' | head -5</code></pre>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 gosh. Open source and available under the MIT License.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

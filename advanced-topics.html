@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Topics - gosh</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><a href="index.html" style="color: inherit; text-decoration: none;">gosh</a></h1>
+                <span class="tagline">A Simple Shell</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="command-reference.html">Commands</a></li>
+                <li><a href="scripting-guide.html">Scripting</a></li>
+                <li><a href="https://github.com/drewwalton/gosh" target="_blank">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="page-header">
+        <div class="container">
+            <h1>Advanced Topics</h1>
+            <p>Explore advanced features and techniques for power users of gosh</p>
+        </div>
+    </header>
+
+    <main class="page-content">
+        <a href="index.html" class="back-link">← Back to Home</a>
+        
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#architecture">Architecture Overview</a></li>
+                <li><a href="#advanced-variables">Advanced Variable Expansion</a></li>
+                <li><a href="#line-continuation">Line Continuation</a></li>
+                <li><a href="#advanced-globbing">Advanced Glob Patterns</a></li>
+                <li><a href="#advanced-piping">Advanced Piping Techniques</a></li>
+                <li><a href="#environment-management">Environment Management</a></li>
+                <li><a href="#advanced-aliasing">Advanced Aliasing</a></li>
+                <li><a href="#scripting-patterns">Advanced Scripting Patterns</a></li>
+                <li><a href="#performance">Performance Optimization</a></li>
+                <li><a href="#debugging">Debugging and Troubleshooting</a></li>
+                <li><a href="#best-practices">Best Practices</a></li>
+            </ul>
+        </div>
+
+        <section id="architecture">
+            <h2>Architecture Overview</h2>
+            <p>Gosh is organized into multiple modules for maximum readability and maintainability:</p>
+            <ul>
+                <li><code>main.go</code> - Entry point and argument handling</li>
+                <li><code>shell.go</code> - Core shell structure and main loop</li>
+                <li><code>parser.go</code> - Command line parsing and tokenization</li>
+                <li><code>executor.go</code> - Command execution logic</li>
+                <li><code>expansion.go</code> - Variable and command expansion</li>
+                <li><code>builtins.go</code> - Built-in command implementations</li>
+                <li><code>utils.go</code> - Utility functions</li>
+            </ul>
+        </section>
+
+        <section id="advanced-variables">
+            <h2>Advanced Variable Expansion</h2>
+
+            <h3>Complex Variable Substitution</h3>
+            <pre><code># Nested variable expansion
+export BASE_DIR="/home/user"
+export PROJECT_DIR="${BASE_DIR}/projects"
+export CURRENT_PROJECT="${PROJECT_DIR}/gosh"
+
+echo "Working in: $CURRENT_PROJECT"</code></pre>
+
+            <h3>Variable Expansion in Command Substitution</h3>
+            <pre><code>export SEARCH_TERM="error"
+export LOG_FILE="/var/log/system.log"
+
+# Use variables within command substitution
+echo "Found $(grep "$SEARCH_TERM" "$LOG_FILE" | wc -l) occurrences"</code></pre>
+        </section>
+
+        <section id="line-continuation">
+            <h2>Line Continuation</h2>
+            <p>Gosh supports line continuation using backslashes (<code>\</code>) at the end of lines, allowing you to split long commands across multiple lines for better readability.</p>
+
+            <h3>Basic Line Continuation</h3>
+            <pre><code># Split a long echo command
+echo "This is a very long message" \
+  "that spans multiple lines" \
+  "for better readability"
+
+# Long command with many arguments
+ls -la \
+  *.go \
+  *.md \
+  *.txt</code></pre>
+
+            <h3>Line Continuation in Pipelines</h3>
+            <pre><code># Multi-stage pipeline
+cat large_file.txt | \
+  grep "pattern" | \
+  sort | \
+  uniq -c | \
+  head -20</code></pre>
+
+            <h3>Line Continuation in Command Chains</h3>
+            <pre><code># Sequential commands
+echo "Step 1: Preparing..."; \
+  mkdir -p output; \
+  echo "Step 2: Processing..."; \
+  touch output/result.txt; \
+  echo "Step 3: Complete!"</code></pre>
+
+            <h3>Interactive vs Script Usage</h3>
+            <p>Line continuation works in both interactive mode and script files:</p>
+            <ul>
+                <li><strong>Interactive</strong>: Use backslash at end of line, press Enter, and continue on the next line with a <code>&gt; </code> prompt</li>
+                <li><strong>Scripts</strong>: Use backslash at end of line and continue the command on subsequent lines</li>
+            </ul>
+
+            <h3>Best Practices</h3>
+            <ul>
+                <li>Use line continuation to improve readability of complex commands</li>
+                <li>Indent continued lines for visual clarity</li>
+                <li>Avoid unnecessary spaces after the backslash</li>
+                <li>Be consistent with your continuation style within scripts</li>
+            </ul>
+        </section>
+
+        <section id="advanced-globbing">
+            <h2>Advanced Glob Patterns</h2>
+
+            <h3>Character Classes</h3>
+            <pre><code># Match files starting with uppercase letters
+ls [A-Z]*
+
+# Match files with specific extensions
+ls *.[ch]  # .c or .h files
+
+# Exclude patterns (when supported by underlying system)
+ls !(*.tmp)  # All files except .tmp files</code></pre>
+
+            <h3>Complex Glob Combinations</h3>
+            <pre><code># Multiple patterns
+ls *.{go,md,txt}
+
+# Nested directory patterns
+find . -name "*.go" -type f</code></pre>
+        </section>
+
+        <section id="advanced-piping">
+            <h2>Advanced Piping Techniques</h2>
+
+            <h3>Multi-stage Data Processing</h3>
+            <pre><code># Complex data pipeline with line continuation
+cat data.csv | \
+  grep -v "^#" | \
+  cut -d',' -f2,3 | \
+  sort | \
+  uniq -c | \
+  sort -nr | \
+  head -10</code></pre>
+
+            <h3>Combining Pipes with Redirection</h3>
+            <pre><code># Process data and save both intermediate and final results
+cat input.txt | \
+  tee intermediate.txt | \
+  sort | \
+  tee sorted.txt | \
+  uniq > final.txt</code></pre>
+        </section>
+
+        <section id="environment-management">
+            <h2>Environment Management</h2>
+
+            <h3>Advanced Environment Variable Techniques</h3>
+            <pre><code># Save and restore environment
+export OLD_PATH="$PATH"
+export PATH="/custom/bin:$PATH"
+# ... do work with custom PATH ...
+export PATH="$OLD_PATH"
+unset OLD_PATH</code></pre>
+
+            <h3>Dynamic Environment Setup</h3>
+            <pre><code># Set environment based on conditions
+export ENVIRONMENT="development"
+export CONFIG_FILE="config_${ENVIRONMENT}.json"
+export LOG_LEVEL="debug"
+
+echo "Using config: $CONFIG_FILE"
+echo "Log level: $LOG_LEVEL"</code></pre>
+        </section>
+
+        <section id="advanced-aliasing">
+            <h2>Advanced Aliasing</h2>
+
+            <h3>Complex Aliases</h3>
+            <pre><code># Aliases with multiple commands
+alias backup="tar -czf backup_$(date +%Y%m%d).tar.gz"
+alias logcheck="tail -f /var/log/system.log | grep ERROR"
+
+# Aliases with pipes
+alias psgrep="ps aux | grep"
+alias netstat="netstat -tuln | grep LISTEN"</code></pre>
+
+            <h3>Temporary Aliases</h3>
+            <pre><code># Create temporary aliases for a session
+alias temp_alias="echo 'This is temporary'"
+temp_alias
+unalias temp_alias</code></pre>
+        </section>
+
+        <section id="scripting-patterns">
+            <h2>Advanced Scripting Patterns</h2>
+
+            <h3>Error Handling Patterns</h3>
+            <pre><code>#!/usr/bin/env gosh
+
+# Function-like command grouping
+echo "Starting backup process..."
+
+# Check if source directory exists
+if [ -d "$SOURCE_DIR" ]; then
+    echo "Source directory found: $SOURCE_DIR"
+else
+    echo "Error: Source directory not found: $SOURCE_DIR"
+    exit 1
+fi
+
+# Perform backup with status checking
+tar -czf "backup.tar.gz" "$SOURCE_DIR"
+echo "Backup completed with status: $?"</code></pre>
+
+            <h3>Configuration Management</h3>
+            <pre><code>#!/usr/bin/env gosh
+# Configuration-driven script
+
+# Load configuration
+export CONFIG_FILE="${HOME}/.gosh_config"
+if [ -f "$CONFIG_FILE" ]; then
+    echo "Loading configuration from $CONFIG_FILE"
+else
+    echo "Using default configuration"
+    export DEFAULT_EDITOR="nano"
+    export DEFAULT_PAGER="less"
+fi</code></pre>
+        </section>
+
+        <section id="performance">
+            <h2>Performance Optimization</h2>
+
+            <h3>Efficient Command Patterns</h3>
+            <pre><code># Avoid unnecessary command substitution
+# Instead of: echo "Files: $(ls | wc -l)"
+# Use when possible: ls | wc -l
+
+# Minimize pipe stages
+# Instead of: cat file | grep pattern | wc -l
+# Use: grep pattern file | wc -l</code></pre>
+
+            <h3>Memory-Efficient Processing</h3>
+            <pre><code># Process large files efficiently
+# Stream processing instead of loading entire files
+tail -f large_log.txt | grep "ERROR" | head -100
+
+# Use appropriate tools for the job
+grep "pattern" large_file.txt > matches.txt  # Better than cat | grep</code></pre>
+
+            <h3>System Integration</h3>
+            <pre><code># System monitoring scripts
+echo "System Status Report - $(date)"
+echo "=================================="
+echo "Disk Usage:"
+df -h | head -5
+echo ""
+echo "Memory Usage:"
+free -h 2>/dev/null || vm_stat
+echo ""
+echo "Load Average:"
+uptime</code></pre>
+        </section>
+
+        <section id="debugging">
+            <h2>Debugging and Troubleshooting</h2>
+
+            <h3>Debug Mode Techniques</h3>
+            <pre><code>#!/usr/bin/env gosh
+# Enable debug output
+export DEBUG=1
+
+if [ "$DEBUG" = "1" ]; then
+    echo "Debug: Starting script execution"
+fi
+
+# Trace command execution
+echo "Executing: ls -la"
+ls -la
+
+if [ "$DEBUG" = "1" ]; then
+    echo "Debug: Command completed"
+fi</code></pre>
+
+            <h3>Error Logging</h3>
+            <pre><code># Log errors to file
+export ERROR_LOG="/tmp/gosh_errors.log"
+
+# Redirect errors
+command_that_might_fail 2>> "$ERROR_LOG"
+
+# Check for errors
+if [ -s "$ERROR_LOG" ]; then
+    echo "Errors occurred, check $ERROR_LOG"
+fi</code></pre>
+        </section>
+
+        <section id="best-practices">
+            <h2>Best Practices for Advanced Usage</h2>
+            <ol>
+                <li><strong>Modular Scripts</strong>: Break complex scripts into smaller, reusable components</li>
+                <li><strong>Error Handling</strong>: Always consider what happens when commands fail</li>
+                <li><strong>Resource Management</strong>: Be mindful of memory and CPU usage in scripts</li>
+                <li><strong>Security</strong>: Never expose sensitive data in command lines or environment variables</li>
+                <li><strong>Portability</strong>: Write scripts that work across different systems when possible</li>
+                <li><strong>Documentation</strong>: Comment complex logic and provide usage examples</li>
+                <li><strong>Testing</strong>: Test scripts with various inputs and edge cases</li>
+            </ol>
+
+            <h3>Platform-Specific Considerations</h3>
+            <h4>macOS Compatibility</h4>
+            <p>Gosh is designed and tested for macOS, taking advantage of:</p>
+            <ul>
+                <li>BSD-style command utilities</li>
+                <li>macOS-specific paths and conventions</li>
+                <li>Native macOS terminal features</li>
+            </ul>
+
+            <h4>Cross-Platform Scripting</h4>
+            <pre><code># Detect operating system
+export OS_TYPE=$(uname -s)
+case "$OS_TYPE" in
+    "Darwin")
+        echo "Running on macOS"
+        export OPEN_CMD="open"
+        ;;
+    "Linux")
+        echo "Running on Linux"
+        export OPEN_CMD="xdg-open"
+        ;;
+    *)
+        echo "Unknown operating system: $OS_TYPE"
+        ;;
+esac</code></pre>
+
+            <h3>Future Enhancements</h3>
+            <p>Areas for potential future development:</p>
+            <ul>
+                <li>Enhanced tab completion</li>
+                <li>Job control improvements</li>
+                <li>Additional built-in commands</li>
+                <li>Configuration file support</li>
+                <li>Plugin system</li>
+                <li>Enhanced error reporting</li>
+            </ul>
+            <p>Gosh continues to evolve while maintaining its core philosophy of simplicity and reliability!</p>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 gosh. Open source and available under the MIT License.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
