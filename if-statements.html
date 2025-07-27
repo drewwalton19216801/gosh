@@ -136,7 +136,7 @@ then
 fi
 
 # String comparison
-name="gosh"
+local name="gosh"  # Local variable
 if test $name = "gosh"
 then
     echo "Welcome to gosh!"
@@ -173,7 +173,7 @@ backup_file() {
     
     if test -f $1
     then
-        export backup_name="$1.backup.$(date +%Y%m%d)"
+        local backup_name="$1.backup.$(date +%Y%m%d)"  # Local variable
         cp $1 $backup_name
         echo "Backup created: $backup_name"
     else
@@ -188,8 +188,8 @@ backup_file "important.txt"</code></pre>
             <pre><code>#!/usr/local/bin/gosh
 
 check_system() {
-    export current_user=$(whoami)
-    export current_dir=$(pwd)
+    local current_user="$(whoami)"  # Local variable
+    local current_dir="$(pwd)"  # Local variable
     
     if test $current_user = "root"
     then

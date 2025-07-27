@@ -79,7 +79,8 @@
 
 echo "Hello from gosh!"
 pwd
-export MY_VAR=test
+export MY_VAR="test"  # Environment variable
+local TEMP_COUNT=42   # Local variable (function scope)
 echo "MY_VAR is: $MY_VAR"
 
 # Pipe examples - gosh, pipes are powerful!
@@ -95,8 +96,18 @@ cat /etc/passwd | grep root | wc -l
 
             <p>Gosh supports several forms of variable expansion:</p>
 
+            <h3>Variable Declaration Requirements</h3>
+            <p>In gosh, all variables must be explicitly declared with either <code>local</code> or <code>export</code>:</p>
+            <pre><code># Local variables (current shell only)
+local NAME="World"
+local COUNT=42
+
+# Environment variables (exported to child processes)
+export MY_VAR="Hello"
+export PATH="$PATH:/new/path"</code></pre>
+
             <h3>Basic Variable Expansion</h3>
-            <pre><code>export NAME="World"
+            <pre><code>local NAME="World"  # Local variable
 echo "Hello, $NAME!"
 echo "Path: ${HOME}/Documents"</code></pre>
 
@@ -111,9 +122,9 @@ echo "Current PATH: $PATH"</code></pre>
 
             <h3>Variable Usage Examples</h3>
             <pre><code># Project configuration
-export PROJECT_NAME="my-app"
-export PROJECT_DIR="$HOME/projects/$PROJECT_NAME"
-export BUILD_DIR="$PROJECT_DIR/build"
+export PROJECT_NAME="my-app"  # Environment variable
+export PROJECT_DIR="$HOME/projects/$PROJECT_NAME"  # Environment variable
+local BUILD_DIR="$PROJECT_DIR/build"  # Local variable
 
 # Create directory structure
 mkdir -p $BUILD_DIR
@@ -127,28 +138,38 @@ echo "Working on $PROJECT_NAME in $PROJECT_DIR"</code></pre>
             <p>Execute commands and use their output in your scripts:</p>
 
             <h3>Using <code>$(command)</code> Syntax</h3>
-            <pre><code>echo "Current directory: $(pwd)"
-echo "Today is $(date +%Y-%m-%d)"
+            <pre><code># Store command output in variables
+local CURRENT_DIR="$(pwd)"
+export BUILD_DATE="$(date +%Y-%m-%d)"
+echo "Current directory: $CURRENT_DIR"
+echo "Today is $BUILD_DATE"
 echo "Found $(ls *.txt | wc -l) text files in $(pwd)"</code></pre>
 
             <h3>Using Backticks</h3>
-            <pre><code>echo "Files: `ls | wc -l`"
-echo "Current user: `whoami`"</code></pre>
+            <pre><code># Store command output in variables
+local FILE_COUNT="`ls | wc -l`"
+export CURRENT_USER="`whoami`"
+echo "Files: $FILE_COUNT"
+echo "Current user: $CURRENT_USER"</code></pre>
 
             <h3>Practical Examples</h3>
             <pre><code># Backup with timestamp
-cp important.txt "backup_$(date +%Y%m%d_%H%M%S).txt"
+local DATE="$(date +%Y%m%d_%H%M%S)"  # Local variable
+cp important.txt "backup_$DATE.txt"
 
 # Dynamic file processing
 for file in $(ls *.log); do
     echo "Processing $file..."
-    grep "ERROR" $file > "errors_$(basename $file .log).txt"
+    local BASE_NAME="$(basename $file .log)"  # Local variable
+    grep "ERROR" $file > "errors_$BASE_NAME.txt"
 done
 
 # System information
-echo "System: $(uname -s)"
-echo "User: $(whoami)"
-echo "Home: $(echo $HOME)"</code></pre>
+local SYSTEM="$(uname -s)"  # Local variable
+export CURRENT_USER="$(whoami)"  # Environment variable
+echo "System: $SYSTEM"
+echo "User: $CURRENT_USER"
+echo "Home: $HOME"</code></pre>
         </section>
 
         <section id="tilde-expansion">
@@ -314,8 +335,8 @@ echo "This is not a comment"  # Inline comment
 # like this
 
 # Script configuration
-export DEBUG=true
-export LOG_LEVEL=info
+export DEBUG="true"  # Environment variable
+export LOG_LEVEL="info"  # Environment variable
 
 # Main processing logic
 if [ "$DEBUG" = "true" ]; then
@@ -386,12 +407,14 @@ greet "Alice" "Bob" "Charlie"
         return 1
     fi
     
-    local file="$1"
+    local file="$1"  # Local variable (function scope)
     echo "Processing file: $file"
     
     if [ -f "$file" ]; then
-        wc -l "$file"
-        grep -c "TODO" "$file" || echo "No TODOs found"
+        local line_count="$(wc -l "$file" | cut -d' ' -f1)"  # Local variable
+        local todo_count="$(grep -c "TODO" "$file" || echo "0")"  # Local variable
+        echo "Lines: $line_count"
+        echo "TODOs: $todo_count"
     else
         echo "Error: File '$file' not found"
         return 1
@@ -404,8 +427,8 @@ process_file "README.md"</code></pre>
 
             <h4>Backup Function</h4>
             <pre><code>backup_file() {
-    local source="$1"
-    local backup_dir="${2:-./backups}"
+    local source="$1"  # Local variable (function scope)
+    local backup_dir="${2:-./backups}"  # Local variable with default value
     
     if [ $# -eq 0 ]; then
         echo "Usage: $0 <source_file> [backup_directory]"
@@ -413,7 +436,9 @@ process_file "README.md"</code></pre>
     fi
     
     mkdir -p "$backup_dir"
-    cp "$source" "$backup_dir/$(basename $source).$(date +%Y%m%d_%H%M%S)"
+    local timestamp="$(date +%Y%m%d_%H%M%S)"  # Local variable
+    local basename="$(basename $source)"  # Local variable
+    cp "$source" "$backup_dir/$basename.$timestamp"
     echo "Backed up $source to $backup_dir"
 }
 
@@ -424,10 +449,15 @@ backup_file "config.ini" "/home/user/backups"</code></pre>
             <h4>System Information Function</h4>
             <pre><code>system_info() {
     echo "=== System Information ==="
-    echo "Date: $(date)"
-    echo "User: $(whoami)"
-    echo "Directory: $(pwd)"
-    echo "Disk usage: $(df -h . | tail -1 | awk '{print $5}')"
+    local current_date="$(date)"  # Local variable
+    local current_user="$(whoami)"  # Local variable
+    local current_dir="$(pwd)"  # Local variable
+    local disk_usage="$(df -h . | tail -1 | awk '{print $5}')"  # Local variable
+    
+    echo "Date: $current_date"
+    echo "User: $current_user"
+    echo "Directory: $current_dir"
+    echo "Disk usage: $disk_usage"
     
     if [ $# -gt 0 ]; then
         echo "Additional info requested: $@"
@@ -472,8 +502,8 @@ type function_name</code></pre>
 # Project management script with functions
 
 # Configuration
-export PROJECT_ROOT="$(pwd)"
-export LOG_FILE="project.log"
+export PROJECT_ROOT="$(pwd)"  # Environment variable
+export LOG_FILE="project.log"  # Environment variable
 
 # Logging function
 log() {
@@ -578,11 +608,12 @@ fi</code></pre>
 
             <h3>Variable Usage</h3>
             <pre><code># Use quotes to handle spaces in filenames
-FILE_NAME="my document.txt"
+local FILE_NAME="my document.txt"  # Local variable
 cp "$FILE_NAME" "backup_$FILE_NAME"
 
 # Use braces for clarity
-echo "Processing ${FILE_NAME} at $(date)"</code></pre>
+local CURRENT_TIME="$(date)"  # Local variable
+echo "Processing ${FILE_NAME} at $CURRENT_TIME"</code></pre>
 
             <h3>Complete Example Script</h3>
             <pre><code>#!/usr/bin/env gosh
@@ -590,9 +621,9 @@ echo "Processing ${FILE_NAME} at $(date)"</code></pre>
 # Usage: ./build.sh [clean|build|test]
 
 # Configuration
-export PROJECT_NAME="my-project"
-export BUILD_DIR="./build"
-export SRC_DIR="./src"
+export PROJECT_NAME="my-project"  # Environment variable
+local BUILD_DIR="./build"  # Local variable
+local SRC_DIR="./src"  # Local variable
 
 # Functions
 clean_build() {

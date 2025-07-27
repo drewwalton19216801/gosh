@@ -73,9 +73,15 @@ echo "Multiple" "arguments"</code></pre>
             <pre><code>env</code></pre>
 
             <h3><code>export VAR=value</code></h3>
-            <p>Set an environment variable.</p>
+            <p>Set an environment variable that will be available to child processes.</p>
             <pre><code>export MY_VAR="Hello"
 export PATH="$PATH:/new/path"</code></pre>
+
+            <h3><code>local VAR=value</code></h3>
+            <p>Set a local variable that exists only within the current shell session (not exported to child processes).</p>
+            <pre><code>local TEMP_VAR="temporary value"
+local COUNT=42
+local RESULT="$(date +%Y%m%d)"</code></pre>
 
             <h3><code>unset VAR</code></h3>
             <p>Unset (remove) an environment variable.</p>
