@@ -40,17 +40,37 @@ body {
     align-items: center;
 }
 
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.nav-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: contain;
+}
+
+.nav-text {
+    display: flex;
+    flex-direction: column;
+}
+
 .nav-brand h1 {
     font-size: 1.5rem;
     font-weight: 700;
     color: #2563eb;
     margin: 0;
+    line-height: 1.2;
 }
 
 .nav-brand .tagline {
     font-size: 0.8rem;
     color: #6b7280;
     font-weight: 400;
+    line-height: 1;
 }
 
 .nav-menu {
