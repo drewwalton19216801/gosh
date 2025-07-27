@@ -78,9 +78,56 @@ func cmdPwd(s *Shell, cmd *Command) error {
 
 // cmdEcho implements the echo command
 func cmdEcho(s *Shell, cmd *Command) error {
-	output := strings.Join(cmd.Args, " ")
+	// Remove quotes from arguments and process escape sequences
+	var processedArgs []string
+	for _, arg := range cmd.Args {
+		processedArg := arg
+		// Remove quotes if present
+		if len(arg) >= 2 && ((arg[0] == '"' && arg[len(arg)-1] == '"') || (arg[0] == '\'' && arg[len(arg)-1] == '\'')) {
+			processedArg = arg[1:len(arg)-1]
+		}
+		// Process escape sequences
+		processedArg = processEscapeSequences(processedArg)
+		processedArgs = append(processedArgs, processedArg)
+	}
+	output := strings.Join(processedArgs, " ")
 	fmt.Println(output)
 	return nil
+}
+
+// processEscapeSequences processes common escape sequences in strings
+func processEscapeSequences(s string) string {
+	result := strings.Builder{}
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\\' && i+1 < len(s) {
+			switch s[i+1] {
+			case '"':
+				result.WriteByte('"')
+				i++ // Skip the next character
+			case '\'':
+				result.WriteByte('\'')
+				i++ // Skip the next character
+			case '\\':
+				result.WriteByte('\\')
+				i++ // Skip the next character
+			case 'n':
+				result.WriteByte('\n')
+				i++ // Skip the next character
+			case 't':
+				result.WriteByte('\t')
+				i++ // Skip the next character
+			case 'r':
+				result.WriteByte('\r')
+				i++ // Skip the next character
+			default:
+				// Unknown escape sequence, keep the backslash
+				result.WriteByte(s[i])
+			}
+		} else {
+			result.WriteByte(s[i])
+		}
+	}
+	return result.String()
 }
 
 // cmdEnv implements the env command
