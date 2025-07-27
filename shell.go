@@ -93,6 +93,12 @@ func (s *Shell) ExecuteLine(line string) error {
 		return nil
 	}
 
+	// Apply expansions to all commands in the chain
+	err = s.expandCommandChain(commandChain)
+	if err != nil {
+		return err
+	}
+
 	// Execute each pipeline in the chain sequentially
 	for _, commands := range commandChain.Pipelines {
 		if len(commands) == 1 {
@@ -137,6 +143,65 @@ func (s *Shell) ExecuteScript(filename string) error {
 	}
 
 	return scanner.Err()
+}
+
+// expandCommandChain applies expansions to all commands in a command chain
+func (s *Shell) expandCommandChain(chain *CommandChain) error {
+	for _, pipeline := range chain.Pipelines {
+		for _, cmd := range pipeline {
+			err := s.expandCommand(cmd)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// expandCommand applies expansions to a single command
+func (s *Shell) expandCommand(cmd *Command) error {
+	// Expand command name
+	expandedNames, err := s.expandToken(cmd.Name)
+	if err != nil {
+		return err
+	}
+	if len(expandedNames) != 1 {
+		return fmt.Errorf("command name expansion resulted in %d tokens, expected 1", len(expandedNames))
+	}
+	cmd.Name = expandedNames[0]
+
+	// Expand arguments
+	expandedArgs, err := s.expandTokens(cmd.Args)
+	if err != nil {
+		return err
+	}
+	cmd.Args = expandedArgs
+
+	// Expand input redirection
+	if cmd.Input != "" {
+		expandedInput, err := s.expandToken(cmd.Input)
+		if err != nil {
+			return err
+		}
+		if len(expandedInput) != 1 {
+			return fmt.Errorf("input redirection expansion resulted in %d tokens, expected 1", len(expandedInput))
+		}
+		cmd.Input = expandedInput[0]
+	}
+
+	// Expand output redirection
+	if cmd.Output != "" {
+		expandedOutput, err := s.expandToken(cmd.Output)
+		if err != nil {
+			return err
+		}
+		if len(expandedOutput) != 1 {
+			return fmt.Errorf("output redirection expansion resulted in %d tokens, expected 1", len(expandedOutput))
+		}
+		cmd.Output = expandedOutput[0]
+	}
+
+	return nil
 }
 
 // Exit sets the shell to stop running

@@ -40,6 +40,10 @@ A basic command-line shell written in Go with sh-style scripting support, design
 - **Command History**: Track previously executed commands
 - **Quote Handling**: Support for single and double quotes in arguments
 - **Comment Support**: Lines starting with `#` are treated as comments in scripts
+- **Variable Expansion**: Expand environment variables with `$VAR` and `${VAR}` syntax
+- **Command Substitution**: Execute commands and use their output with `$(command)` and `` `command` ``
+- **Tilde Expansion**: Expand `~` to home directory, `~/path` to home/path, and `~user/path` to user's home
+- **Glob Patterns**: Use wildcards like `*.txt`, `file?.log`, and `[abc]*` for filename matching
 
 ## Building
 
@@ -91,6 +95,61 @@ ls -la | head -5
 cat /etc/passwd | grep root | wc -l
 
 # Gosh darn it, that's some fine scripting!
+```
+
+## Examples
+
+```bash
+# Basic commands
+ls -la
+echo "Hello, World!"
+
+# I/O redirection
+echo "Hello" > output.txt
+cat < input.txt
+ls >> log.txt
+
+# Background execution
+sleep 10 &
+
+# Environment variables
+export MY_VAR="Hello"
+echo $MY_VAR
+
+# Aliases
+alias ll="ls -la"
+ll
+
+# Command chaining
+echo "First command"; echo "Second command"; pwd
+
+# Pipes
+ls | grep ".go" | wc -l
+echo "Hello World" | wc -w
+
+# Variable expansion
+export NAME="World"
+echo "Hello, $NAME!"
+echo "Path: ${HOME}/Documents"
+
+# Command substitution
+echo "Current directory: $(pwd)"
+echo "Files: `ls | wc -l`"
+echo "Today is $(date +%Y-%m-%d)"
+
+# Tilde expansion
+ls ~/Documents
+cp file.txt ~/backup/
+cd ~user/projects
+
+# Glob patterns
+ls *.go
+rm temp_file_?.txt
+echo [Hh]ello*
+
+# Combined features
+ls *.go > go_files.txt; cat go_files.txt | wc -l
+echo "Found $(ls *.txt | wc -l) text files in $(pwd)"
 ```
 
 ## Architecture

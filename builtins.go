@@ -177,7 +177,7 @@ func cmdHistory(s *Shell, cmd *Command) error {
 
 // cmdHelp implements the help command
 func cmdHelp(s *Shell, cmd *Command) error {
-	fmt.Println("gosh - A simple shell")
+	fmt.Println("gosh - A simple shell written in Go")
 	fmt.Println("")
 	fmt.Println("Built-in commands:")
 	fmt.Println("  exit [code]     - Exit the shell with optional exit code")
@@ -200,6 +200,10 @@ func cmdHelp(s *Shell, cmd *Command) error {
 	fmt.Println("  - Background execution: cmd &")
 	fmt.Println("  - Script execution: gosh script.sh")
 	fmt.Println("  - Environment variables and aliases")
+	fmt.Println("  - Variable expansion: $VAR, ${VAR}")
+	fmt.Println("  - Command substitution: $(cmd), `cmd`")
+	fmt.Println("  - Tilde expansion: ~, ~/path, ~user/path")
+	fmt.Println("  - Glob patterns: *.txt, file?.log, [abc]*")
 	return nil
 }
 
