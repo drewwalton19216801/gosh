@@ -47,39 +47,79 @@ document.addEventListener('DOMContentLoaded', function() {
     
     window.addEventListener('scroll', updateActiveNav);
     
-    // Terminal typing animation
-    const terminalLines = document.querySelectorAll('.terminal-line');
-    let currentLine = 0;
+    // Terminal typing animation for individual terminals
+    const terminals = document.querySelectorAll('.terminal');
     
-    function showNextLine() {
-        if (currentLine < terminalLines.length) {
-            terminalLines[currentLine].style.opacity = '1';
-            terminalLines[currentLine].style.transform = 'translateY(0)';
-            currentLine++;
-            setTimeout(showNextLine, 800);
-        }
-    }
-    
-    // Initialize terminal lines as hidden
-    terminalLines.forEach(line => {
-        line.style.opacity = '0';
-        line.style.transform = 'translateY(10px)';
-        line.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-    });
-    
-    // Start animation when hero section is in view
-    const hero = document.querySelector('.hero');
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                setTimeout(showNextLine, 1000);
-                observer.unobserve(hero);
+    terminals.forEach((terminal, terminalIndex) => {
+        const terminalLines = terminal.querySelectorAll('.terminal-line');
+        let currentLine = 0;
+        let animationStarted = false;
+        
+        function showNextLine() {
+            if (currentLine < terminalLines.length) {
+                terminalLines[currentLine].style.opacity = '1';
+                terminalLines[currentLine].style.transform = 'translateY(0)';
+                currentLine++;
+                setTimeout(showNextLine, 1200);
             }
+        }
+        
+        // Initialize terminal lines as hidden
+        terminalLines.forEach(line => {
+            line.style.opacity = '0';
+            line.style.transform = 'translateY(10px)';
+            line.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
         });
+        
+        // Start animation when terminal comes into view
+        const terminalObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !animationStarted) {
+                    animationStarted = true;
+                    setTimeout(showNextLine, 500 + (terminalIndex * 200));
+                    terminalObserver.unobserve(terminal);
+                }
+            });
+        }, {
+            threshold: 0.3,
+            rootMargin: '0px 0px -100px 0px'
+        });
+        
+        terminalObserver.observe(terminal);
     });
     
+    // Legacy support for hero section (for other pages)
+    const hero = document.querySelector('.hero');
     if (hero) {
-        observer.observe(hero);
+        const heroTerminalLines = hero.querySelectorAll('.terminal-line');
+        let currentHeroLine = 0;
+        
+        function showNextHeroLine() {
+            if (currentHeroLine < heroTerminalLines.length) {
+                heroTerminalLines[currentHeroLine].style.opacity = '1';
+                heroTerminalLines[currentHeroLine].style.transform = 'translateY(0)';
+                currentHeroLine++;
+                setTimeout(showNextHeroLine, 800);
+            }
+        }
+        
+        // Initialize hero terminal lines as hidden
+        heroTerminalLines.forEach(line => {
+            line.style.opacity = '0';
+            line.style.transform = 'translateY(10px)';
+            line.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        });
+        
+        const heroObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    setTimeout(showNextHeroLine, 1000);
+                    heroObserver.unobserve(hero);
+                }
+            });
+        });
+        
+        heroObserver.observe(hero);
     }
     
     // Add scroll-based animations for feature cards
