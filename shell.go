@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/chzyer/readline"
@@ -29,11 +30,11 @@ func NewShell() *Shell {
 		running: true,
 	}
 	
-	// Initialize readline with history support
+	// Initialize readline with history support and tab completion
 	rl, err := readline.NewEx(&readline.Config{
 		Prompt:          "gosh> ",
 		HistoryFile:     "/tmp/.gosh_history",
-		AutoComplete:    nil,
+		AutoComplete:    s.createCompleter(),
 		InterruptPrompt: "^C",
 		EOFPrompt:       "exit",
 	})
@@ -51,6 +52,7 @@ func (s *Shell) Run() {
 	fmt.Println("gosh - A simple shell")
 	fmt.Println("Type 'help' for available commands or 'exit' to quit.")
 	fmt.Println("Use up/down arrow keys to navigate command history.")
+	fmt.Println("Press TAB for command and file completion.")
 
 	defer s.rl.Close()
 
@@ -208,4 +210,235 @@ func (s *Shell) expandCommand(cmd *Command) error {
 func (s *Shell) Exit(code int) {
 	s.exitCode = code
 	s.running = false
+}
+
+// createCompleter creates a tab completion function for readline
+func (s *Shell) createCompleter() readline.AutoCompleter {
+	return &TabCompleter{shell: s}
+}
+
+// TabCompleter implements readline.AutoCompleter interface
+type TabCompleter struct {
+	shell *Shell
+}
+
+// Do implements the AutoCompleter interface
+func (tc *TabCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) {
+	lineStr := string(line)
+	completions := tc.shell.getCompletions(lineStr, pos)
+	
+	if len(completions) == 0 {
+		return nil, 0
+	}
+	
+	// Find the current word being completed
+	fields := strings.Fields(lineStr[:pos])
+	currentWord := ""
+	
+	// Get the word being completed
+	if pos > 0 && !strings.HasSuffix(lineStr[:pos], " ") {
+		if len(fields) > 0 {
+			currentWord = fields[len(fields)-1]
+		}
+	}
+	
+	// Convert completions to [][]rune format expected by readline
+	// We need to return only the suffix that completes the current word
+	var result [][]rune
+	for _, completion := range completions {
+		// Only return the part that extends beyond the current word
+		if strings.HasPrefix(completion, currentWord) {
+			suffix := completion[len(currentWord):]
+			result = append(result, []rune(suffix))
+		} else {
+			// Fallback: return the full completion
+			result = append(result, []rune(completion))
+		}
+	}
+	
+	return result, 0 // Return 0 for length since we're providing suffixes
+}
+
+// getCompletions returns completion suggestions for the given input
+func (s *Shell) getCompletions(line string, pos int) []string {
+	// Parse the current line to understand context
+	fields := strings.Fields(line[:pos])
+	currentWord := ""
+	
+	// Get the word being completed
+	if pos > 0 && !strings.HasSuffix(line[:pos], " ") {
+		if len(fields) > 0 {
+			currentWord = fields[len(fields)-1]
+			fields = fields[:len(fields)-1]
+		}
+	}
+	
+	var completions []string
+	
+	if len(fields) == 0 {
+		// Completing command name
+		completions = append(completions, s.getCommandCompletions(currentWord)...)
+	} else {
+		// Completing arguments - provide file/directory completions
+		completions = append(completions, s.getFileCompletions(currentWord)...)
+	}
+	
+	return completions
+}
+
+// getCommandCompletions returns command name completions
+func (s *Shell) getCommandCompletions(prefix string) []string {
+	var completions []string
+	
+	// Add built-in commands
+	for cmd := range builtins {
+		if strings.HasPrefix(cmd, prefix) {
+			completions = append(completions, cmd)
+		}
+	}
+	
+	// Add aliases
+	for alias := range s.aliases {
+		if strings.HasPrefix(alias, prefix) {
+			completions = append(completions, alias)
+		}
+	}
+	
+	// Add external commands from PATH
+	pathCompletions := s.getPathCompletions(prefix)
+	completions = append(completions, pathCompletions...)
+	
+	// Sort and remove duplicates
+	sort.Strings(completions)
+	return removeDuplicates(completions)
+}
+
+// getPathCompletions returns external command completions from PATH
+func (s *Shell) getPathCompletions(prefix string) []string {
+	var completions []string
+	pathEnv := os.Getenv("PATH")
+	if pathEnv == "" {
+		return completions
+	}
+	
+	paths := strings.Split(pathEnv, ":")
+	seenCommands := make(map[string]bool)
+	
+	for _, dir := range paths {
+		if dir == "" {
+			continue
+		}
+		
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			continue
+		}
+		
+		for _, entry := range entries {
+			name := entry.Name()
+			if !strings.HasPrefix(name, prefix) {
+				continue
+			}
+			
+			// Check if it's executable
+			if entry.IsDir() {
+				continue
+			}
+			
+			filePath := filepath.Join(dir, name)
+			if info, err := os.Stat(filePath); err == nil {
+				if info.Mode()&0111 != 0 { // Check if executable
+					if !seenCommands[name] {
+						completions = append(completions, name)
+						seenCommands[name] = true
+					}
+				}
+			}
+		}
+	}
+	
+	return completions
+}
+
+// getFileCompletions returns file and directory completions
+func (s *Shell) getFileCompletions(prefix string) []string {
+	var completions []string
+	
+	// Handle different path types
+	var searchDir, filePrefix string
+	
+	if strings.Contains(prefix, "/") {
+		// Path contains directory separator
+		searchDir = filepath.Dir(prefix)
+		filePrefix = filepath.Base(prefix)
+		
+		// Handle absolute vs relative paths
+		if !filepath.IsAbs(searchDir) {
+			cwd, err := os.Getwd()
+			if err != nil {
+				return completions
+			}
+			searchDir = filepath.Join(cwd, searchDir)
+		}
+	} else {
+		// No directory separator - search current directory
+		cwd, err := os.Getwd()
+		if err != nil {
+			return completions
+		}
+		searchDir = cwd
+		filePrefix = prefix
+	}
+	
+	// Read directory entries
+	entries, err := os.ReadDir(searchDir)
+	if err != nil {
+		return completions
+	}
+	
+	for _, entry := range entries {
+		name := entry.Name()
+		
+		// Skip hidden files unless prefix starts with dot
+		if strings.HasPrefix(name, ".") && !strings.HasPrefix(filePrefix, ".") {
+			continue
+		}
+		
+		if strings.HasPrefix(name, filePrefix) {
+			var completion string
+			if strings.Contains(prefix, "/") {
+				// Reconstruct the full path
+				completion = filepath.Join(filepath.Dir(prefix), name)
+			} else {
+				completion = name
+			}
+			
+			// Add trailing slash for directories
+			if entry.IsDir() {
+				completion += "/"
+			}
+			
+			completions = append(completions, completion)
+		}
+	}
+	
+	return completions
+}
+
+// removeDuplicates removes duplicate strings from a sorted slice
+func removeDuplicates(strs []string) []string {
+	if len(strs) <= 1 {
+		return strs
+	}
+	
+	result := make([]string, 0, len(strs))
+	result = append(result, strs[0])
+	
+	for i := 1; i < len(strs); i++ {
+		if strs[i] != strs[i-1] {
+			result = append(result, strs[i])
+		}
+	}
+	
+	return result
 }
