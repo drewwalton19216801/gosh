@@ -86,7 +86,7 @@ fi</code></pre>
                 <li><strong>Function support</strong> - if statements work inside user-defined functions</li>
                 <li><strong>Variable expansion</strong> in conditions</li>
                 <li><strong>Return statement handling</strong> within if blocks</li>
-                <li><strong>Script-only execution</strong> (not available in interactive mode)</li>
+                <li><strong>Interactive and script support</strong> - works in both interactive mode and script files</li>
             </ul>
         </section>
 
@@ -216,7 +216,7 @@ check_system</code></pre>
         <section id="important-notes">
             <h2>Important Notes</h2>
             <ul>
-                <li><strong>Script-only feature:</strong> If statements are only supported in script mode, not in interactive mode</li>
+                <li><strong>Multi-line support:</strong> If statements are supported in both script files and interactive mode. In interactive mode, the shell automatically detects when you start an if statement and continues reading lines until you type <code>fi</code></li>
                 <li><strong>Multi-line format:</strong> Use separate lines for <code>if</code>, <code>then</code>, <code>else</code>, and <code>fi</code> keywords</li>
                 <li><strong>Condition evaluation:</strong> Conditions are evaluated using the exit status of commands (0 = true, non-zero = false)</li>
                 <li><strong>Variable expansion:</strong> Variables are expanded within conditions, so use proper quoting when necessary</li>

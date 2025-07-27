@@ -58,9 +58,17 @@
                         <div class="terminal-line output">Hello, World!</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
-                            <span class="command">ls | grep ".go" | wc -l</span>
+                            <span class="command">if test -f "main.go"; then</span>
                         </div>
-                        <div class="terminal-line output">8</div>
+                        <div class="terminal-line">
+                            <span class="prompt">then> </span>
+                            <span class="command">echo "Go project detected"</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="prompt">then> </span>
+                            <span class="command">fi</span>
+                        </div>
+                        <div class="terminal-line output">Go project detected</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
                             <span class="cursor">_</span>
@@ -92,9 +100,17 @@
                         <div class="terminal-line output">Hello, World!</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
-                            <span class="command">ls | grep ".go" | wc -l</span>
+                            <span class="command">if test -f "main.go"; then</span>
                         </div>
-                        <div class="terminal-line output">8</div>
+                        <div class="terminal-line">
+                            <span class="prompt">then> </span>
+                            <span class="command">echo "Go project detected"</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="prompt">then> </span>
+                            <span class="command">fi</span>
+                        </div>
+                        <div class="terminal-line output">Go project detected</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
                             <span class="cursor">_</span>
@@ -122,7 +138,7 @@
                 <div class="feature-card">
                     <div class="feature-icon">📝</div>
                     <h3>Shell Scripting</h3>
-                    <p>Write powerful shell scripts with functions, variable expansion, and command substitution</p>
+                    <p>Write powerful shell scripts with functions, control structures (if/case), variable expansion, and command substitution</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">⚡</div>
