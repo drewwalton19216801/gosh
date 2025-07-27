@@ -60,6 +60,11 @@ func (s *Shell) executeWithRedirection(cmd *Command) error {
 		os.Stderr = origStderr
 	}()
 
+	// Check if it's a user-defined function
+	if _, exists := s.functions[cmd.Name]; exists {
+		return s.executeFunction(cmd.Name, cmd.Args)
+	}
+
 	// Check if it's a built-in command
 	if builtin, exists := builtins[cmd.Name]; exists {
 		return builtin(s, cmd)

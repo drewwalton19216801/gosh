@@ -54,8 +54,9 @@ func (s *Shell) expandVariables(input string) string {
 		return s.getVariable(varName)
 	})
 
-	// Handle $VAR (word boundaries)
-	varPattern := regexp.MustCompile(`\$([a-zA-Z_][a-zA-Z0-9_]*)`)
+	// Handle $VAR and positional parameters like $1, $2, etc.
+	// This pattern matches: $VAR, $1, $2, $#, $@, $*, etc.
+	varPattern := regexp.MustCompile(`\$([a-zA-Z_][a-zA-Z0-9_]*|[0-9]+|[#@*])`)
 	result = varPattern.ReplaceAllStringFunc(result, func(match string) string {
 		varName := match[1:] // Remove $
 		return s.getVariable(varName)
@@ -66,6 +67,31 @@ func (s *Shell) expandVariables(input string) string {
 
 // getVariable gets a variable value from shell env or system env
 func (s *Shell) getVariable(name string) string {
+	// Handle positional parameters if we're in a function context
+	if len(s.functionStack) > 0 {
+		ctx := s.functionStack[len(s.functionStack)-1]
+		
+		// Handle special parameters
+		switch name {
+		case "0":
+			return ctx.Name
+		case "#":
+			return fmt.Sprintf("%d", len(ctx.Args))
+		case "@":
+			return strings.Join(ctx.Args, " ")
+		case "*":
+			return strings.Join(ctx.Args, " ")
+		default:
+			// Handle numbered parameters $1, $2, etc.
+			if len(name) > 0 && name[0] >= '1' && name[0] <= '9' {
+				if paramNum := int(name[0] - '0'); paramNum <= len(ctx.Args) {
+					return ctx.Args[paramNum-1]
+				}
+				return ""
+			}
+		}
+	}
+	
 	// Check shell-specific environment first
 	if value, exists := s.env[name]; exists {
 		return value

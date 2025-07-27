@@ -17,19 +17,20 @@ var builtins map[string]BuiltinFunc
 // init initializes the builtins map
 func init() {
 	builtins = map[string]BuiltinFunc{
-		"exit":    cmdExit,
-		"cd":      cmdCd,
-		"pwd":     cmdPwd,
-		"echo":    cmdEcho,
-		"env":     cmdEnv,
-		"export":  cmdExport,
-		"unset":   cmdUnset,
-		"alias":   cmdAlias,
-		"unalias": cmdUnalias,
-		"history": cmdHistory,
-		"help":    cmdHelp,
-		"which":   cmdWhich,
-		"case":    cmdCase,
+		"exit":     cmdExit,
+		"cd":       cmdCd,
+		"pwd":      cmdPwd,
+		"echo":     cmdEcho,
+		"env":      cmdEnv,
+		"export":   cmdExport,
+		"unset":    cmdUnset,
+		"alias":    cmdAlias,
+		"unalias":  cmdUnalias,
+		"history":  cmdHistory,
+		"help":     cmdHelp,
+		"which":    cmdWhich,
+		"case":     cmdCase,
+		"declare":  cmdDeclare,
 	}
 }
 
@@ -169,12 +170,27 @@ func cmdExport(s *Shell, cmd *Command) error {
 // cmdUnset implements the unset command
 func cmdUnset(s *Shell, cmd *Command) error {
 	if len(cmd.Args) == 0 {
-		return fmt.Errorf("unset: missing variable name")
+		return fmt.Errorf("unset: missing variable or function name")
 	}
 
+	// Check for -f flag to unset functions
+	if len(cmd.Args) >= 2 && cmd.Args[0] == "-f" {
+		for i := 1; i < len(cmd.Args); i++ {
+			delete(s.functions, cmd.Args[i])
+		}
+		return nil
+	}
+
+	// Default behavior: unset variables
 	for _, arg := range cmd.Args {
-		delete(s.env, arg)
-		os.Unsetenv(arg)
+		// Check if it's a function first
+		if _, exists := s.functions[arg]; exists {
+			delete(s.functions, arg)
+		} else {
+			// Unset as variable
+			delete(s.env, arg)
+			os.Unsetenv(arg)
+		}
 	}
 
 	return nil
@@ -238,9 +254,12 @@ func cmdHelp(s *Shell, cmd *Command) error {
 	fmt.Println("  echo [args...]  - Print arguments")
 	fmt.Println("  env             - Show environment variables")
 	fmt.Println("  export VAR=val  - Set environment variable")
-	fmt.Println("  unset VAR       - Unset environment variable")
+	fmt.Println("  unset VAR       - Unset environment variable or function")
+	fmt.Println("  unset -f FUNC   - Unset function")
 	fmt.Println("  alias name=cmd  - Create command alias")
 	fmt.Println("  unalias name    - Remove alias")
+	fmt.Println("  declare         - List all defined functions")
+	fmt.Println("  declare -f      - List function names only")
 	fmt.Println("  history         - Show command history")
 	fmt.Println("  which cmd       - Show path to command")
 	fmt.Println("  help            - Show this help")
@@ -253,6 +272,8 @@ func cmdHelp(s *Shell, cmd *Command) error {
 	fmt.Println("  - Background execution: cmd &")
 	fmt.Println("  - Script execution: gosh script.sh")
 	fmt.Println("  - Case statements: case $var in pattern) commands ;; esac")
+	fmt.Println("  - User-defined functions: function_name() { commands; }")
+	fmt.Println("  - Function parameters: $1, $2, ..., $#, $0")
 	fmt.Println("  - Environment variables and aliases")
 	fmt.Println("  - Variable expansion: $VAR, ${VAR}")
 	fmt.Println("  - Command substitution: $(cmd), `cmd`")
@@ -268,6 +289,12 @@ func cmdWhich(s *Shell, cmd *Command) error {
 	}
 
 	for _, cmdName := range cmd.Args {
+		// Check if it's a user-defined function
+		if _, exists := s.functions[cmdName]; exists {
+			fmt.Printf("%s: user-defined function\n", cmdName)
+			continue
+		}
+
 		// Check if it's a built-in
 		if _, exists := builtins[cmdName]; exists {
 			fmt.Printf("%s: shell builtin\n", cmdName)
@@ -301,4 +328,36 @@ func cmdWhich(s *Shell, cmd *Command) error {
 // cmdCase implements the case command (for interactive use)
 func cmdCase(s *Shell, cmd *Command) error {
 	return fmt.Errorf("case statements are only supported in scripts, not interactive mode")
+}
+
+// cmdDeclare implements the declare command for listing functions
+func cmdDeclare(s *Shell, cmd *Command) error {
+	if len(cmd.Args) == 0 {
+		// List all functions
+		if len(s.functions) == 0 {
+			fmt.Println("No functions defined")
+			return nil
+		}
+		
+		fmt.Println("Defined functions:")
+		for name, function := range s.functions {
+			fmt.Printf("%s() {\n", name)
+			for _, line := range function.Body {
+				fmt.Printf("  %s\n", line)
+			}
+			fmt.Println("}")
+			fmt.Println()
+		}
+		return nil
+	}
+	
+	// Check for -f flag to list only function names
+	if len(cmd.Args) == 1 && cmd.Args[0] == "-f" {
+		for name := range s.functions {
+			fmt.Println(name)
+		}
+		return nil
+	}
+	
+	return fmt.Errorf("declare: unsupported option")
 }

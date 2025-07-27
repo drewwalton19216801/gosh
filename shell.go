@@ -11,22 +11,39 @@ import (
 	"github.com/chzyer/readline"
 )
 
+// Function represents a user-defined shell function
+type Function struct {
+	Name   string
+	Params []string
+	Body   []string
+}
+
+// FunctionContext holds the execution context for a function
+type FunctionContext struct {
+	Name string
+	Args []string
+}
+
 // Shell represents the main shell instance
 type Shell struct {
-	env     map[string]string
-	aliases map[string]string
-	history []string
-	running bool
-	rl      *readline.Instance
+	env             map[string]string
+	aliases         map[string]string
+	functions       map[string]*Function
+	functionStack   []*FunctionContext
+	history         []string
+	running         bool
+	rl              *readline.Instance
 }
 
 // NewShell creates a new shell instance
 func NewShell() *Shell {
 	s := &Shell{
-		env:     make(map[string]string),
-		aliases: make(map[string]string),
-		history: make([]string, 0),
-		running: true,
+		env:           make(map[string]string),
+		aliases:       make(map[string]string),
+		functions:     make(map[string]*Function),
+		functionStack: make([]*FunctionContext, 0),
+		history:       make([]string, 0),
+		running:       true,
 	}
 
 	// Initialize readline with history support and tab completion
@@ -155,6 +172,23 @@ func (s *Shell) executeScriptLines(allLines []string) error {
 		// Skip empty lines and comments (only if not in continuation)
 		trimmed := strings.TrimSpace(line)
 		if fullLine.Len() == 0 && (trimmed == "" || strings.HasPrefix(trimmed, "#")) {
+			continue
+		}
+
+		// Check for function definition
+		if fullLine.Len() == 0 && s.isFunctionDefinition(trimmed) {
+			// Parse multi-line function definition
+			funcLines, endLine, err := s.extractFunctionDefinition(allLines, lineNum-1)
+			if err != nil {
+				return fmt.Errorf("line %d: %v", lineNum, err)
+			}
+			
+			// Define the function
+			if err := s.defineFunction(funcLines); err != nil {
+				return fmt.Errorf("line %d: %v", lineNum, err)
+			}
+			
+			lineNum = endLine + 1
 			continue
 		}
 
@@ -778,4 +812,123 @@ func removeDuplicates(strs []string) []string {
 	}
 
 	return result
+}
+
+// isFunctionDefinition checks if a line starts a function definition
+func (s *Shell) isFunctionDefinition(line string) bool {
+	// Function definitions can be in two formats:
+	// 1. function_name() {
+	// 2. function function_name() {
+	line = strings.TrimSpace(line)
+	
+	// Check for "function name() {" format
+	if strings.HasPrefix(line, "function ") {
+		rest := strings.TrimPrefix(line, "function ")
+		return strings.Contains(rest, "()") && strings.HasSuffix(strings.TrimSpace(rest), "{")
+	}
+	
+	// Check for "name() {" format
+	return strings.Contains(line, "()") && strings.HasSuffix(strings.TrimSpace(line), "{")
+}
+
+// extractFunctionDefinition extracts a complete function definition from script lines
+func (s *Shell) extractFunctionDefinition(allLines []string, startLine int) ([]string, int, error) {
+	var funcLines []string
+	i := startLine
+	braceCount := 0
+	
+	for i < len(allLines) {
+		line := allLines[i]
+		funcLines = append(funcLines, line)
+		
+		// Count braces to find the end of the function
+		for _, char := range line {
+			if char == '{' {
+				braceCount++
+			} else if char == '}' {
+				braceCount--
+				if braceCount == 0 {
+					return funcLines, i, nil
+				}
+			}
+		}
+		
+		i++
+	}
+	
+	return nil, i, fmt.Errorf("function definition not properly closed with '}'")
+}
+
+// defineFunction parses and stores a function definition
+func (s *Shell) defineFunction(funcLines []string) error {
+	if len(funcLines) == 0 {
+		return fmt.Errorf("empty function definition")
+	}
+	
+	firstLine := strings.TrimSpace(funcLines[0])
+	var funcName string
+	var params []string
+	
+	// Parse function name and parameters
+	if strings.HasPrefix(firstLine, "function ") {
+		// "function name() {" format
+		rest := strings.TrimPrefix(firstLine, "function ")
+		parenIndex := strings.Index(rest, "()")
+		if parenIndex == -1 {
+			return fmt.Errorf("invalid function syntax: missing ()")
+		}
+		funcName = strings.TrimSpace(rest[:parenIndex])
+	} else {
+		// "name() {" format
+		parenIndex := strings.Index(firstLine, "()")
+		if parenIndex == -1 {
+			return fmt.Errorf("invalid function syntax: missing ()")
+		}
+		funcName = strings.TrimSpace(firstLine[:parenIndex])
+	}
+	
+	if funcName == "" {
+		return fmt.Errorf("function name cannot be empty")
+	}
+	
+	// Extract function body (everything except first and last lines)
+	var body []string
+	for i := 1; i < len(funcLines)-1; i++ {
+		body = append(body, funcLines[i])
+	}
+	
+	// Store the function
+	s.functions[funcName] = &Function{
+		Name:   funcName,
+		Params: params,
+		Body:   body,
+	}
+	
+	return nil
+}
+
+// executeFunction executes a user-defined function
+func (s *Shell) executeFunction(funcName string, args []string) error {
+	func_, exists := s.functions[funcName]
+	if !exists {
+		return fmt.Errorf("function not found: %s", funcName)
+	}
+	
+	// Create function context
+	ctx := &FunctionContext{
+		Name: funcName,
+		Args: args,
+	}
+	
+	// Push context onto stack
+	s.functionStack = append(s.functionStack, ctx)
+	defer func() {
+		// Pop context when function exits
+		if len(s.functionStack) > 0 {
+			s.functionStack = s.functionStack[:len(s.functionStack)-1]
+		}
+	}()
+	
+	// Execute function body
+	return s.executeScriptLines(func_.Body)
 }
