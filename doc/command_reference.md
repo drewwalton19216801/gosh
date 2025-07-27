@@ -50,12 +50,22 @@ env
 ```
 
 ### `export VAR=value`
-Set an environment variable.
+Set an environment variable that will be available to child processes.
 
 **Usage:**
 ```bash
 export MY_VAR="Hello"
 export PATH="$PATH:/new/path"
+```
+
+### `local VAR=value`
+Set a local variable that exists only within the current shell session (not exported to child processes).
+
+**Usage:**
+```bash
+local TEMP_VAR="temporary value"
+local COUNT=42
+local RESULT="$(date +%Y%m%d)"
 ```
 
 ### `unset VAR`
@@ -108,6 +118,24 @@ Show help information.
 help
 ```
 
+### `functions`
+List all defined functions.
+
+**Usage:**
+```bash
+functions
+```
+
+### `type name`
+Show information about a command, function, or alias.
+
+**Usage:**
+```bash
+type greet      # Check if greet is a function
+type ls         # Show type of ls command
+type ll         # Check if ll is an alias
+```
+
 ## Command Features
 
 ### Command Chaining
@@ -147,4 +175,65 @@ Lines starting with `#` are treated as comments in scripts:
 ```bash
 # This is a comment
 echo "This is not a comment"
+```
+
+### Functions
+Define and use shell functions for code reusability:
+```bash
+# Define a function
+greet() {
+    echo "Hello, $1!"
+}
+
+# Call the function
+greet "World"
+
+# Functions support positional parameters
+show_info() {
+    echo "Function: $0"
+    echo "Args: $@"
+    echo "Count: $#"
+}
+
+show_info arg1 arg2
+```
+
+### Variable Expansion
+Expand variables and command substitution:
+```bash
+# Environment variables (available to child processes)
+export NAME="World"
+echo "Hello, $NAME!"
+
+# Local variables (shell-only)
+local TEMP_DIR="/tmp/myapp"
+echo "Using temp dir: $TEMP_DIR"
+
+# Command substitution
+local CURRENT_DIR="$(pwd)"
+export BUILD_DATE="$(date +%Y%m%d)"
+echo "Current dir: $CURRENT_DIR"
+echo "Files: `ls | wc -l`"
+```
+
+### Command Substitution
+Use command output in other commands:
+```bash
+echo "Today is $(date)"
+echo "Found $(ls *.txt | wc -l) text files"
+```
+
+### Tilde Expansion
+Expand `~` to home directories:
+```bash
+ls ~/Documents
+cd ~user/projects
+```
+
+### Glob Patterns
+Use wildcards for filename matching:
+```bash
+ls *.go
+echo [Hh]ello*
+rm temp_?.txt
 ```
