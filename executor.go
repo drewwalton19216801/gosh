@@ -15,6 +15,11 @@ func (s *Shell) ExecuteCommand(cmd *Command) error {
 		return fmt.Errorf("invalid command")
 	}
 
+	// Handle special nested if command
+	if cmd.Name == "__nested_if__" {
+		return s.executeIfStatement(cmd.Args)
+	}
+
 	// Handle redirection for both built-ins and external commands
 	return s.executeWithRedirection(cmd)
 }

@@ -246,7 +246,18 @@ func (s *Shell) executeScriptLines(allLines []string) error {
 		}
 
 		// Check for case statement
-		if fullLine.Len() == 0 && strings.HasPrefix(trimmed, "case ") {
+		if strings.HasPrefix(trimmed, "case ") {
+			// If we have accumulated content, execute it first
+			if fullLine.Len() > 0 {
+				completeCommand := strings.TrimSpace(fullLine.String())
+				if completeCommand != "" {
+					if err := s.ExecuteLine(completeCommand); err != nil {
+						return fmt.Errorf("line %d: %v", startLineNum, err)
+					}
+				}
+				fullLine.Reset()
+			}
+			
 			// Parse multi-line case statement
 			caseLines, endLine, err := s.extractCaseStatement(allLines, lineNum-1)
 			if err != nil {
@@ -263,7 +274,18 @@ func (s *Shell) executeScriptLines(allLines []string) error {
 		}
 
 		// Check for if statement
-		if fullLine.Len() == 0 && strings.HasPrefix(trimmed, "if ") {
+		if strings.HasPrefix(trimmed, "if ") {
+			// If we have accumulated content, execute it first
+			if fullLine.Len() > 0 {
+				completeCommand := strings.TrimSpace(fullLine.String())
+				if completeCommand != "" {
+					if err := s.ExecuteLine(completeCommand); err != nil {
+						return fmt.Errorf("line %d: %v", startLineNum, err)
+					}
+				}
+				fullLine.Reset()
+			}
+			
 			// Parse multi-line if statement
 			ifLines, endLine, err := s.extractIfStatement(allLines, lineNum-1)
 			if err != nil {
@@ -346,13 +368,21 @@ func (s *Shell) extractCaseStatement(allLines []string, startLine int) ([]string
 func (s *Shell) extractIfStatement(allLines []string, startLine int) ([]string, int, error) {
 	var ifLines []string
 	i := startLine
+	ifCount := 0
+	fiCount := 0
 	
 	for i < len(allLines) {
 		line := strings.TrimSpace(allLines[i])
 		ifLines = append(ifLines, allLines[i])
 		
-		if line == "fi" {
-			return ifLines, i, nil
+		if strings.HasPrefix(line, "if ") {
+			ifCount++
+		} else if line == "fi" {
+			fiCount++
+			if ifCount == fiCount {
+				// Found matching fi
+				return ifLines, i, nil
+			}
 		}
 		i++
 	}

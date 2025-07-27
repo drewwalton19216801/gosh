@@ -489,25 +489,55 @@ func ParseIfFromLines(lines []string) (*CommandChain, error) {
 			continue
 		}
 
-		// Parse command
-		if line != "" && !strings.HasPrefix(line, "#") {
-			cmd, err := parseCommand(line)
+		// Check for nested if statement
+		if strings.HasPrefix(line, "if ") {
+			// Find the matching fi for this nested if
+			nestedLines, endIndex, err := extractNestedIf(lines, i)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing command in if: %v", err)
+				return nil, fmt.Errorf("error extracting nested if: %v", err)
 			}
-
+			
+			// Create a special command that represents the nested if statement
+			// The executor will need to handle this specially
+			nestedCmd := &Command{
+				Name: "__nested_if__",
+				Args: nestedLines, // Store the actual lines of the nested if
+			}
+			
 			switch currentSection {
 			case "then":
-				ifStmt.ThenCommands = append(ifStmt.ThenCommands, cmd)
+				ifStmt.ThenCommands = append(ifStmt.ThenCommands, nestedCmd)
 			case "else":
-				ifStmt.ElseCommands = append(ifStmt.ElseCommands, cmd)
+				ifStmt.ElseCommands = append(ifStmt.ElseCommands, nestedCmd)
 			case "elif":
 				if currentElifBranch != nil {
-					currentElifBranch.Commands = append(currentElifBranch.Commands, cmd)
+					currentElifBranch.Commands = append(currentElifBranch.Commands, nestedCmd)
 				}
 			}
+			
+			i = endIndex + 1 // Skip past the closing fi
+			continue
+		} else {
+			// Parse regular command
+			if line != "" && !strings.HasPrefix(line, "#") {
+				cmd, err := parseCommand(line)
+				if err != nil {
+					return nil, fmt.Errorf("error parsing command in if: %v", err)
+				}
+
+				switch currentSection {
+				case "then":
+					ifStmt.ThenCommands = append(ifStmt.ThenCommands, cmd)
+				case "else":
+					ifStmt.ElseCommands = append(ifStmt.ElseCommands, cmd)
+				case "elif":
+					if currentElifBranch != nil {
+						currentElifBranch.Commands = append(currentElifBranch.Commands, cmd)
+					}
+				}
+			}
+			i++
 		}
-		i++
 	}
 
 	// Save final elif branch if exists
@@ -663,6 +693,32 @@ func tokenize(line string) ([]string, error) {
 	}
 
 	return tokens, nil
+}
+
+// extractNestedIf extracts a nested if statement from lines starting at the given index
+func extractNestedIf(lines []string, startIndex int) ([]string, int, error) {
+	var nestedLines []string
+	i := startIndex
+	ifCount := 0
+	fiCount := 0
+	
+	for i < len(lines) {
+		line := strings.TrimSpace(lines[i])
+		nestedLines = append(nestedLines, lines[i])
+		
+		if strings.HasPrefix(line, "if ") {
+			ifCount++
+		} else if line == "fi" {
+			fiCount++
+			if ifCount == fiCount {
+				// Found matching fi
+				return nestedLines, i, nil
+			}
+		}
+		i++
+	}
+	
+	return nil, i, fmt.Errorf("nested if statement not properly closed with 'fi'")
 }
 
 // removeQuotes removes surrounding quotes from a string if present

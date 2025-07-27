@@ -35,11 +35,11 @@ func init() {
 		"test":     cmdTest,
 		"[":        cmdTest,
 		"return":   cmdReturn,
-		"if":       cmdIf,
+		"fi":       cmdFi,
 		"then":     cmdThen,
 		"else":     cmdElse,
 		"elif":     cmdElif,
-		"fi":       cmdFi,
+		"esac":     cmdEsac,
 	}
 }
 
@@ -611,27 +611,27 @@ func cmdReturn(s *Shell, cmd *Command) error {
 	return ReturnError{Code: code}
 }
 
-// cmdIf implements the if command (for interactive use)
-func cmdIf(s *Shell, cmd *Command) error {
-	return fmt.Errorf("if statements are only supported in scripts, not interactive mode")
-}
-
-// cmdThen implements the then command (for interactive use)
-func cmdThen(s *Shell, cmd *Command) error {
-	return fmt.Errorf("then statements are only supported in scripts, not interactive mode")
-}
-
-// cmdElse implements the else command (for interactive use)
-func cmdElse(s *Shell, cmd *Command) error {
-	return fmt.Errorf("else statements are only supported in scripts, not interactive mode")
-}
-
-// cmdElif implements the elif command (for interactive use)
-func cmdElif(s *Shell, cmd *Command) error {
-	return fmt.Errorf("elif statements are only supported in scripts, not interactive mode")
-}
-
-// cmdFi implements the fi command (for interactive use)
+// cmdFi implements the fi command (should only be used to close if statements)
 func cmdFi(s *Shell, cmd *Command) error {
-	return fmt.Errorf("fi statements are only supported in scripts, not interactive mode")
+	return fmt.Errorf("fi: unexpected token (not inside an if statement)")
+}
+
+// cmdThen implements the then command (should only be used in if statements)
+func cmdThen(s *Shell, cmd *Command) error {
+	return fmt.Errorf("then: unexpected token (not inside an if statement)")
+}
+
+// cmdElse implements the else command (should only be used in if statements)
+func cmdElse(s *Shell, cmd *Command) error {
+	return fmt.Errorf("else: unexpected token (not inside an if statement)")
+}
+
+// cmdElif implements the elif command (should only be used in if statements)
+func cmdElif(s *Shell, cmd *Command) error {
+	return fmt.Errorf("elif: unexpected token (not inside an if statement)")
+}
+
+// cmdEsac implements the esac command (should only be used to close case statements)
+func cmdEsac(s *Shell, cmd *Command) error {
+	return fmt.Errorf("esac: unexpected token (not inside a case statement)")
 }
