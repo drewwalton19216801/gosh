@@ -15,6 +15,7 @@ Gosh provides a comprehensive set of built-in commands for shell operations. See
 - **Unix Pipes**: Connect commands with `|` to chain operations
 - **Input/Output Redirection**: Support for `<`, `>`, and `>>` operators
 - **Background Execution**: Run commands in background with `&`
+- **Line Continuation**: Split long commands across multiple lines using `\`
 - **Environment Variables**: Set and use custom environment variables
 - **Command Aliases**: Create shortcuts for frequently used commands
 - **Command History**: Track previously executed commands
@@ -103,6 +104,11 @@ echo "$MY_VAR, $(whoami)!"
 
 # Command chaining
 echo "Starting..."; pwd; echo "Done!"
+
+# Line continuation for long commands
+echo "This is a very long command" \
+  "that spans multiple lines" \
+  "for better readability"
 ```
 
 For comprehensive examples and tutorials, see the [Scripting Guide](doc/scripting_guide.md).

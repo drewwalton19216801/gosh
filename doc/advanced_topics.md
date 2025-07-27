@@ -58,11 +58,60 @@ ls *.{go,md,txt}
 find . -name "*.go" -type f
 ```
 
+## Line Continuation
+
+Gosh supports line continuation using backslashes (`\`) at the end of lines, allowing you to split long commands across multiple lines for better readability.
+
+### Basic Line Continuation
+```bash
+# Split a long echo command
+echo "This is a very long message" \
+  "that spans multiple lines" \
+  "for better readability"
+
+# Long command with many arguments
+ls -la \
+  *.go \
+  *.md \
+  *.txt
+```
+
+### Line Continuation in Pipelines
+```bash
+# Multi-stage pipeline
+cat large_file.txt | \
+  grep "pattern" | \
+  sort | \
+  uniq -c | \
+  head -20
+```
+
+### Line Continuation in Command Chains
+```bash
+# Sequential commands
+echo "Step 1: Preparing..."; \
+  mkdir -p output; \
+  echo "Step 2: Processing..."; \
+  touch output/result.txt; \
+  echo "Step 3: Complete!"
+```
+
+### Interactive vs Script Usage
+Line continuation works in both interactive mode and script files:
+- **Interactive**: Use backslash at end of line, press Enter, and continue on the next line with a `> ` prompt
+- **Scripts**: Use backslash at end of line and continue the command on subsequent lines
+
+### Best Practices
+- Use line continuation to improve readability of complex commands
+- Indent continued lines for visual clarity
+- Avoid unnecessary spaces after the backslash
+- Be consistent with your continuation style within scripts
+
 ## Advanced Piping Techniques
 
 ### Multi-stage Data Processing
 ```bash
-# Complex data pipeline
+# Complex data pipeline with line continuation
 cat data.csv | \
   grep -v "^#" | \
   cut -d',' -f2,3 | \
@@ -89,7 +138,7 @@ cat input.txt | \
 # Sequential execution with status checking
 command1; echo "Command 1 completed"; command2; echo "Command 2 completed"
 
-# Complex workflows
+# Complex workflows with line continuation
 echo "Starting process..."; \
   mkdir -p temp; \
   cd temp; \

@@ -63,10 +63,8 @@ func (s *Shell) Run() {
 			cwd = filepath.Base(cwd)
 		}
 
-		// Update prompt with current directory
-		s.rl.SetPrompt(fmt.Sprintf("gosh:%s> ", cwd))
-
-		line, err := s.rl.Readline()
+		// Read command line with line continuation support
+		line, err := s.readLineWithContinuation(cwd)
 		if err != nil {
 			break
 		}
@@ -128,18 +126,58 @@ func (s *Shell) ExecuteScript(filename string) error {
 
 	scanner := bufio.NewScanner(file)
 	lineNum := 0
+	var fullLine strings.Builder
+	startLineNum := 0
 
 	for scanner.Scan() {
 		lineNum++
-		line := strings.TrimSpace(scanner.Text())
+		line := scanner.Text()
 
-		// Skip empty lines and comments
-		if line == "" || strings.HasPrefix(line, "#") {
+		// Skip empty lines and comments (only if not in continuation)
+		trimmed := strings.TrimSpace(line)
+		if fullLine.Len() == 0 && (trimmed == "" || strings.HasPrefix(trimmed, "#")) {
 			continue
 		}
 
-		if err := s.ExecuteLine(line); err != nil {
-			return fmt.Errorf("line %d: %v", lineNum, err)
+		// If this is the start of a new command, record the line number
+		if fullLine.Len() == 0 {
+			startLineNum = lineNum
+		}
+
+		// Check if line ends with backslash (line continuation)
+		trimmedRight := strings.TrimRightFunc(line, func(r rune) bool {
+			return r == ' ' || r == '\t'
+		})
+
+		if strings.HasSuffix(trimmedRight, "\\") {
+			// Remove the backslash and continue reading
+			continuedLine := strings.TrimSuffix(trimmedRight, "\\")
+			fullLine.WriteString(continuedLine)
+			fullLine.WriteString(" ") // Add space to separate continued lines
+			continue
+		} else {
+			// No continuation, add this line and execute
+			fullLine.WriteString(line)
+			completeCommand := strings.TrimSpace(fullLine.String())
+			
+			if completeCommand != "" {
+				if err := s.ExecuteLine(completeCommand); err != nil {
+					return fmt.Errorf("line %d: %v", startLineNum, err)
+				}
+			}
+			
+			// Reset for next command
+			fullLine.Reset()
+		}
+	}
+
+	// Handle case where file ends with a continuation line
+	if fullLine.Len() > 0 {
+		completeCommand := strings.TrimSpace(fullLine.String())
+		if completeCommand != "" {
+			if err := s.ExecuteLine(completeCommand); err != nil {
+				return fmt.Errorf("line %d: %v", startLineNum, err)
+			}
 		}
 	}
 
@@ -203,6 +241,46 @@ func (s *Shell) expandCommand(cmd *Command) error {
 	}
 
 	return nil
+}
+
+// readLineWithContinuation reads a command line with support for backslash line continuation
+func (s *Shell) readLineWithContinuation(cwd string) (string, error) {
+	var fullLine strings.Builder
+	isFirstLine := true
+	
+	for {
+		// Set appropriate prompt
+		if isFirstLine {
+			s.rl.SetPrompt(fmt.Sprintf("gosh:%s> ", cwd))
+		} else {
+			s.rl.SetPrompt("> ")
+		}
+		
+		line, err := s.rl.Readline()
+		if err != nil {
+			return "", err
+		}
+		
+		// Check if line ends with backslash (line continuation)
+		trimmed := strings.TrimRightFunc(line, func(r rune) bool {
+			return r == ' ' || r == '\t'
+		})
+		
+		if strings.HasSuffix(trimmed, "\\") {
+			// Remove the backslash and continue reading
+			continuedLine := strings.TrimSuffix(trimmed, "\\")
+			fullLine.WriteString(continuedLine)
+			fullLine.WriteString(" ") // Add space to separate continued lines
+			isFirstLine = false
+			continue
+		} else {
+			// No continuation, add this line and finish
+			fullLine.WriteString(line)
+			break
+		}
+	}
+	
+	return fullLine.String(), nil
 }
 
 // Exit sets the shell to stop running
