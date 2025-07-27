@@ -20,6 +20,7 @@ A basic command-line shell written in Go with sh-style scripting support, design
 
 ### Shell Features
 - **Interactive Mode**: Run `./gosh` for an interactive shell session
+- **Command Mode**: Run `./gosh -c "command"` to execute a single command and exit
 - **Script Mode**: Run `./gosh script.sh` to execute shell scripts
 - **Unix Pipes**: Connect commands with `|` to chain operations
   - `cmd1 | cmd2` - Pass output of cmd1 as input to cmd2
@@ -49,6 +50,19 @@ go build -o gosh
 ./gosh
 ```
 Gosh, that was easy!
+
+### Command Mode
+```bash
+./gosh -c "command"
+```
+Execute a single command and exit. Perfect for automation and scripting!
+
+Examples:
+```bash
+./gosh -c "echo 'Hello World'"
+./gosh -c "ls -la | grep .go"
+./gosh -c "pwd && echo 'Current directory listed above'"
+```
 
 ### Script Mode
 ```bash
