@@ -3,10 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"sort"
 	"strings"
+	"syscall"
 
 	"github.com/chzyer/readline"
 )
@@ -33,6 +36,8 @@ type Shell struct {
 	history         []string
 	running         bool
 	rl              *readline.Instance
+	currentCmd      *os.Process
+	sigChan         chan os.Signal
 }
 
 // NewShell creates a new shell instance
@@ -44,7 +49,12 @@ func NewShell() *Shell {
 		functionStack: make([]*FunctionContext, 0),
 		history:       make([]string, 0),
 		running:       true,
+		sigChan:       make(chan os.Signal, 1),
 	}
+
+	// Set up signal handling for SIGINT (Ctrl-C)
+	signal.Notify(s.sigChan, syscall.SIGINT)
+	go s.handleSignals()
 
 	// Initialize readline with history support and tab completion
 	rl, err := readline.NewEx(&readline.Config{
@@ -61,6 +71,22 @@ func NewShell() *Shell {
 	s.rl = rl
 
 	return s
+}
+
+// handleSignals processes incoming signals
+func (s *Shell) handleSignals() {
+	for sig := range s.sigChan {
+		switch sig {
+		case syscall.SIGINT:
+			// If there's a running command, terminate it
+			if s.currentCmd != nil {
+				// Send SIGINT to the running process
+				s.currentCmd.Signal(syscall.SIGINT)
+				s.currentCmd = nil
+			}
+			// Don't exit the shell, just interrupt the current command
+		}
+	}
 }
 
 // Run starts the interactive shell loop
@@ -635,6 +661,17 @@ func (s *Shell) readLineWithContinuation(cwd string) (string, error) {
 		
 		line, err := s.rl.Readline()
 		if err != nil {
+			// Handle Ctrl-C (interrupt) - don't exit, just return empty line to continue
+			if err == io.EOF || err == readline.ErrInterrupt {
+				if fullLine.Len() > 0 {
+					// If we have partial input, clear it and start fresh
+					fullLine.Reset()
+					isFirstLine = true
+					continue
+				}
+				// Return empty string to continue the shell loop
+				return "", nil
+			}
 			return "", err
 		}
 		

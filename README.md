@@ -29,6 +29,7 @@ Gosh provides a comprehensive set of built-in commands for shell operations. See
 - **Command Substitution**: Execute commands and use their output with `$(command)` and `` `command` ``
 - **Tilde Expansion**: Expand `~` to home directory and user paths
 - **Glob Patterns**: Use wildcards for filename matching
+- **Signal Handling**: Ctrl-C interrupts running commands without exiting the shell
 
 For detailed information on scripting and advanced features, see the [Scripting Guide](doc/scripting_guide.md) and [Advanced Topics](doc/advanced_topics.md).
 
@@ -122,6 +123,30 @@ echo "This is a very long command" \
 ```
 
 For comprehensive examples and tutorials, see the [Scripting Guide](doc/scripting_guide.md).
+
+## Signal Handling
+
+Gosh implements proper signal handling to provide a better user experience:
+
+- **Ctrl-C (SIGINT)**: Interrupts the currently running command but does not exit the shell
+- **Ctrl-C while idle**: Shows a new prompt but does not exit the shell
+- The shell remains active and returns to the prompt in all cases
+- This allows you to stop long-running commands without losing your shell session
+- The shell can only be exited using the `exit` command or EOF (Ctrl-D)
+
+### Testing Signal Handling
+
+To test the signal handling functionality:
+
+1. Start the shell: `./gosh`
+2. Press Ctrl-C while idle - the shell should show a new prompt but not exit
+3. Run a long command: `sleep 10`
+4. Press Ctrl-C to interrupt the sleep command
+5. The shell should return to the prompt without exiting
+6. Press Ctrl-C again while idle - should show new prompt, not exit
+7. Use `exit` to properly exit the shell
+
+Gosh, that's convenient!
 
 ## Architecture
 

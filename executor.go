@@ -106,7 +106,22 @@ func (s *Shell) executeExternal(cmd *Command) error {
 		return execCmd.Start()
 	}
 
-	return execCmd.Run()
+	// Start the command and track it for signal handling
+	err = execCmd.Start()
+	if err != nil {
+		return err
+	}
+
+	// Set the current command for signal handling
+	s.currentCmd = execCmd.Process
+
+	// Wait for the command to complete
+	err = execCmd.Wait()
+
+	// Clear the current command
+	s.currentCmd = nil
+
+	return err
 }
 
 // ExecutePipeline executes a series of commands connected by pipes
@@ -129,6 +144,7 @@ func (s *Shell) ExecutePipeline(commands []*Command) error {
 	// Create pipes for connecting commands
 	var pipes []io.ReadCloser
 	var execCmds []*exec.Cmd
+	var processes []*os.Process
 
 	for i, cmd := range commands {
 		// Resolve command path
@@ -207,6 +223,12 @@ func (s *Shell) ExecutePipeline(commands []*Command) error {
 		if err := execCmd.Start(); err != nil {
 			return fmt.Errorf("failed to start command %s: %v", commands[i].Name, err)
 		}
+		processes = append(processes, execCmd.Process)
+	}
+
+	// Set the first process as current for signal handling
+	if len(processes) > 0 {
+		s.currentCmd = processes[0]
 	}
 
 	// Close pipe read ends that we created
@@ -225,6 +247,9 @@ func (s *Shell) ExecutePipeline(commands []*Command) error {
 			lastErr = fmt.Errorf("command %s failed: %v", commands[i].Name, err)
 		}
 	}
+
+	// Clear the current command
+	s.currentCmd = nil
 
 	return lastErr
 }
