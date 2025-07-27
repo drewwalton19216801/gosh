@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>If Statements - gosh</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1><a href="index.html" style="color: inherit; text-decoration: none;">gosh</a></h1>
+                <span class="tagline">A Simple Shell</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="command-reference.html">Commands</a></li>
+                <li><a href="scripting-guide.html">Scripting</a></li>
+                <li><a href="https://github.com/drewwalton19216801/gosh" target="_blank">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="page-header">
+        <div class="container">
+            <h1>If Statements</h1>
+            <p>Complete guide to conditional statements in gosh shell scripts</p>
+        </div>
+    </header>
+
+    <main class="page-content">
+        <a href="index.html" class="back-link">← Back to Home</a>
+        
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#syntax">Syntax</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#test-operators">Test Operators</a></li>
+                <li><a href="#examples">Examples</a></li>
+                <li><a href="#important-notes">Important Notes</a></li>
+            </ul>
+        </div>
+
+        <section id="syntax">
+            <h2>Syntax</h2>
+            <p>If statements in gosh follow the standard POSIX shell syntax:</p>
+            
+            <h3>Basic If Statement</h3>
+            <pre><code>if condition
+then
+    # commands
+fi</code></pre>
+
+            <h3>If-Else Statement</h3>
+            <pre><code>if condition
+then
+    # commands when true
+else
+    # commands when false
+fi</code></pre>
+
+            <h3>If-Elif-Else Statement</h3>
+            <pre><code>if condition1
+then
+    # commands when condition1 is true
+elif condition2
+then
+    # commands when condition2 is true
+else
+    # commands when all conditions are false
+fi</code></pre>
+        </section>
+
+        <section id="features">
+            <h2>Features</h2>
+            <ul>
+                <li><strong>Basic if-then-else statements</strong> with proper condition evaluation</li>
+                <li><strong>Multi-line syntax</strong> with separate <code>then</code>, <code>else</code>, and <code>fi</code> keywords</li>
+                <li><strong>elif branches</strong> for multiple conditions</li>
+                <li><strong>Integration with test command</strong> for numeric, string, and file comparisons</li>
+                <li><strong>Function support</strong> - if statements work inside user-defined functions</li>
+                <li><strong>Variable expansion</strong> in conditions</li>
+                <li><strong>Return statement handling</strong> within if blocks</li>
+                <li><strong>Script-only execution</strong> (not available in interactive mode)</li>
+            </ul>
+        </section>
+
+        <section id="test-operators">
+            <h2>Test Command Operators</h2>
+            <p>The <code>test</code> command is commonly used with if statements for condition evaluation:</p>
+            
+            <h3>Numeric Comparisons</h3>
+            <ul>
+                <li><code>-eq</code> - Equal to</li>
+                <li><code>-ne</code> - Not equal to</li>
+                <li><code>-lt</code> - Less than</li>
+                <li><code>-le</code> - Less than or equal to</li>
+                <li><code>-gt</code> - Greater than</li>
+                <li><code>-ge</code> - Greater than or equal to</li>
+            </ul>
+
+            <h3>String Comparisons</h3>
+            <ul>
+                <li><code>=</code> - String equality</li>
+                <li><code>!=</code> - String inequality</li>
+                <li><code>-z</code> - String is empty</li>
+                <li><code>-n</code> - String is not empty</li>
+            </ul>
+
+            <h3>File Tests</h3>
+            <ul>
+                <li><code>-f</code> - File exists and is a regular file</li>
+                <li><code>-d</code> - File exists and is a directory</li>
+                <li><code>-e</code> - File exists</li>
+                <li><code>-r</code> - File is readable</li>
+                <li><code>-w</code> - File is writable</li>
+                <li><code>-x</code> - File is executable</li>
+            </ul>
+        </section>
+
+        <section id="examples">
+            <h2>Examples</h2>
+            
+            <h3>Basic Conditional Logic</h3>
+            <pre><code>#!/usr/local/bin/gosh
+
+# Simple numeric comparison
+if test 5 -gt 3
+then
+    echo "5 is greater than 3"
+fi
+
+# String comparison
+name="gosh"
+if test $name = "gosh"
+then
+    echo "Welcome to gosh!"
+else
+    echo "This is not gosh"
+fi</code></pre>
+
+            <h3>Function Argument Checking</h3>
+            <pre><code>#!/usr/local/bin/gosh
+
+check_args() {
+    if test $# -eq 0
+    then
+        echo "No arguments provided"
+        return 1
+    else
+        echo "Received $# arguments"
+        return 0
+    fi
+}
+
+check_args
+check_args arg1 arg2</code></pre>
+
+            <h3>File Backup Script</h3>
+            <pre><code>#!/usr/local/bin/gosh
+
+backup_file() {
+    if test $# -eq 0
+    then
+        echo "Usage: backup_file <filename>"
+        return 1
+    fi
+    
+    if test -f $1
+    then
+        export backup_name="$1.backup.$(date +%Y%m%d)"
+        cp $1 $backup_name
+        echo "Backup created: $backup_name"
+    else
+        echo "Error: File $1 does not exist"
+        return 1
+    fi
+}
+
+backup_file "important.txt"</code></pre>
+
+            <h3>System Information Script</h3>
+            <pre><code>#!/usr/local/bin/gosh
+
+check_system() {
+    export current_user=$(whoami)
+    export current_dir=$(pwd)
+    
+    if test $current_user = "root"
+    then
+        echo "Warning: Running as root user"
+    else
+        echo "Running as user: $current_user"
+    fi
+    
+    if test -d $current_dir
+    then
+        echo "Current directory: $current_dir"
+        if test -w $current_dir
+        then
+            echo "Directory is writable"
+        else
+            echo "Directory is read-only"
+        fi
+    fi
+}
+
+check_system</code></pre>
+        </section>
+
+        <section id="important-notes">
+            <h2>Important Notes</h2>
+            <ul>
+                <li><strong>Script-only feature:</strong> If statements are only supported in script mode, not in interactive mode</li>
+                <li><strong>Multi-line format:</strong> Use separate lines for <code>if</code>, <code>then</code>, <code>else</code>, and <code>fi</code> keywords</li>
+                <li><strong>Condition evaluation:</strong> Conditions are evaluated using the exit status of commands (0 = true, non-zero = false)</li>
+                <li><strong>Variable expansion:</strong> Variables are expanded within conditions, so use proper quoting when necessary</li>
+                <li><strong>Return statements:</strong> Can be used within if blocks in functions to control function exit</li>
+                <li><strong>Nested if statements:</strong> If statements can be nested within other if statements</li>
+                <li><strong>Test command:</strong> The <code>test</code> command is the most common way to create conditions</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 gosh. Open source and available under the MIT License.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
