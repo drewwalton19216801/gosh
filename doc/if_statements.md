@@ -126,11 +126,13 @@ check_grade() {
 
 2. **Multi-line format**: If statements must use the multi-line format with separate `then`, `else`, and `fi` keywords on their own lines.
 
-3. **Condition evaluation**: The condition is based on the exit status of the command. Exit status 0 means success (true), non-zero means failure (false).
+3. **Nested if statements**: gosh fully supports nested if statements. You can place if statements inside other if statements, and the parser will correctly match each `if` with its corresponding `fi`.
 
-4. **Variable expansion**: Variables in conditions are expanded before evaluation.
+4. **Condition evaluation**: The condition is based on the exit status of the command. Exit status 0 means success (true), non-zero means failure (false).
 
-5. **Return statements**: Functions can use `return` statements within if blocks to exit early.
+5. **Variable expansion**: Variables in conditions are expanded before evaluation.
+
+6. **Return statements**: Functions can use `return` statements within if blocks to exit early.
 
 ## Examples
 
@@ -175,6 +177,35 @@ then
 else
     echo "Unknown operating system: $(uname)"
 fi
+```
+
+### Nested If Statements
+
+```bash
+#!/usr/local/bin/gosh
+
+check_directory() {
+    if test -d $1
+    then
+        echo "Directory $1 exists"
+        if test -w $1
+        then
+            echo "Directory is writable"
+            if test -r $1
+            then
+                echo "Directory is readable"
+            else
+                echo "Directory is not readable"
+            fi
+        else
+            echo "Directory is read-only"
+        fi
+    else
+        echo "Directory $1 does not exist"
+    fi
+}
+
+check_directory $1
 ```
 
 ## Comparison with Other Shells
