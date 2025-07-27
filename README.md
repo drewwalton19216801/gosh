@@ -1,6 +1,6 @@
 # gosh - A Simple Shell
 
-![Gosh Logo](images/gosh_logo.png)
+<img src="images/gosh_logo.png" alt="Gosh Logo" width="50%" style="display: block; margin: 20px auto;">
 
 A basic command-line shell written in Go with sh-style scripting support, designed for macOS compatibility. Gosh, it's good to have a reliable shell!
 
