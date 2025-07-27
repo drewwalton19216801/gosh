@@ -1,6 +1,6 @@
 # gosh - A Simple Shell
 
-A basic command-line shell written in Go with sh-style scripting support, designed for macOS compatibility.
+A basic command-line shell written in Go with sh-style scripting support, designed for macOS compatibility. Gosh, it's good to have a reliable shell!
 
 ## Features
 
@@ -44,26 +44,29 @@ go build -o gosh
 ```bash
 ./gosh
 ```
+Gosh, that was easy!
 
 ### Script Mode
 ```bash
 ./gosh script.sh
 ```
+By gosh, scripting has never been simpler!
 
 ### Example Script
 ```bash
 #!/usr/bin/env gosh
-# Example gosh script
+# Example gosh script - gosh, this is neat!
 
 echo "Hello from gosh!"
 pwd
 export MY_VAR=test
 echo "MY_VAR is: $MY_VAR"
+# Gosh darn it, that's some fine scripting!
 ```
 
 ## Architecture
 
-The shell is organized into multiple modules for maximum readability:
+Gosh, we've organized the shell into multiple modules for maximum readability:
 
 - `main.go` - Entry point and argument handling
 - `shell.go` - Core shell structure and main loop
@@ -74,7 +77,7 @@ The shell is organized into multiple modules for maximum readability:
 
 ## Compatibility
 
-Designed and tested for macOS. The shell uses Go's standard library for cross-platform compatibility where possible.
+Designed and tested for macOS. Gosh, the shell uses Go's standard library for cross-platform compatibility where possible - oh my gosh, it's portable!
 
 ## License
 
