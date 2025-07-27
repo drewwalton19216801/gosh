@@ -23,7 +23,8 @@ This guide demonstrates the tab completion functionality in gosh.
 2. Type `cd ~/D` and press TAB - should complete to directories starting with 'D' in your home
 3. Type `ls ~/Documents/` and press TAB - should show contents of ~/Documents/ directory
 4. Type `echo ~` and press TAB - should complete to `echo ~/`
-5. Type `cat ~/.*` and press TAB - should show hidden files in home directory
+5. Type `cd ~/` and press TAB - should not expand further (no completions shown)
+6. Type `cat ~/.*` and press TAB - should show hidden files in home directory
 
 ## Testing Glob Pattern Completion
 
