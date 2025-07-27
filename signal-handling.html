@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signal Handling - gosh Documentation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="images/gosh_logo.png" alt="gosh logo" class="nav-logo">
+                <div class="nav-text">
+                    <h1>gosh</h1>
+                    <span class="tagline">A Simple Shell</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="command-reference.html">Commands</a></li>
+                <li><a href="scripting-guide.html">Scripting</a></li>
+                <li><a href="https://github.com/drewwalton19216801/gosh" target="_blank">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="index.html">Home</a> > <span>Signal Handling</span>
+            </div>
+            
+            <h1>Signal Handling</h1>
+            <p class="lead">Gosh implements robust signal handling to provide a professional shell experience where Ctrl-C never accidentally exits your session.</p>
+
+            <section class="section">
+                <h2>Overview</h2>
+                <p>Signal handling in gosh ensures that the shell behaves predictably and safely when receiving interrupt signals. The implementation focuses on providing a user-friendly experience where commands can be interrupted without losing the shell session.</p>
+            </section>
+
+            <section class="section">
+                <h2>Signal Types</h2>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <h3>SIGINT (Ctrl-C)</h3>
+                        <p>The primary signal handled by gosh. When pressed:</p>
+                        <ul>
+                            <li><strong>During command execution:</strong> Interrupts the running command and returns to the prompt</li>
+                            <li><strong>While shell is idle:</strong> Shows a new prompt but does not exit the shell</li>
+                            <li><strong>During pipeline execution:</strong> Interrupts all processes in the pipeline</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Behavior Examples</h2>
+                
+                <h3>Interrupting a Long-Running Command</h3>
+                <div class="code-block">
+                    <pre><code>gosh> sleep 30
+^C
+gosh> # Command interrupted, shell continues</code></pre>
+                </div>
+
+                <h3>Ctrl-C While Idle</h3>
+                <div class="code-block">
+                    <pre><code>gosh> ^C
+gosh> # New prompt shown, shell continues running</code></pre>
+                </div>
+
+                <h3>Pipeline Interruption</h3>
+                <div class="code-block">
+                    <pre><code>gosh> find / -name "*.log" | grep error | sort
+^C
+gosh> # All processes in pipeline interrupted</code></pre>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Implementation Details</h2>
+                <p>The signal handling system in gosh consists of several key components:</p>
+                
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <h3>Signal Channel</h3>
+                        <p>A dedicated goroutine listens for SIGINT signals and processes them appropriately based on the current shell state.</p>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <h3>Process Tracking</h3>
+                        <p>The shell tracks currently running processes to enable proper signal forwarding and cleanup.</p>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <h3>Readline Integration</h3>
+                        <p>Special handling for readline interrupts ensures the shell doesn't exit when Ctrl-C is pressed while idle.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Testing Signal Handling</h2>
+                <p>To verify that signal handling works correctly in your gosh installation:</p>
+                
+                <div class="step-list">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Start gosh</h3>
+                            <div class="code-block">
+                                <code>./gosh</code>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Test idle Ctrl-C</h3>
+                            <p>Press Ctrl-C while at the prompt. The shell should show a new prompt without exiting.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Test command interruption</h3>
+                            <div class="code-block">
+                                <code>sleep 10</code>
+                            </div>
+                            <p>Press Ctrl-C during execution. The sleep command should be interrupted and you should return to the prompt.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3>Test pipeline interruption</h3>
+                            <div class="code-block">
+                                <code>find /usr -name "*.txt" | head -100</code>
+                            </div>
+                            <p>Press Ctrl-C during execution. Both find and head processes should be interrupted.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Exit Methods</h2>
+                <p>Since Ctrl-C doesn't exit the shell, you can exit gosh using these methods:</p>
+                
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <h3>exit command</h3>
+                        <div class="code-block">
+                            <code>gosh> exit</code>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <h3>EOF (Ctrl-D)</h3>
+                        <p>Press Ctrl-D to send an EOF signal and exit the shell gracefully.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <h2>Benefits</h2>
+                <ul>
+                    <li><strong>Safety:</strong> Prevents accidental shell termination</li>
+                    <li><strong>Productivity:</strong> Allows quick command interruption without losing session</li>
+                    <li><strong>Consistency:</strong> Matches behavior of professional shells like bash and zsh</li>
+                    <li><strong>Reliability:</strong> Robust handling of edge cases and pipeline scenarios</li>
+                </ul>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 gosh. Open source and available under the MIT License.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

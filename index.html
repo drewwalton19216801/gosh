@@ -61,17 +61,17 @@
                         <div class="terminal-line output">Hello, World!</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
-                            <span class="command">if test -f "main.go"; then</span>
+                            <span class="command">sleep 10</span>
                         </div>
                         <div class="terminal-line">
-                            <span class="prompt">then> </span>
-                            <span class="command">echo "Go project detected"</span>
+                            <span class="prompt">gosh> </span>
+                            <span class="command">^C</span>
                         </div>
                         <div class="terminal-line">
-                            <span class="prompt">then> </span>
-                            <span class="command">fi</span>
+                            <span class="prompt">gosh> </span>
+                            <span class="command">echo "Ctrl-C works perfectly!"</span>
                         </div>
-                        <div class="terminal-line output">Go project detected</div>
+                        <div class="terminal-line output">Ctrl-C works perfectly!</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
                             <span class="cursor">_</span>
@@ -103,17 +103,17 @@
                         <div class="terminal-line output">Hello, World!</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
-                            <span class="command">if test -f "main.go"; then</span>
+                            <span class="command">sleep 10</span>
                         </div>
                         <div class="terminal-line">
-                            <span class="prompt">then> </span>
-                            <span class="command">echo "Go project detected"</span>
+                            <span class="prompt">gosh> </span>
+                            <span class="command">^C</span>
                         </div>
                         <div class="terminal-line">
-                            <span class="prompt">then> </span>
-                            <span class="command">fi</span>
+                            <span class="prompt">gosh> </span>
+                            <span class="command">echo "Ctrl-C works perfectly!"</span>
                         </div>
-                        <div class="terminal-line output">Go project detected</div>
+                        <div class="terminal-line output">Ctrl-C works perfectly!</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
                             <span class="cursor">_</span>
@@ -152,6 +152,11 @@
                     <div class="feature-icon">🌟</div>
                     <h3>Modern Features</h3>
                     <p>Command history, aliases, tab completion, and background execution</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Signal Handling</h3>
+                    <p>Robust Ctrl-C handling that interrupts commands without exiting the shell</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🍎</div>
@@ -236,6 +241,11 @@
                     <div class="doc-icon">🔀</div>
                     <h3>If Statements</h3>
                     <p>Complete guide to conditional statements in gosh</p>
+                </a>
+                <a href="signal-handling.html" class="doc-card">
+                    <div class="doc-icon">🛡️</div>
+                    <h3>Signal Handling</h3>
+                    <p>Learn about robust Ctrl-C handling and signal management</p>
                 </a>
             </div>
         </div>
