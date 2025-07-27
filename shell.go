@@ -74,6 +74,11 @@ func (s *Shell) Run() {
 			continue
 		}
 
+		// Skip comments in interactive mode
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
+
 		s.history = append(s.history, line)
 		if err := s.ExecuteLine(line); err != nil {
 			fmt.Fprintf(os.Stderr, "gosh: %v\n", err)
