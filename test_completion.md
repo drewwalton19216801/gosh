@@ -10,20 +10,6 @@ This guide demonstrates the tab completion functionality in gosh.
 4. Type `h` and press TAB - should show `help` and `history`
 5. Type `qu` and press TAB - should complete to `quota` (not `ququota`)
 
-## Bug Fixes
-
-### Fixed: Duplicate Prefix Issue
-- **Problem**: Typing "qu" and pressing TAB resulted in "ququota"
-- **Root Cause**: The `TabCompleter.Do()` method was returning full completion strings instead of just the suffix
-- **Fix**: Modified the method to return only the suffix that extends beyond the current word
-- **Test**: Type "qu" and press TAB - should complete to "quota" (not "ququota")
-
-### Fixed: Glob Pattern Completion
-- **Problem**: Typing "ls *." and pressing TAB showed no completions
-- **Root Cause**: The file completion logic didn't handle glob patterns like `*`, `?`, `[]`
-- **Fix**: Added `getGlobCompletions()` function that uses `filepath.Glob()` to expand patterns
-- **Test**: Create files ending with dots (e.g., `touch file1. file2.`) then type "ls *." and press TAB
-
 ## Testing File/Directory Completion
 
 1. Type `cd ` (with space) and press TAB - should show directories in current folder
@@ -33,7 +19,7 @@ This guide demonstrates the tab completion functionality in gosh.
 ## Testing Glob Pattern Completion
 
 1. Create test files: `touch file1. file2. test.`
-2. Type `ls *.` and press TAB - should show files ending with dots
+2. Type `ls .` and press TAB - should show files ending with dots
 3. Create test files: `touch test.txt example.txt sample.go`
 4. Type `ls *.txt` and press TAB - should show .txt files
 5. Type `ls test.*` and press TAB - should show files starting with "test"
