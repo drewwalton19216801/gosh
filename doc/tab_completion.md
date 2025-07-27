@@ -15,6 +15,7 @@ This guide demonstrates the tab completion functionality in gosh.
 1. Type `cd ` (with space) and press TAB - should show directories in current folder
 2. Type `ls *.` and press TAB - should show files starting with dot
 3. Type `cat README` and press TAB - should complete to `README.md`
+4. Navigate to `examples/` directory and type `./case` then press TAB - should complete to `./case_statement_demo.sh`
 
 ## Testing Glob Pattern Completion
 
@@ -35,6 +36,7 @@ This guide demonstrates the tab completion functionality in gosh.
 - ✅ Built-in command completion (exit, cd, pwd, echo, etc.)
 - ✅ External command completion from PATH
 - ✅ File and directory completion
+- ✅ File path completion (including ./ and ../ prefixes)
 - ✅ Alias completion
 - ✅ Context-aware completion (commands vs arguments)
 - ✅ Hidden file completion (when prefix starts with dot)

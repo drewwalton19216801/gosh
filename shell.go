@@ -473,12 +473,22 @@ func (s *Shell) getCompletions(line string, pos int) []string {
 
 	var completions []string
 
-	if len(fields) == 0 {
-		// Completing command name
+	// Check if the current word looks like a file path (contains / or starts with .)
+	isFilePath := strings.Contains(currentWord, "/") || strings.HasPrefix(currentWord, ".")
+
+	if len(fields) == 0 && !isFilePath {
+		// Completing command name (but not if it looks like a file path)
 		completions = append(completions, s.getCommandCompletions(currentWord)...)
 	} else {
-		// Completing arguments - provide file/directory completions
+		// Completing arguments or file paths - provide file/directory completions
 		completions = append(completions, s.getFileCompletions(currentWord)...)
+	}
+
+	// If we're completing a command name and no command completions were found,
+	// also try file completions (for executable files)
+	if len(fields) == 0 && !isFilePath && len(completions) == 0 {
+		fileCompletions := s.getFileCompletions(currentWord)
+		completions = append(completions, fileCompletions...)
 	}
 
 	return completions
