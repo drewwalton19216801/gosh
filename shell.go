@@ -102,8 +102,6 @@ func (s *Shell) Run() {
 		cwd, err := os.Getwd()
 		if err != nil {
 			cwd = "unknown"
-		} else {
-			cwd = filepath.Base(cwd)
 		}
 
 		// Read command line with line continuation support
@@ -647,6 +645,34 @@ func (s *Shell) expandCommand(cmd *Command) error {
 
 // readLineWithContinuation reads a command line with support for backslash line continuation
 // and multi-line constructs like if and case statements
+// abbreviatePath converts a full path to abbreviated form
+// Example: /Users/drewwalton/Projects/go/gosh -> /U/d/P/g/gosh
+func (s *Shell) abbreviatePath(path string) string {
+	if path == "/" {
+		return "/"
+	}
+
+	// Split the path into components
+	parts := strings.Split(strings.TrimPrefix(path, "/"), "/")
+	if len(parts) <= 1 {
+		return path
+	}
+
+	// Abbreviate all parts except the last one
+	var abbreviated []string
+	for i, part := range parts {
+		if i == len(parts)-1 {
+			// Keep the last directory name in full
+			abbreviated = append(abbreviated, part)
+		} else if len(part) > 0 {
+			// Abbreviate to first character
+			abbreviated = append(abbreviated, string(part[0]))
+		}
+	}
+
+	return "/" + strings.Join(abbreviated, "/")
+}
+
 func (s *Shell) readLineWithContinuation(cwd string) (string, error) {
 	var fullLine strings.Builder
 	isFirstLine := true
@@ -654,7 +680,8 @@ func (s *Shell) readLineWithContinuation(cwd string) (string, error) {
 	for {
 		// Set appropriate prompt
 		if isFirstLine {
-			s.rl.SetPrompt(fmt.Sprintf("gosh:%s> ", cwd))
+			abbreviatedPath := s.abbreviatePath(cwd)
+			s.rl.SetPrompt(fmt.Sprintf("gosh:%s> ", abbreviatedPath))
 		} else {
 			s.rl.SetPrompt("> ")
 		}
@@ -1025,68 +1052,68 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 				} else if strings.HasPrefix(prefix, "~/") {
 					// Handle ~/ case
 					if strings.HasSuffix(prefix, "/") {
-					completion = prefix + name
-				} else {
-					// For cases like ~/PR completing to ~/Projects, use the correct filesystem case
-					prefixDir := filepath.Dir(prefix)
-					if prefixDir == "." {
-						// prefix is just ~/something without slashes
-						prefixBase := filepath.Base(prefix)
-						if strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
-							// Case-insensitive match - construct completion that starts with original prefix
-							completion = "~/" + prefixBase + name[len(prefixBase):]
-						} else {
-							// Exact match
-							completion = "~/" + name
-						}
+						completion = prefix + name
 					} else {
-						// Handle cases like ~/Documents/PR completing to ~/Documents/Projects
-						prefixBase := filepath.Base(prefix)
-						if strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
-							// Case-insensitive match - construct completion that starts with original prefix
-							completion = prefixDir + "/" + prefixBase + name[len(prefixBase):]
+						// For cases like ~/PR completing to ~/Projects, use the correct filesystem case
+						prefixDir := filepath.Dir(prefix)
+						if prefixDir == "." {
+							// prefix is just ~/something without slashes
+							prefixBase := filepath.Base(prefix)
+							if strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
+								// Case-insensitive match - construct completion that starts with original prefix
+								completion = "~/" + prefixBase + name[len(prefixBase):]
+							} else {
+								// Exact match
+								completion = "~/" + name
+							}
 						} else {
-							// Exact match
-							completion = prefixDir + "/" + name
+							// Handle cases like ~/Documents/PR completing to ~/Documents/Projects
+							prefixBase := filepath.Base(prefix)
+							if strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
+								// Case-insensitive match - construct completion that starts with original prefix
+								completion = prefixDir + "/" + prefixBase + name[len(prefixBase):]
+							} else {
+								// Exact match
+								completion = prefixDir + "/" + name
+							}
 						}
 					}
-				}
 				} else {
 					// Handle ~user case
 					completion = prefix + "/" + name
 				}
 			} else if strings.Contains(prefix, "/") {
 				// Reconstruct the full path, preserving the original prefix format
-			prefixDir := filepath.Dir(prefix)
-			prefixBase := filepath.Base(prefix)
-			if prefixDir == "." && strings.HasPrefix(prefix, "./") {
-				// Preserve './' prefix format
-				if strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
-					// Case-insensitive match
-					completion = "./" + prefixBase + name[len(prefixBase):]
+				prefixDir := filepath.Dir(prefix)
+				prefixBase := filepath.Base(prefix)
+				if prefixDir == "." && strings.HasPrefix(prefix, "./") {
+					// Preserve './' prefix format
+					if strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
+						// Case-insensitive match
+						completion = "./" + prefixBase + name[len(prefixBase):]
+					} else {
+						// Exact match
+						completion = "./" + name
+					}
 				} else {
-					// Exact match
-					completion = "./" + name
+					// Use the correct filesystem case but preserve prefix structure
+					if strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
+						// Case-insensitive match
+						completion = filepath.Join(prefixDir, prefixBase+name[len(prefixBase):])
+					} else {
+						// Exact match
+						completion = filepath.Join(prefixDir, name)
+					}
 				}
-			} else {
-				// Use the correct filesystem case but preserve prefix structure
-				if strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
-					// Case-insensitive match
-					completion = filepath.Join(prefixDir, prefixBase + name[len(prefixBase):])
-				} else {
-					// Exact match
-					completion = filepath.Join(prefixDir, name)
-				}
-			}
 			} else {
 				// Simple filename completion
-			if strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefix)) {
-				// Case-insensitive match - construct completion that starts with original prefix
-				completion = prefix + name[len(prefix):]
-			} else {
-				// Exact match
-				completion = name
-			}
+				if strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefix)) {
+					// Case-insensitive match - construct completion that starts with original prefix
+					completion = prefix + name[len(prefix):]
+				} else {
+					// Exact match
+					completion = name
+				}
 			}
 
 			// Add trailing slash for directories
