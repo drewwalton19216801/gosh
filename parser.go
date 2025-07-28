@@ -9,11 +9,11 @@ import (
 
 // Command represents a parsed command with arguments
 type Command struct {
-	Name string
-	Args []string
-	Input string
-	Output string
-	Append bool
+	Name       string
+	Args       []string
+	Input      string
+	Output     string
+	Append     bool
 	Background bool
 }
 
@@ -31,7 +31,7 @@ type CaseStatement struct {
 
 // IfStatement represents an if control structure
 type IfStatement struct {
-	Condition []*Command
+	Condition    []*Command
 	ThenCommands []*Command
 	ElseCommands []*Command
 	ElifBranches []*ElifBranch
@@ -40,20 +40,20 @@ type IfStatement struct {
 // ElifBranch represents an elif branch in an if statement
 type ElifBranch struct {
 	Condition []*Command
-	Commands []*Command
+	Commands  []*Command
 }
 
 // ControlStructure represents different control flow structures
 type ControlStructure struct {
 	Type string // "case" or "if"
 	Case *CaseStatement
-	If *IfStatement
+	If   *IfStatement
 }
 
 // CommandChain represents a sequence of command pipelines and control structures
 type CommandChain struct {
 	Pipelines [][]*Command
-	Controls []*ControlStructure
+	Controls  []*ControlStructure
 }
 
 // ParseLine parses a command line into command chains (semicolon-separated pipelines)
@@ -128,7 +128,7 @@ func parseCommand(cmdStr string) (*Command, error) {
 	i := 0
 	for i < len(tokens) {
 		token := tokens[i]
-		
+
 		switch token {
 		case ">":
 			if i+1 >= len(tokens) {
@@ -399,7 +399,7 @@ func ParseCaseFromLines(lines []string) (*CommandChain, error) {
 
 	return &CommandChain{
 		Pipelines: [][]*Command{},
-		Controls: []*ControlStructure{control},
+		Controls:  []*ControlStructure{control},
 	}, nil
 }
 
@@ -427,7 +427,7 @@ func ParseIfFromLines(lines []string) (*CommandChain, error) {
 	}
 
 	ifStmt := &IfStatement{
-		Condition: []*Command{conditionCmd},
+		Condition:    []*Command{conditionCmd},
 		ThenCommands: []*Command{},
 		ElseCommands: []*Command{},
 		ElifBranches: []*ElifBranch{},
@@ -440,7 +440,7 @@ func ParseIfFromLines(lines []string) (*CommandChain, error) {
 
 	for i < len(lines) {
 		line := strings.TrimSpace(lines[i])
-		
+
 		if line == "fi" {
 			break
 		}
@@ -482,7 +482,7 @@ func ParseIfFromLines(lines []string) (*CommandChain, error) {
 
 			currentElifBranch = &ElifBranch{
 				Condition: []*Command{elifConditionCmd},
-				Commands: []*Command{},
+				Commands:  []*Command{},
 			}
 			currentSection = "elif"
 			i++
@@ -496,14 +496,14 @@ func ParseIfFromLines(lines []string) (*CommandChain, error) {
 			if err != nil {
 				return nil, fmt.Errorf("error extracting nested if: %v", err)
 			}
-			
+
 			// Create a special command that represents the nested if statement
 			// The executor will need to handle this specially
 			nestedCmd := &Command{
 				Name: "__nested_if__",
 				Args: nestedLines, // Store the actual lines of the nested if
 			}
-			
+
 			switch currentSection {
 			case "then":
 				ifStmt.ThenCommands = append(ifStmt.ThenCommands, nestedCmd)
@@ -514,7 +514,7 @@ func ParseIfFromLines(lines []string) (*CommandChain, error) {
 					currentElifBranch.Commands = append(currentElifBranch.Commands, nestedCmd)
 				}
 			}
-			
+
 			i = endIndex + 1 // Skip past the closing fi
 			continue
 		} else {
@@ -547,12 +547,12 @@ func ParseIfFromLines(lines []string) (*CommandChain, error) {
 
 	control := &ControlStructure{
 		Type: "if",
-		If: ifStmt,
+		If:   ifStmt,
 	}
 
 	return &CommandChain{
 		Pipelines: [][]*Command{},
-		Controls: []*ControlStructure{control},
+		Controls:  []*ControlStructure{control},
 	}, nil
 }
 
@@ -616,7 +616,7 @@ func stripInlineComment(line string) string {
 func tokenize(line string) ([]string, error) {
 	// Strip inline comments first
 	line = stripInlineComment(line)
-	
+
 	var tokens []string
 	var current strings.Builder
 	inQuotes := false
@@ -701,11 +701,11 @@ func extractNestedIf(lines []string, startIndex int) ([]string, int, error) {
 	i := startIndex
 	ifCount := 0
 	fiCount := 0
-	
+
 	for i < len(lines) {
 		line := strings.TrimSpace(lines[i])
 		nestedLines = append(nestedLines, lines[i])
-		
+
 		if strings.HasPrefix(line, "if ") {
 			ifCount++
 		} else if line == "fi" {
@@ -717,7 +717,7 @@ func extractNestedIf(lines []string, startIndex int) ([]string, int, error) {
 		}
 		i++
 	}
-	
+
 	return nil, i, fmt.Errorf("nested if statement not properly closed with 'fi'")
 }
 

@@ -17,29 +17,29 @@ var builtins map[string]BuiltinFunc
 // init initializes the builtins map
 func init() {
 	builtins = map[string]BuiltinFunc{
-		"exit":     cmdExit,
-		"cd":       cmdCd,
-		"pwd":      cmdPwd,
-		"echo":     cmdEcho,
-		"env":      cmdEnv,
-		"export":   cmdExport,
-		"local":    cmdLocal,
-		"unset":    cmdUnset,
-		"alias":    cmdAlias,
-		"unalias":  cmdUnalias,
-		"history":  cmdHistory,
-		"help":     cmdHelp,
-		"which":    cmdWhich,
-		"case":     cmdCase,
-		"declare":  cmdDeclare,
-		"test":     cmdTest,
-		"[":        cmdTest,
-		"return":   cmdReturn,
-		"fi":       cmdFi,
-		"then":     cmdThen,
-		"else":     cmdElse,
-		"elif":     cmdElif,
-		"esac":     cmdEsac,
+		"exit":    cmdExit,
+		"cd":      cmdCd,
+		"pwd":     cmdPwd,
+		"echo":    cmdEcho,
+		"env":     cmdEnv,
+		"export":  cmdExport,
+		"local":   cmdLocal,
+		"unset":   cmdUnset,
+		"alias":   cmdAlias,
+		"unalias": cmdUnalias,
+		"history": cmdHistory,
+		"help":    cmdHelp,
+		"which":   cmdWhich,
+		"case":    cmdCase,
+		"declare": cmdDeclare,
+		"test":    cmdTest,
+		"[":       cmdTest,
+		"return":  cmdReturn,
+		"fi":      cmdFi,
+		"then":    cmdThen,
+		"else":    cmdElse,
+		"elif":    cmdElif,
+		"esac":    cmdEsac,
 	}
 }
 
@@ -94,7 +94,7 @@ func cmdEcho(s *Shell, cmd *Command) error {
 		processedArg := arg
 		// Remove quotes if present
 		if len(arg) >= 2 && ((arg[0] == '"' && arg[len(arg)-1] == '"') || (arg[0] == '\'' && arg[len(arg)-1] == '\'')) {
-			processedArg = arg[1:len(arg)-1]
+			processedArg = arg[1 : len(arg)-1]
 		}
 		// Process escape sequences
 		processedArg = processEscapeSequences(processedArg)
@@ -188,15 +188,15 @@ func cmdLocal(s *Shell, cmd *Command) error {
 			return fmt.Errorf("local: invalid assignment: %s", arg)
 		}
 		key, value := parts[0], parts[1]
-		
+
 		// Remove quotes if present
 		if len(value) >= 2 {
 			if (strings.HasPrefix(value, "\"") && strings.HasSuffix(value, "\"")) ||
-			   (strings.HasPrefix(value, "'") && strings.HasSuffix(value, "'")) {
+				(strings.HasPrefix(value, "'") && strings.HasSuffix(value, "'")) {
 				value = value[1 : len(value)-1]
 			}
 		}
-		
+
 		// Handle command substitution if present
 		if strings.Contains(value, "$(") {
 			expandedValue, err := s.expandToken(value)
@@ -207,7 +207,7 @@ func cmdLocal(s *Shell, cmd *Command) error {
 				value = expandedValue[0]
 			}
 		}
-		
+
 		// Set the variable in the shell environment only (not system environment)
 		s.env[key] = value
 	}
@@ -387,7 +387,7 @@ func cmdDeclare(s *Shell, cmd *Command) error {
 			fmt.Println("No functions defined")
 			return nil
 		}
-		
+
 		fmt.Println("Defined functions:")
 		for name, function := range s.functions {
 			fmt.Printf("%s() {\n", name)
@@ -399,7 +399,7 @@ func cmdDeclare(s *Shell, cmd *Command) error {
 		}
 		return nil
 	}
-	
+
 	// Check for -f flag to list only function names
 	if len(cmd.Args) == 1 && cmd.Args[0] == "-f" {
 		for name := range s.functions {
@@ -407,7 +407,7 @@ func cmdDeclare(s *Shell, cmd *Command) error {
 		}
 		return nil
 	}
-	
+
 	return fmt.Errorf("declare: unsupported option")
 }
 
@@ -421,7 +421,7 @@ func (e TestFailureError) Error() string {
 // cmdTest implements the test command (and [ command)
 func cmdTest(s *Shell, cmd *Command) error {
 	args := cmd.Args
-	
+
 	// Handle [ command - remove trailing ] if present
 	if cmd.Name == "[" {
 		if len(args) == 0 || args[len(args)-1] != "]" {
@@ -429,12 +429,12 @@ func cmdTest(s *Shell, cmd *Command) error {
 		}
 		args = args[:len(args)-1]
 	}
-	
+
 	// No arguments means false
 	if len(args) == 0 {
 		return TestFailureError{}
 	}
-	
+
 	// Single argument means test if non-empty
 	if len(args) == 1 {
 		if args[0] != "" {
@@ -443,12 +443,12 @@ func cmdTest(s *Shell, cmd *Command) error {
 			return TestFailureError{}
 		}
 	}
-	
+
 	// Two arguments with unary operator
 	if len(args) == 2 {
 		operator := args[0]
 		operand := args[1]
-		
+
 		switch operator {
 		case "-z":
 			// String is empty
@@ -489,13 +489,13 @@ func cmdTest(s *Shell, cmd *Command) error {
 			return fmt.Errorf("test: unknown unary operator: %s", operator)
 		}
 	}
-	
+
 	// Three arguments with binary operator
 	if len(args) == 3 {
 		left := args[0]
 		operator := args[1]
 		right := args[2]
-		
+
 		switch operator {
 		case "=", "==":
 			// String equality
@@ -587,7 +587,7 @@ func cmdTest(s *Shell, cmd *Command) error {
 			return fmt.Errorf("test: unknown binary operator: %s", operator)
 		}
 	}
-	
+
 	return fmt.Errorf("test: too many arguments")
 }
 

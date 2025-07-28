@@ -70,7 +70,7 @@ func (s *Shell) getVariable(name string) string {
 	// Handle positional parameters if we're in a function context
 	if len(s.functionStack) > 0 {
 		ctx := s.functionStack[len(s.functionStack)-1]
-		
+
 		// Handle special parameters
 		switch name {
 		case "0":
@@ -91,7 +91,7 @@ func (s *Shell) getVariable(name string) string {
 			}
 		}
 	}
-	
+
 	// Check shell-specific environment first
 	if value, exists := s.env[name]; exists {
 		return value

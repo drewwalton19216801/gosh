@@ -29,15 +29,15 @@ type FunctionContext struct {
 
 // Shell represents the main shell instance
 type Shell struct {
-	env             map[string]string
-	aliases         map[string]string
-	functions       map[string]*Function
-	functionStack   []*FunctionContext
-	history         []string
-	running         bool
-	rl              *readline.Instance
-	currentCmd      *os.Process
-	sigChan         chan os.Signal
+	env           map[string]string
+	aliases       map[string]string
+	functions     map[string]*Function
+	functionStack []*FunctionContext
+	history       []string
+	running       bool
+	rl            *readline.Instance
+	currentCmd    *os.Process
+	sigChan       chan os.Signal
 }
 
 // NewShell creates a new shell instance
@@ -217,24 +217,24 @@ func (s *Shell) executeMultiLineConstruct(lines []string) error {
 	if len(lines) > 0 && strings.HasPrefix(strings.TrimSpace(lines[0]), "case ") {
 		return s.executeCaseStatement(lines)
 	}
-	
+
 	// Check for if statement
 	if len(lines) > 0 && strings.HasPrefix(strings.TrimSpace(lines[0]), "if ") {
 		return s.executeIfStatement(lines)
 	}
-	
+
 	// If not a recognized multi-line construct, execute each line separately
 	for i, line := range lines {
 		trimmed := strings.TrimSpace(line)
 		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
 			continue
 		}
-		
+
 		if err := s.ExecuteLine(line); err != nil {
 			return fmt.Errorf("line %d: %v", i+1, err)
 		}
 	}
-	
+
 	return nil
 }
 
@@ -261,12 +261,12 @@ func (s *Shell) executeScriptLines(allLines []string) error {
 			if err != nil {
 				return fmt.Errorf("line %d: %v", lineNum, err)
 			}
-			
+
 			// Define the function
 			if err := s.defineFunction(funcLines); err != nil {
 				return fmt.Errorf("line %d: %v", lineNum, err)
 			}
-			
+
 			lineNum = endLine + 1
 			continue
 		}
@@ -283,18 +283,18 @@ func (s *Shell) executeScriptLines(allLines []string) error {
 				}
 				fullLine.Reset()
 			}
-			
+
 			// Parse multi-line case statement
 			caseLines, endLine, err := s.extractCaseStatement(allLines, lineNum-1)
 			if err != nil {
 				return fmt.Errorf("line %d: %v", lineNum, err)
 			}
-			
+
 			// Execute case statement
 			if err := s.executeCaseStatement(caseLines); err != nil {
 				return fmt.Errorf("line %d: %v", lineNum, err)
 			}
-			
+
 			lineNum = endLine + 1
 			continue
 		}
@@ -311,18 +311,18 @@ func (s *Shell) executeScriptLines(allLines []string) error {
 				}
 				fullLine.Reset()
 			}
-			
+
 			// Parse multi-line if statement
 			ifLines, endLine, err := s.extractIfStatement(allLines, lineNum-1)
 			if err != nil {
 				return fmt.Errorf("line %d: %v", lineNum, err)
 			}
-			
+
 			// Execute if statement
 			if err := s.executeIfStatement(ifLines); err != nil {
 				return fmt.Errorf("line %d: %v", lineNum, err)
 			}
-			
+
 			lineNum = endLine + 1
 			continue
 		}
@@ -347,13 +347,13 @@ func (s *Shell) executeScriptLines(allLines []string) error {
 			// No continuation, add this line and execute
 			fullLine.WriteString(line)
 			completeCommand := strings.TrimSpace(fullLine.String())
-			
+
 			if completeCommand != "" {
 				if err := s.ExecuteLine(completeCommand); err != nil {
 					return fmt.Errorf("line %d: %v", startLineNum, err)
 				}
 			}
-			
+
 			// Reset for next command
 			fullLine.Reset()
 		}
@@ -376,17 +376,17 @@ func (s *Shell) executeScriptLines(allLines []string) error {
 func (s *Shell) extractCaseStatement(allLines []string, startLine int) ([]string, int, error) {
 	var caseLines []string
 	i := startLine
-	
+
 	for i < len(allLines) {
 		line := strings.TrimSpace(allLines[i])
 		caseLines = append(caseLines, allLines[i])
-		
+
 		if line == "esac" {
 			return caseLines, i, nil
 		}
 		i++
 	}
-	
+
 	return nil, i, fmt.Errorf("case statement not properly closed with 'esac'")
 }
 
@@ -396,11 +396,11 @@ func (s *Shell) extractIfStatement(allLines []string, startLine int) ([]string, 
 	i := startLine
 	ifCount := 0
 	fiCount := 0
-	
+
 	for i < len(allLines) {
 		line := strings.TrimSpace(allLines[i])
 		ifLines = append(ifLines, allLines[i])
-		
+
 		if strings.HasPrefix(line, "if ") {
 			ifCount++
 		} else if line == "fi" {
@@ -412,7 +412,7 @@ func (s *Shell) extractIfStatement(allLines []string, startLine int) ([]string, 
 		}
 		i++
 	}
-	
+
 	return nil, i, fmt.Errorf("if statement not properly closed with 'fi'")
 }
 
@@ -422,32 +422,32 @@ func (s *Shell) executeCaseStatement(caseLines []string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if len(commandChain.Controls) == 0 {
 		return fmt.Errorf("no case statement found")
 	}
-	
+
 	caseStmt := commandChain.Controls[0].Case
 	if caseStmt == nil {
 		return fmt.Errorf("invalid case statement")
 	}
-	
+
 	// Expand the variable
 	expandedVar, err := s.expandToken(caseStmt.Variable)
 	if err != nil {
 		return fmt.Errorf("error expanding case variable: %v", err)
 	}
-	
+
 	if len(expandedVar) != 1 {
 		return fmt.Errorf("case variable expansion resulted in %d tokens, expected 1", len(expandedVar))
 	}
-	
+
 	varValue := expandedVar[0]
 	// Remove quotes if present in the expanded value
 	if len(varValue) >= 2 && ((varValue[0] == '"' && varValue[len(varValue)-1] == '"') || (varValue[0] == '\'' && varValue[len(varValue)-1] == '\'')) {
 		varValue = varValue[1 : len(varValue)-1]
 	}
-	
+
 	// Match patterns and execute commands
 	for _, pattern := range caseStmt.Patterns {
 		for _, patternStr := range pattern.Patterns {
@@ -466,7 +466,7 @@ func (s *Shell) executeCaseStatement(caseLines []string) error {
 			}
 		}
 	}
-	
+
 	return nil // No pattern matched
 }
 
@@ -476,16 +476,16 @@ func (s *Shell) executeIfStatement(ifLines []string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	if len(commandChain.Controls) == 0 {
 		return fmt.Errorf("no if statement found")
 	}
-	
+
 	ifStmt := commandChain.Controls[0].If
 	if ifStmt == nil {
 		return fmt.Errorf("invalid if statement")
 	}
-	
+
 	// Execute the condition
 	conditionPassed := false
 	for _, condCmd := range ifStmt.Condition {
@@ -502,7 +502,7 @@ func (s *Shell) executeIfStatement(ifLines []string) error {
 			conditionPassed = true
 		}
 	}
-	
+
 	if conditionPassed {
 		// Execute then commands
 		for _, cmd := range ifStmt.ThenCommands {
@@ -529,7 +529,7 @@ func (s *Shell) executeIfStatement(ifLines []string) error {
 					elifConditionPassed = true
 				}
 			}
-			
+
 			if elifConditionPassed {
 				// Execute elif commands
 				for _, cmd := range elifBranch.Commands {
@@ -544,7 +544,7 @@ func (s *Shell) executeIfStatement(ifLines []string) error {
 				break
 			}
 		}
-		
+
 		// If no elif was executed, execute else commands
 		if !elifExecuted {
 			for _, cmd := range ifStmt.ElseCommands {
@@ -557,7 +557,7 @@ func (s *Shell) executeIfStatement(ifLines []string) error {
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -565,7 +565,7 @@ func (s *Shell) executeIfStatement(ifLines []string) error {
 func (s *Shell) matchPattern(value, pattern string) bool {
 	// Expand variables in the pattern first
 	expandedPattern := s.expandVariables(pattern)
-	
+
 	// Handle wildcard patterns
 	matched, err := filepath.Match(expandedPattern, value)
 	if err != nil {
@@ -650,7 +650,7 @@ func (s *Shell) expandCommand(cmd *Command) error {
 func (s *Shell) readLineWithContinuation(cwd string) (string, error) {
 	var fullLine strings.Builder
 	isFirstLine := true
-	
+
 	for {
 		// Set appropriate prompt
 		if isFirstLine {
@@ -658,7 +658,7 @@ func (s *Shell) readLineWithContinuation(cwd string) (string, error) {
 		} else {
 			s.rl.SetPrompt("> ")
 		}
-		
+
 		line, err := s.rl.Readline()
 		if err != nil {
 			// Handle Ctrl-C (interrupt) - don't exit, just return empty line to continue
@@ -674,12 +674,12 @@ func (s *Shell) readLineWithContinuation(cwd string) (string, error) {
 			}
 			return "", err
 		}
-		
+
 		// Check if line ends with backslash (line continuation)
 		trimmed := strings.TrimRightFunc(line, func(r rune) bool {
 			return r == ' ' || r == '\t'
 		})
-		
+
 		if strings.HasSuffix(trimmed, "\\") {
 			// Remove the backslash and continue reading
 			continuedLine := strings.TrimSuffix(trimmed, "\\")
@@ -690,7 +690,7 @@ func (s *Shell) readLineWithContinuation(cwd string) (string, error) {
 		} else {
 			// Add this line
 			fullLine.WriteString(line)
-			
+
 			// Check if we need to read more lines for multi-line constructs
 			currentContent := fullLine.String()
 			if s.needsMoreLines(currentContent) {
@@ -698,11 +698,11 @@ func (s *Shell) readLineWithContinuation(cwd string) (string, error) {
 				isFirstLine = false
 				continue
 			}
-			
+
 			break
 		}
 	}
-	
+
 	return fullLine.String(), nil
 }
 
@@ -710,17 +710,17 @@ func (s *Shell) readLineWithContinuation(cwd string) (string, error) {
 // a multi-line construct like if or case statements
 func (s *Shell) needsMoreLines(input string) bool {
 	lines := strings.Split(input, "\n")
-	
+
 	// Check for incomplete if statement
 	if s.isIncompleteIfStatement(lines) {
 		return true
 	}
-	
+
 	// Check for incomplete case statement
 	if s.isIncompleteCaseStatement(lines) {
 		return true
 	}
-	
+
 	return false
 }
 
@@ -728,7 +728,7 @@ func (s *Shell) needsMoreLines(input string) bool {
 func (s *Shell) isIncompleteIfStatement(lines []string) bool {
 	ifCount := 0
 	fiCount := 0
-	
+
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
 		if strings.HasPrefix(trimmed, "if ") {
@@ -737,7 +737,7 @@ func (s *Shell) isIncompleteIfStatement(lines []string) bool {
 			fiCount++
 		}
 	}
-	
+
 	return ifCount > fiCount
 }
 
@@ -745,7 +745,7 @@ func (s *Shell) isIncompleteIfStatement(lines []string) bool {
 func (s *Shell) isIncompleteCaseStatement(lines []string) bool {
 	caseCount := 0
 	esacCount := 0
-	
+
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
 		if strings.HasPrefix(trimmed, "case ") {
@@ -754,7 +754,7 @@ func (s *Shell) isIncompleteCaseStatement(lines []string) bool {
 			esacCount++
 		}
 	}
-	
+
 	return caseCount > esacCount
 }
 
@@ -1139,13 +1139,13 @@ func (s *Shell) isFunctionDefinition(line string) bool {
 	// 1. function_name() {
 	// 2. function function_name() {
 	line = strings.TrimSpace(line)
-	
+
 	// Check for "function name() {" format
 	if strings.HasPrefix(line, "function ") {
 		rest := strings.TrimPrefix(line, "function ")
 		return strings.Contains(rest, "()") && strings.HasSuffix(strings.TrimSpace(rest), "{")
 	}
-	
+
 	// Check for "name() {" format
 	return strings.Contains(line, "()") && strings.HasSuffix(strings.TrimSpace(line), "{")
 }
@@ -1155,11 +1155,11 @@ func (s *Shell) extractFunctionDefinition(allLines []string, startLine int) ([]s
 	var funcLines []string
 	i := startLine
 	braceCount := 0
-	
+
 	for i < len(allLines) {
 		line := allLines[i]
 		funcLines = append(funcLines, line)
-		
+
 		// Count braces to find the end of the function
 		for _, char := range line {
 			if char == '{' {
@@ -1171,10 +1171,10 @@ func (s *Shell) extractFunctionDefinition(allLines []string, startLine int) ([]s
 				}
 			}
 		}
-		
+
 		i++
 	}
-	
+
 	return nil, i, fmt.Errorf("function definition not properly closed with '}'")
 }
 
@@ -1183,11 +1183,11 @@ func (s *Shell) defineFunction(funcLines []string) error {
 	if len(funcLines) == 0 {
 		return fmt.Errorf("empty function definition")
 	}
-	
+
 	firstLine := strings.TrimSpace(funcLines[0])
 	var funcName string
 	var params []string
-	
+
 	// Parse function name and parameters
 	if strings.HasPrefix(firstLine, "function ") {
 		// "function name() {" format
@@ -1205,24 +1205,24 @@ func (s *Shell) defineFunction(funcLines []string) error {
 		}
 		funcName = strings.TrimSpace(firstLine[:parenIndex])
 	}
-	
+
 	if funcName == "" {
 		return fmt.Errorf("function name cannot be empty")
 	}
-	
+
 	// Extract function body (everything except first and last lines)
 	var body []string
 	for i := 1; i < len(funcLines)-1; i++ {
 		body = append(body, funcLines[i])
 	}
-	
+
 	// Store the function
 	s.functions[funcName] = &Function{
 		Name:   funcName,
 		Params: params,
 		Body:   body,
 	}
-	
+
 	return nil
 }
 
@@ -1232,13 +1232,13 @@ func (s *Shell) executeFunction(funcName string, args []string) error {
 	if !exists {
 		return fmt.Errorf("function not found: %s", funcName)
 	}
-	
+
 	// Create function context
 	ctx := &FunctionContext{
 		Name: funcName,
 		Args: args,
 	}
-	
+
 	// Push context onto stack
 	s.functionStack = append(s.functionStack, ctx)
 	defer func() {
@@ -1247,10 +1247,10 @@ func (s *Shell) executeFunction(funcName string, args []string) error {
 			s.functionStack = s.functionStack[:len(s.functionStack)-1]
 		}
 	}()
-	
+
 	// Execute function body
 	err := s.executeScriptLines(func_.Body)
-	
+
 	// Handle return statements
 	if returnErr, ok := err.(ReturnError); ok {
 		// Return statements are normal function exits, not errors
@@ -1259,33 +1259,33 @@ func (s *Shell) executeFunction(funcName string, args []string) error {
 		_ = returnErr.Code // Use the return code if needed
 		return nil
 	}
-	
+
 	return err
 }
 
 // isVariableAssignment checks if a line is a variable assignment (VAR=value)
 func (s *Shell) isVariableAssignment(line string) bool {
 	trimmed := strings.TrimSpace(line)
-	
+
 	// Must contain an equals sign
 	if !strings.Contains(trimmed, "=") {
 		return false
 	}
-	
+
 	// Find the first equals sign
 	eqIndex := strings.Index(trimmed, "=")
 	if eqIndex == 0 {
 		return false // Can't start with =
 	}
-	
+
 	// Extract variable name (everything before =)
 	varName := trimmed[:eqIndex]
-	
+
 	// Variable name must be valid (alphanumeric + underscore, can't start with digit)
 	if len(varName) == 0 {
 		return false
 	}
-	
+
 	// Check if it's a valid variable name
 	for i, char := range varName {
 		if i == 0 {
@@ -1300,18 +1300,18 @@ func (s *Shell) isVariableAssignment(line string) bool {
 			}
 		}
 	}
-	
+
 	return true
 }
 
 // handleVariableAssignment processes a variable assignment
 func (s *Shell) handleVariableAssignment(line string) error {
 	trimmed := strings.TrimSpace(line)
-	
+
 	// Find the first equals sign
 	eqIndex := strings.Index(trimmed, "=")
 	varName := trimmed[:eqIndex]
-	
+
 	// Reject bare variable assignments - require 'local' or 'export'
 	return fmt.Errorf("variable assignment without declaration: %s\nUse 'local %s' for local variables or 'export %s' for environment variables", varName, trimmed, trimmed)
 }
