@@ -42,25 +42,45 @@ This guide demonstrates the tab completion functionality in gosh.
 
 ## Testing Case-Insensitive Completion
 
-1. Type `EC` and press TAB - should complete to `echo`
-2. Type `EX` and press TAB - should show `exit` and `export`
-3. Type `cd ~/PROJ` and press TAB - should complete to `~/PROJects` (if Projects exists)
-4. Type `LS` and press TAB - should complete to `ls`
-5. Type `GIT` and press TAB - should show git commands
+1. Type `EC` and press TAB - should complete to `ECho`
+2. Type `EX` and press TAB - should complete to `EXit`
+3. Type `exi` and press TAB - should complete to `exit`
+4. Type `EXI` and press TAB - should complete to `EXIt` (NOT `EXIexit`)
+5. Type `cd ~/PROJ` and press TAB - should complete to `~/PROJects` (if Projects exists)
+6. Type `LS` and press TAB - should complete to `LSls`
+7. Type `GIT` and press TAB - should show git commands with preserved case
 
-### Case-Insensitive Completion Behavior
+### Case-Insensitive Completion and Execution Behavior
 
-When using case-insensitive completion, the shell preserves your input case and appends the remaining part from the filesystem:
+The shell supports case-insensitive completion and execution for built-in commands, aliases, and user-defined functions.
 
+**Tab Completion Behavior:**
+When using case-insensitive completion, the shell preserves your input case and appends the remaining part from the filesystem or command name:
+
+**File/Directory Completions:**
 - Input: `proj` → Completion: `projects` (your case + filesystem remainder)
 - Input: `PROJ` → Completion: `PROJects` (your case + filesystem remainder)
 - Input: `Projects` → Completion: `Projects` (exact match uses filesystem case)
 
+**Command Completions:**
+- Input: `exi` → Completion: `exit` (your case + command remainder)
+- Input: `EXI` → Completion: `EXIt` (your case + command remainder)
+- Input: `EC` → Completion: `ECho` (your case + command remainder)
+- Input: `exit` → Completion: `exit` (exact match uses actual command case)
+
+**Command Execution:**
+Commands can be executed regardless of case:
+- `exit`, `EXIT`, `Exit`, `EXit` all work
+- `echo`, `ECHO`, `Echo`, `ECho` all work
+- `pwd`, `PWD`, `Pwd`, `PWd` all work
+- Aliases and user-defined functions also support case-insensitive execution
+
 This behavior ensures that:
 - Tab completion works regardless of case
+- Commands execute regardless of case
 - Your typing style is respected
 - The completion clearly shows it found a case-insensitive match
-- No duplication bugs occur (like `PROJProjects`)
+- No duplication bugs occur (like `PROJProjects` or `EXIexit`)
 
 ## Features Implemented
 
