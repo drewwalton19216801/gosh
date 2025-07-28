@@ -65,6 +65,17 @@ func (s *Shell) executeWithRedirection(cmd *Command) error {
 		os.Stderr = origStderr
 	}()
 
+	// Expand aliases
+	for {
+		alias, ok := s.aliases[cmd.Name]
+		if !ok {
+			break
+		}
+		aliasArgs := strings.Fields(alias)
+		cmd.Name = aliasArgs[0]
+		cmd.Args = append(aliasArgs[1:], cmd.Args...)
+	}
+
 	// Check if it's a user-defined function
 	if _, exists := s.functions[cmd.Name]; exists {
 		return s.executeFunction(cmd.Name, cmd.Args)
