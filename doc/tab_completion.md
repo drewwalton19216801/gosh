@@ -40,6 +40,28 @@ This guide demonstrates the tab completion functionality in gosh.
 1. Type `l` and press TAB - should show commands like `ls`, `ln`, etc.
 2. Type `g` and press TAB - should show commands like `git`, `grep`, etc.
 
+## Testing Case-Insensitive Completion
+
+1. Type `EC` and press TAB - should complete to `echo`
+2. Type `EX` and press TAB - should show `exit` and `export`
+3. Type `cd ~/PROJ` and press TAB - should complete to `~/PROJects` (if Projects exists)
+4. Type `LS` and press TAB - should complete to `ls`
+5. Type `GIT` and press TAB - should show git commands
+
+### Case-Insensitive Completion Behavior
+
+When using case-insensitive completion, the shell preserves your input case and appends the remaining part from the filesystem:
+
+- Input: `proj` → Completion: `projects` (your case + filesystem remainder)
+- Input: `PROJ` → Completion: `PROJects` (your case + filesystem remainder)
+- Input: `Projects` → Completion: `Projects` (exact match uses filesystem case)
+
+This behavior ensures that:
+- Tab completion works regardless of case
+- Your typing style is respected
+- The completion clearly shows it found a case-insensitive match
+- No duplication bugs occur (like `PROJProjects`)
+
 ## Features Implemented
 
 - ✅ Built-in command completion (exit, cd, pwd, echo, etc.)
@@ -52,3 +74,4 @@ This guide demonstrates the tab completion functionality in gosh.
 - ✅ Hidden file completion (when prefix starts with dot)
 - ✅ Directory trailing slash addition
 - ✅ Duplicate removal and sorting
+- ✅ Case-insensitive completion for commands, aliases, and files
