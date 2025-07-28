@@ -993,7 +993,31 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 
 		if strings.HasPrefix(name, filePrefix) {
 			var completion string
-			if strings.Contains(prefix, "/") {
+
+			// Handle tilde expansion case first
+			if strings.HasPrefix(prefix, "~") && prefix != expandedPrefix {
+				// We expanded a tilde, so we need to reconstruct with the original tilde prefix
+				if prefix == "~" {
+					completion = "~/" + name
+				} else if strings.HasPrefix(prefix, "~/") {
+					// Handle ~/ case
+					if strings.HasSuffix(prefix, "/") {
+						completion = prefix + name
+					} else {
+						// For cases like ~/P completing to ~/Projects, replace the partial match
+						prefixDir := filepath.Dir(prefix)
+						if prefixDir == "." {
+							// prefix is just ~/something without slashes
+							completion = "~/" + name
+						} else {
+							completion = prefixDir + "/" + name
+						}
+					}
+				} else {
+					// Handle ~user case
+					completion = prefix + "/" + name
+				}
+			} else if strings.Contains(prefix, "/") {
 				// Reconstruct the full path, preserving the original prefix format
 				prefixDir := filepath.Dir(prefix)
 				if prefixDir == "." && strings.HasPrefix(prefix, "./") {
@@ -1003,26 +1027,7 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 					completion = filepath.Join(prefixDir, name)
 				}
 			} else {
-				// Handle tilde expansion case
-				if strings.HasPrefix(prefix, "~") && prefix != expandedPrefix {
-					// We expanded a tilde, so we need to reconstruct with the original tilde prefix
-					if prefix == "~" {
-						completion = "~/" + name
-					} else if strings.HasPrefix(prefix, "~/") {
-						// Extract the part after ~/ from the original prefix
-						originalSuffix := prefix[2:]
-						if originalSuffix == "" {
-							completion = "~/" + name
-						} else {
-							completion = "~/" + filepath.Join(originalSuffix, name)
-						}
-					} else {
-						// Handle ~user case
-						completion = prefix + "/" + name
-					}
-				} else {
-					completion = name
-				}
+				completion = name
 			}
 
 			// Add trailing slash for directories
