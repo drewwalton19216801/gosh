@@ -50,8 +50,11 @@ This guide demonstrates the tab completion functionality in gosh.
 6. Type `LS` and press TAB - should complete to `LSls`
 7. Type `GIT` and press TAB - should show git commands with preserved case
 
-### Case-Insensitive Completion Behavior
+### Case-Insensitive Completion and Execution Behavior
 
+The shell supports case-insensitive completion and execution for built-in commands, aliases, and user-defined functions.
+
+**Tab Completion Behavior:**
 When using case-insensitive completion, the shell preserves your input case and appends the remaining part from the filesystem or command name:
 
 **File/Directory Completions:**
@@ -65,8 +68,16 @@ When using case-insensitive completion, the shell preserves your input case and 
 - Input: `EC` → Completion: `ECho` (your case + command remainder)
 - Input: `exit` → Completion: `exit` (exact match uses actual command case)
 
+**Command Execution:**
+Commands can be executed regardless of case:
+- `exit`, `EXIT`, `Exit`, `EXit` all work
+- `echo`, `ECHO`, `Echo`, `ECho` all work
+- `pwd`, `PWD`, `Pwd`, `PWd` all work
+- Aliases and user-defined functions also support case-insensitive execution
+
 This behavior ensures that:
 - Tab completion works regardless of case
+- Commands execute regardless of case
 - Your typing style is respected
 - The completion clearly shows it found a case-insensitive match
 - No duplication bugs occur (like `PROJProjects` or `EXIexit`)

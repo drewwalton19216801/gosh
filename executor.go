@@ -65,10 +65,18 @@ func (s *Shell) executeWithRedirection(cmd *Command) error {
 		os.Stderr = origStderr
 	}()
 
-	// Expand aliases
+	// Expand aliases (case-insensitive)
 	for {
-		alias, ok := s.aliases[cmd.Name]
-		if !ok {
+		var alias string
+		var found bool
+		for aliasName, aliasValue := range s.aliases {
+			if strings.EqualFold(cmd.Name, aliasName) {
+				alias = aliasValue
+				found = true
+				break
+			}
+		}
+		if !found {
 			break
 		}
 		aliasArgs := strings.Fields(alias)
@@ -76,14 +84,18 @@ func (s *Shell) executeWithRedirection(cmd *Command) error {
 		cmd.Args = append(aliasArgs[1:], cmd.Args...)
 	}
 
-	// Check if it's a user-defined function
-	if _, exists := s.functions[cmd.Name]; exists {
-		return s.executeFunction(cmd.Name, cmd.Args)
+	// Check if it's a user-defined function (case-insensitive)
+	for funcName := range s.functions {
+		if strings.EqualFold(cmd.Name, funcName) {
+			return s.executeFunction(funcName, cmd.Args)
+		}
 	}
 
-	// Check if it's a built-in command
-	if builtin, exists := builtins[cmd.Name]; exists {
-		return builtin(s, cmd)
+	// Check if it's a built-in command (case-insensitive)
+	for builtinName, builtin := range builtins {
+		if strings.EqualFold(cmd.Name, builtinName) {
+			return builtin(s, cmd)
+		}
 	}
 
 	// Handle external commands
@@ -161,10 +173,17 @@ func (s *Shell) ExecutePipeline(commands []*Command) error {
 		// Resolve command path
 		cmdPath, err := s.resolvePath(cmd.Name)
 		if err != nil {
-			// Check if it's a builtin
-			if _, exists := builtins[cmd.Name]; !exists {
-				return err
+			// Check if it's a builtin (case-insensitive)
+		builtinFound := false
+		for builtinName := range builtins {
+			if strings.EqualFold(cmd.Name, builtinName) {
+				builtinFound = true
+				break
 			}
+		}
+		if !builtinFound {
+			return err
+		}
 			// Builtins in pipelines are not supported for now
 			return fmt.Errorf("builtin commands not supported in pipelines: %s", cmd.Name)
 		}
