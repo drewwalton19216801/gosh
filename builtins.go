@@ -40,6 +40,7 @@ func init() {
 		"else":    cmdElse,
 		"elif":    cmdElif,
 		"esac":    cmdEsac,
+		"gosh":    cmdGosh,
 	}
 }
 
@@ -634,4 +635,41 @@ func cmdElif(s *Shell, cmd *Command) error {
 // cmdEsac implements the esac command (should only be used to close case statements)
 func cmdEsac(s *Shell, cmd *Command) error {
 	return fmt.Errorf("esac: unexpected token (not inside a case statement)")
+}
+
+// cmdGosh implements a fun easter egg command
+func cmdGosh(s *Shell, cmd *Command) error {
+	jokes := []string{
+		"Gosh! You found the secret command!",
+		"Oh my gosh! This shell is shell-arious!",
+		"Gosh darn it, you're good at exploring!",
+		"Holy gosh! You must be shell-shocked by this discovery!",
+		"Gosh golly! This shell really knows how to shell out the fun!",
+		"By gosh! You've struck shell gold!",
+		"Gosh almighty! You're really shelling it today!",
+		"Well I'll be gosh-darned! You found the fun zone!",
+		"Gosh! This is what happens when developers get shell-fish with their humor!",
+		"Oh gosh! You've entered the shell-ter of bad puns!",
+	}
+	
+	// Pick a random joke based on the current working directory hash
+	// This gives a pseudo-random but deterministic selection
+	pwd, _ := os.Getwd()
+	hash := 0
+	for _, c := range pwd {
+		hash = hash*31 + int(c)
+	}
+	if hash < 0 {
+		hash = -hash
+	}
+	
+	selectedJoke := jokes[hash%len(jokes)]
+	fmt.Println(selectedJoke)
+	
+	// Add some extra flair if they pass arguments
+	if len(cmd.Args) > 0 {
+		fmt.Printf("Gosh %s, you're really going all out!\n", strings.Join(cmd.Args, " "))
+	}
+	
+	return nil
 }
