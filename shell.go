@@ -855,14 +855,28 @@ func (s *Shell) getCommandCompletions(prefix string) []string {
 	// Add built-in commands
 	for cmd := range builtins {
 		if strings.HasPrefix(strings.ToLower(cmd), lowerPrefix) {
-			completions = append(completions, cmd)
+			if strings.HasPrefix(strings.ToLower(cmd), strings.ToLower(prefix)) {
+				// Case-insensitive match - construct completion that starts with original prefix
+				completion := prefix + cmd[len(prefix):]
+				completions = append(completions, completion)
+			} else {
+				// Exact match
+				completions = append(completions, cmd)
+			}
 		}
 	}
 
 	// Add aliases
 	for alias := range s.aliases {
 		if strings.HasPrefix(strings.ToLower(alias), lowerPrefix) {
-			completions = append(completions, alias)
+			if strings.HasPrefix(strings.ToLower(alias), strings.ToLower(prefix)) {
+				// Case-insensitive match - construct completion that starts with original prefix
+				completion := prefix + alias[len(prefix):]
+				completions = append(completions, completion)
+			} else {
+				// Exact match
+				completions = append(completions, alias)
+			}
 		}
 	}
 
@@ -911,7 +925,15 @@ func (s *Shell) getPathCompletions(prefix string) []string {
 			if info, err := os.Stat(filePath); err == nil {
 				if info.Mode()&0111 != 0 { // Check if executable
 					if !seenCommands[name] {
-						completions = append(completions, name)
+						var completion string
+						if strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefix)) {
+							// Case-insensitive match - construct completion that starts with original prefix
+							completion = prefix + name[len(prefix):]
+						} else {
+							// Exact match
+							completion = name
+						}
+						completions = append(completions, completion)
 						seenCommands[name] = true
 					}
 				}
