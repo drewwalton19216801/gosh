@@ -746,14 +746,6 @@ func reconstructPaths(tokens []string) []string {
 	i := 0
 
 	for i < len(tokens) {
-		// First token is always added (command name)
-		if i == 0 {
-			result = append(result, tokens[i])
-			i++
-			continue
-		}
-
-		// For subsequent tokens, try to reconstruct paths
 		currentToken := tokens[i]
 		reconstructed := false
 
