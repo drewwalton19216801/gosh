@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"unicode"
 )
@@ -692,6 +693,9 @@ func tokenize(line string) ([]string, error) {
 		tokens = append(tokens, current.String())
 	}
 
+	// Post-process tokens to handle unquoted paths with spaces
+	tokens = reconstructPaths(tokens)
+
 	return tokens, nil
 }
 
@@ -729,4 +733,87 @@ func removeQuotes(s string) string {
 		}
 	}
 	return s
+}
+
+// reconstructPaths attempts to reconstruct file paths from tokens that were split on spaces
+// This handles cases like "ls Intel Power Gadget/" where the path contains spaces
+func reconstructPaths(tokens []string) []string {
+	if len(tokens) <= 1 {
+		return tokens
+	}
+
+	var result []string
+	i := 0
+
+	for i < len(tokens) {
+		// First token is always added (command name)
+		if i == 0 {
+			result = append(result, tokens[i])
+			i++
+			continue
+		}
+
+		// For subsequent tokens, try to reconstruct paths
+		currentToken := tokens[i]
+		reconstructed := false
+
+		// If the current token is already quoted, don't try to reconstruct
+		if isQuoted(currentToken) {
+			result = append(result, currentToken)
+			i++
+			continue
+		}
+
+		// Look ahead to see if we can form a valid path by combining tokens
+		for j := i + 1; j < len(tokens); j++ {
+			// Skip if any token in the range is quoted
+			hasQuoted := false
+			for k := i; k <= j; k++ {
+				if isQuoted(tokens[k]) {
+					hasQuoted = true
+					break
+				}
+			}
+			if hasQuoted {
+				continue
+			}
+
+			// Try combining tokens from i to j
+			var pathParts []string
+			for k := i; k <= j; k++ {
+				pathParts = append(pathParts, tokens[k])
+			}
+			combinedPath := strings.Join(pathParts, " ")
+
+			// Check if this combined path exists as a file or directory
+			if pathExists(combinedPath) {
+				result = append(result, combinedPath)
+				i = j + 1
+				reconstructed = true
+				break
+			}
+		}
+
+		// If we couldn't reconstruct a path, add the token as-is
+		if !reconstructed {
+			result = append(result, currentToken)
+			i++
+		}
+	}
+
+	return result
+}
+
+// isQuoted checks if a token is wrapped in quotes
+func isQuoted(token string) bool {
+	if len(token) < 2 {
+		return false
+	}
+	return (token[0] == '"' && token[len(token)-1] == '"') || (token[0] == '\'' && token[len(token)-1] == '\'')
+}
+
+// pathExists checks if a given path exists in the filesystem
+func pathExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }

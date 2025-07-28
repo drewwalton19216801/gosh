@@ -24,6 +24,9 @@ func (s *Shell) expandToken(token string) ([]string, error) {
 		return nil, err
 	}
 
+	// Remove quotes before glob expansion
+	expanded = removeQuotes(expanded)
+
 	// Finally expand globs (this can return multiple results)
 	return s.expandGlob(expanded)
 }
