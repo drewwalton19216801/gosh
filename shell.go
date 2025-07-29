@@ -1278,13 +1278,13 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 				}
 			} else {
 				// Simple filename completion
-				if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefix)) {
+				if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(filePrefix)) {
 					// Case-insensitive match - on case-sensitive filesystems, use actual name
 					if isCaseSensitiveFilesystem() {
 						completion = name
 					} else {
 						// On case-insensitive filesystems, preserve user's case
-						completion = prefix + name[len(prefix):]
+						completion = filePrefix + name[len(filePrefix):]
 					}
 				} else {
 					// Exact match
