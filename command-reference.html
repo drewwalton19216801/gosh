@@ -16,7 +16,7 @@
                 <img src="images/gosh_logo.png" alt="gosh logo" class="nav-logo">
                 <div class="nav-text">
                     <h1><a href="index.html" style="color: inherit; text-decoration: none;">gosh</a></h1>
-                    <span class="tagline">A Simple Shell</span>
+                    <span class="tagline">A Cross-Platform Shell</span>
                 </div>
             </div>
             <ul class="nav-menu">
@@ -42,6 +42,7 @@
             <h3>Table of Contents</h3>
             <ul>
                 <li><a href="#built-in-commands">Built-in Commands</a></li>
+                <li><a href="#cross-platform-commands">Cross-Platform File Operations</a></li>
                 <li><a href="#command-features">Command Features</a></li>
                 <li><a href="#examples">Examples</a></li>
             </ul>
@@ -120,6 +121,93 @@ which python</code></pre>
             <p>Show the definition of a function or command type.</p>
             <pre><code>type my_function
 type ls</code></pre>
+        </section>
+
+        <section id="cross-platform-commands">
+            <h2>Cross-Platform File Operations</h2>
+            <p>Gosh supports both Unix-style and Windows-style commands for file operations, making it easy to work across different platforms.</p>
+
+            <h3><code>ls</code> / <code>dir</code> - List Directory Contents</h3>
+            <p>List files and directories. Both Unix (<code>ls</code>) and Windows (<code>dir</code>) style commands are supported.</p>
+            <pre><code># Unix style
+ls
+ls -l          # Long format
+ls -la         # Long format with hidden files
+ls -lh         # Long format with human-readable sizes
+
+# Windows style  
+dir
+dir -l         # Long format
+dir -la        # Long format with hidden files
+dir -lh        # Long format with human-readable sizes</code></pre>
+
+            <h3><code>cat</code> / <code>type</code> - Display File Contents</h3>
+            <p>Display the contents of files. Both Unix (<code>cat</code>) and Windows (<code>type</code>) style commands work.</p>
+            <pre><code># Unix style
+cat file.txt
+cat file1.txt file2.txt    # Multiple files
+
+# Windows style
+type file.txt
+type file1.txt file2.txt   # Multiple files</code></pre>
+
+            <h3><code>cp</code> / <code>copy</code> - Copy Files</h3>
+            <p>Copy files and directories. Supports both Unix and Windows syntax.</p>
+            <pre><code># Unix style
+cp source.txt dest.txt
+cp -r source_dir dest_dir  # Recursive copy
+
+# Windows style
+copy source.txt dest.txt
+copy -r source_dir dest_dir</code></pre>
+
+            <h3><code>mv</code> / <code>move</code> - Move/Rename Files</h3>
+            <p>Move or rename files and directories.</p>
+            <pre><code># Unix style
+mv oldname.txt newname.txt
+mv file.txt /new/location/
+
+# Windows style
+move oldname.txt newname.txt
+move file.txt /new/location/</code></pre>
+
+            <h3><code>rm</code> / <code>del</code> - Remove Files</h3>
+            <p>Delete files and directories.</p>
+            <pre><code># Unix style
+rm file.txt
+rm -r directory/           # Recursive removal
+rm -rf directory/          # Force recursive removal
+
+# Windows style
+del file.txt
+del -r directory/          # Recursive removal
+del -rf directory/         # Force recursive removal</code></pre>
+
+            <h3><code>mkdir</code> / <code>md</code> - Create Directories</h3>
+            <p>Create new directories.</p>
+            <pre><code># Unix style
+mkdir new_directory
+mkdir -p path/to/nested/dir  # Create parent directories
+
+# Windows style
+md new_directory
+md -p path/to/nested/dir     # Create parent directories</code></pre>
+
+            <h3><code>rmdir</code> / <code>rd</code> - Remove Directories</h3>
+            <p>Remove empty directories.</p>
+            <pre><code># Unix style
+rmdir empty_directory
+
+# Windows style
+rd empty_directory</code></pre>
+
+            <h3><code>clear</code> / <code>cls</code> - Clear Screen</h3>
+            <p>Clear the terminal screen.</p>
+            <pre><code># Unix style
+clear
+
+# Windows style
+cls</code></pre>
         </section>
 
         <section id="command-features">
@@ -220,6 +308,24 @@ type greet</code></pre>
 
         <section id="examples">
             <h2>Examples</h2>
+
+            <h3>Cross-Platform File Operations</h3>
+            <pre><code># List files (both styles work)
+ls -la
+dir -l
+
+# Display file contents
+cat README.md
+type README.md
+
+# Copy files
+cp source.txt backup.txt
+copy source.txt backup.txt
+
+# Create and navigate directories
+mkdir project
+cd project
+ls</code></pre>
 
             <h3>Basic Operations</h3>
             <pre><code># Navigate and list files

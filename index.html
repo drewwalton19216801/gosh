@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>gosh - A Simple Shell</title>
+    <title>gosh - A Cross-Platform Shell</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +16,7 @@
                 <img src="images/gosh_logo.png" alt="gosh logo" class="nav-logo">
                 <div class="nav-text">
                     <h1>gosh</h1>
-                    <span class="tagline">A Simple Shell</span>
+                    <span class="tagline">A Cross-Platform Shell</span>
                 </div>
             </div>
             <ul class="nav-menu">
@@ -32,8 +32,8 @@
         <div class="hero-content">
             <div class="hero-text">
                 <h1 class="hero-title">gosh</h1>
-                <p class="hero-subtitle">A basic command-line shell written in Go with sh-style scripting support</p>
-                <p class="hero-description">Designed for macOS compatibility. Gosh, it's good to have a reliable shell!</p>
+                <p class="hero-subtitle">A powerful command-line shell written in Go with sh-style scripting support</p>
+                <p class="hero-description">Works seamlessly on Windows, macOS, and Linux. Gosh, it's good to have a reliable shell everywhere!</p>
                 <div class="hero-buttons">
                     <a href="#getting-started" class="btn btn-primary">Get Started</a>
                     <a href="command-reference.html" class="btn btn-secondary">View Commands</a>
@@ -56,22 +56,21 @@
                         </div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
-                            <span class="command">echo "Hello, World!"</span>
+                            <span class="command">ls -la</span>
                         </div>
-                        <div class="terminal-line output">Hello, World!</div>
+                        <div class="terminal-line output">drwxr-xr-x  5 user  staff   160 Dec 15 10:30 .</div>
+                        <div class="terminal-line output">-rw-r--r--  1 user  staff  1024 Dec 15 10:29 README.md</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
-                            <span class="command">sleep 10</span>
+                            <span class="command">dir -l</span>
                         </div>
+                        <div class="terminal-line output">drwxr-xr-x  5 user  staff   160 Dec 15 10:30 .</div>
+                        <div class="terminal-line output">-rw-r--r--  1 user  staff  1024 Dec 15 10:29 README.md</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
-                            <span class="command">^C</span>
+                            <span class="command">echo "Cross-platform!"</span>
                         </div>
-                        <div class="terminal-line">
-                            <span class="prompt">gosh> </span>
-                            <span class="command">echo "Ctrl-C works perfectly!"</span>
-                        </div>
-                        <div class="terminal-line output">Ctrl-C works perfectly!</div>
+                        <div class="terminal-line output">Cross-platform!</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
                             <span class="cursor">_</span>
@@ -98,22 +97,21 @@
                         </div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
-                            <span class="command">echo "Hello, World!"</span>
+                            <span class="command">ls -la</span>
                         </div>
-                        <div class="terminal-line output">Hello, World!</div>
+                        <div class="terminal-line output">drwxr-xr-x  5 user  staff   160 Dec 15 10:30 .</div>
+                        <div class="terminal-line output">-rw-r--r--  1 user  staff  1024 Dec 15 10:29 README.md</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
-                            <span class="command">sleep 10</span>
+                            <span class="command">dir -l</span>
                         </div>
+                        <div class="terminal-line output">drwxr-xr-x  5 user  staff   160 Dec 15 10:30 .</div>
+                        <div class="terminal-line output">-rw-r--r--  1 user  staff  1024 Dec 15 10:29 README.md</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
-                            <span class="command">^C</span>
+                            <span class="command">echo "Cross-platform!"</span>
                         </div>
-                        <div class="terminal-line">
-                            <span class="prompt">gosh> </span>
-                            <span class="command">echo "Ctrl-C works perfectly!"</span>
-                        </div>
-                        <div class="terminal-line output">Ctrl-C works perfectly!</div>
+                        <div class="terminal-line output">Cross-platform!</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
                             <span class="cursor">_</span>
@@ -145,8 +143,8 @@
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">⚡</div>
-                    <h3>Built-in Commands</h3>
-                    <p>Comprehensive set of built-in commands for common shell operations</p>
+                    <h3>Cross-Platform File Operations</h3>
+                    <p>Built-in commands that work on Windows, macOS, and Linux with both Unix (ls, cat, cp) and Windows (dir, type, copy) style commands</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🌟</div>
@@ -159,9 +157,9 @@
                     <p>Robust Ctrl-C handling that interrupts commands without exiting the shell</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">🍎</div>
-                    <h3>macOS Optimized</h3>
-                    <p>Designed and tested specifically for macOS with cross-platform compatibility</p>
+                    <div class="feature-icon">🌍</div>
+                    <h3>Cross-Platform Compatible</h3>
+                    <p>Works seamlessly on Windows, macOS, and Linux with consistent behavior across all platforms</p>
                 </div>
             </div>
         </div>
@@ -177,6 +175,10 @@
                         <h3>Build gosh</h3>
                         <div class="code-block">
                             <code>go build -o gosh</code>
+                        </div>
+                        <p>Cross-platform builds:</p>
+                        <div class="code-block">
+                            <code>GOOS=windows go build -o gosh.exe<br>GOOS=linux go build -o gosh-linux<br>GOOS=darwin go build -o gosh-macos</code>
                         </div>
                     </div>
                 </div>
@@ -195,8 +197,12 @@
                     <div class="step-content">
                         <h3>Try Command Mode</h3>
                         <div class="code-block">
-                            <code>./gosh -c "echo 'Hello World'"</code>
+                            <code>./gosh -c "ls -la"</code>
                         </div>
+                        <div class="code-block">
+                            <code>./gosh -c "dir -l"</code>
+                        </div>
+                        <p>Both Unix and Windows style commands work!</p>
                     </div>
                 </div>
                 <div class="step">
