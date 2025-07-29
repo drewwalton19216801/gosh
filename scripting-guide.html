@@ -261,7 +261,11 @@ for file in $(ls *.log); do
 done
 
 # System information
-local SYSTEM="$(uname -s)"  # Local variable
+if command -v uname >/dev/null 2>&1; then
+    local SYSTEM="$(uname -s)"  # Local variable
+else
+    local SYSTEM="Windows"  # Local variable
+fi
 export CURRENT_USER="$(whoami)"  # Environment variable
 echo "System: $SYSTEM"
 echo "User: $CURRENT_USER"

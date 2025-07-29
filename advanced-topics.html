@@ -371,7 +371,11 @@ fi</code></pre>
 
             <h4>Cross-Platform Scripting</h4>
             <pre><code># Detect operating system
-export OS_TYPE=$(uname -s)
+if command -v uname >/dev/null 2>&1; then
+    export OS_TYPE=$(uname -s)
+else
+    export OS_TYPE="Windows"
+fi
 case "$OS_TYPE" in
     "Darwin")
         echo "Running on macOS"
