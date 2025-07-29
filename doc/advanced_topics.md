@@ -103,11 +103,21 @@ Line continuation works in both interactive mode and script files:
 - **Interactive**: Use backslash at end of line, press Enter, and continue on the next line with a `> ` prompt
 - **Scripts**: Use backslash at end of line and continue the command on subsequent lines
 
+### Windows Path Separator Compatibility
+Gosh intelligently distinguishes between line continuation backslashes and Windows path separators:
+- **Line continuation**: `echo hello \` (space before backslash)
+- **Windows path**: `cd Projects\` (alphanumeric before backslash)
+- **Windows path**: `cd ~\` (tilde before backslash)
+- **Windows path**: `cd C:\` (colon before backslash)
+
+This ensures that Windows-style paths work correctly without triggering line continuation mode.
+
 ### Best Practices
 - Use line continuation to improve readability of complex commands
 - Indent continued lines for visual clarity
 - Avoid unnecessary spaces after the backslash
 - Be consistent with your continuation style within scripts
+- On Windows, path separators (`cd dir\`) work without triggering continuation mode
 
 ## Advanced Piping Techniques
 

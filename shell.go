@@ -710,7 +710,7 @@ func (s *Shell) readLineWithContinuation(cwd string) (string, error) {
 			return r == ' ' || r == '\t'
 		})
 
-		if strings.HasSuffix(trimmed, "\\") {
+		if strings.HasSuffix(trimmed, "\\") && s.isLineContinuationBackslash(trimmed) {
 			// Remove the backslash and continue reading
 			continuedLine := strings.TrimSuffix(trimmed, "\\")
 			fullLine.WriteString(continuedLine)
@@ -786,6 +786,43 @@ func (s *Shell) isIncompleteCaseStatement(lines []string) bool {
 	}
 
 	return caseCount > esacCount
+}
+
+// isLineContinuationBackslash determines if a trailing backslash is for line continuation
+// or part of a Windows path. Returns true only if it's likely a line continuation.
+func (s *Shell) isLineContinuationBackslash(line string) bool {
+	if !strings.HasSuffix(line, "\\") {
+		return false
+	}
+	
+	// If the line is just a backslash, it's continuation
+	if line == "\\" {
+		return true
+	}
+	
+	// Get the character before the backslash
+	if len(line) < 2 {
+		return true
+	}
+	
+	prevChar := line[len(line)-2]
+	
+	// If preceded by a space or tab, it's likely line continuation
+	if prevChar == ' ' || prevChar == '\t' {
+		return true
+	}
+	
+	// If preceded by alphanumeric, dot, tilde, colon, or another backslash,
+	// it's likely a path separator (especially on Windows)
+	if (prevChar >= 'a' && prevChar <= 'z') ||
+		(prevChar >= 'A' && prevChar <= 'Z') ||
+		(prevChar >= '0' && prevChar <= '9') ||
+		prevChar == '.' || prevChar == '~' || prevChar == ':' || prevChar == '\\' {
+		return false
+	}
+	
+	// For other characters, assume it's line continuation
+	return true
 }
 
 // Exit sets the shell to stop running
@@ -1082,7 +1119,7 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 		// Otherwise, check if the name matches the prefix
 		if filePrefix == "" || strings.HasPrefix(strings.ToLower(name), strings.ToLower(filePrefix)) {
 			var completion string
-			
+
 			// Detect the path separator style used by the user
 			userSeparator := getPathSeparator(prefix)
 
@@ -1094,6 +1131,8 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 				} else if strings.HasPrefix(prefix, "~/") {
 					// Handle ~/ case
 					if strings.HasSuffix(prefix, "/") {
+						// Directory listing case - we're already in the directory, so just use the tilde path up to the last separator + filename
+						// For ~/Projects/, we want ~/Projects/filename, not ~/Projects/Projects
 						completion = prefix + name
 					} else {
 						// For cases like ~/PR completing to ~/Projects, use the correct filesystem case
@@ -1113,16 +1152,21 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 							prefixBase := filepath.Base(prefix)
 							if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
 								// Case-insensitive match - construct completion that starts with original prefix
-								completion = prefixDir + "/" + prefixBase + name[len(prefixBase):]
+								completion = prefixDir + userSeparator + prefixBase + name[len(prefixBase):]
 							} else {
 								// Exact match or directory listing
-								completion = prefixDir + "/" + name
+								completion = prefixDir + userSeparator + name
 							}
 						}
 					}
 				} else {
 					// Handle ~user case
-					completion = prefix + "/" + name
+					if strings.HasSuffix(prefix, "/") || strings.HasSuffix(prefix, "\\") {
+						// Directory listing case
+						completion = prefix + name
+					} else {
+						completion = prefix + userSeparator + name
+					}
 				}
 			} else if containsPathSeparator(prefix) {
 				// Check if we're doing directory listing (prefix ends with separator)
@@ -1166,7 +1210,7 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 
 			// Add trailing slash for directories
 			if entry.IsDir() {
-				completion += "/"
+				completion += userSeparator
 			}
 
 			completions = append(completions, completion)
@@ -1251,7 +1295,8 @@ func (s *Shell) getGlobCompletions(pattern string) []string {
 
 		// Add trailing slash for directories
 		if info, err := os.Stat(match); err == nil && info.IsDir() {
-			completion += "/"
+			userSeparator := getPathSeparator(pattern)
+			completion += userSeparator
 		}
 
 		completions = append(completions, completion)
@@ -1469,7 +1514,7 @@ func getHistoryFilePath() string {
 		// Fallback to current directory if home directory is not available
 		return ".gosh_history"
 	}
-	
+
 	// Use home directory with hidden file
 	return filepath.Join(homeDir, ".gosh_history")
 }

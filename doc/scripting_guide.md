@@ -129,7 +129,7 @@ echo "Running as: $CURRENT_USER"
 
 ## Tilde Expansion
 
-Gosh expands tilde (`~`) to represent home directories:
+Gosh expands tilde (`~`) to represent home directories with cross-platform path separator support:
 
 ```bash
 # Expand to current user's home
@@ -137,10 +137,25 @@ ls ~/Documents
 cp file.txt ~/backup/
 cd ~
 
+# Windows-style paths with backslashes (Windows only)
+cd ~\Documents
+ls ~\backup\
+copy file.txt ~\backup\
+
 # Expand to specific user's home
 cd ~user/projects
 ls ~admin/logs
+
+# Windows-style user paths
+cd ~user\projects
+ls ~admin\logs
 ```
+
+**Cross-Platform Compatibility:**
+- Both `~/path` and `~\path` work on Windows
+- Unix/Linux systems use forward slashes: `~/path`
+- Windows systems support both: `~/path` and `~\path`
+- Path separator style is preserved in expansions
 
 ## Glob Patterns
 

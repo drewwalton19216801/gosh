@@ -68,6 +68,7 @@ This guide demonstrates the tab completion functionality in gosh.
 - Both `cd Projects/go` and `cd Projects\go` work on Windows
 - Tab completion preserves your preferred path separator style
 - No mixed separators in completion results (e.g., no `Projects/gProjects\go/`)
+- Windows paths ending with backslashes (e.g., `cd Projects\`) work correctly without triggering line continuation mode
 
 ### Case-Insensitive Completion and Execution Behavior
 

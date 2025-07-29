@@ -235,24 +235,51 @@ func (s *Shell) expandTilde(input string) (string, error) {
 		return home, nil
 	}
 
-	if strings.HasPrefix(input, "~/") {
-		// ~/path, expand ~ to home directory
+	if strings.HasPrefix(input, "~/") || strings.HasPrefix(input, "~\\") {
+		// ~/path or ~\path, expand ~ to home directory
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return input, err
 		}
-		return filepath.Join(home, input[2:]), nil
+		// Preserve trailing slash/backslash if present
+		result := filepath.Join(home, input[2:])
+		if (strings.HasSuffix(input, "/") && !strings.HasSuffix(result, "/")) ||
+			(strings.HasSuffix(input, "\\") && !strings.HasSuffix(result, "\\")) {
+			// Add the appropriate separator based on the input
+			if strings.HasSuffix(input, "/") {
+				result += "/"
+			} else {
+				result += "\\"
+			}
+		}
+		return result, nil
 	}
 
-	// ~user or ~user/path
+	// ~user or ~user/path or ~user\path
 	slashIndex := strings.Index(input, "/")
+	backslashIndex := strings.Index(input, "\\")
+	
+	// Find the first path separator (either / or \)
+	separatorIndex := -1
+	if slashIndex != -1 && backslashIndex != -1 {
+		if slashIndex < backslashIndex {
+			separatorIndex = slashIndex
+		} else {
+			separatorIndex = backslashIndex
+		}
+	} else if slashIndex != -1 {
+		separatorIndex = slashIndex
+	} else if backslashIndex != -1 {
+		separatorIndex = backslashIndex
+	}
+	
 	var username, rest string
-	if slashIndex == -1 {
+	if separatorIndex == -1 {
 		username = input[1:]
 		rest = ""
 	} else {
-		username = input[1:slashIndex]
-		rest = input[slashIndex+1:]
+		username = input[1:separatorIndex]
+		rest = input[separatorIndex+1:]
 	}
 
 	user, err := user.Lookup(username)
@@ -263,7 +290,18 @@ func (s *Shell) expandTilde(input string) (string, error) {
 	if rest == "" {
 		return user.HomeDir, nil
 	}
-	return filepath.Join(user.HomeDir, rest), nil
+	// Preserve trailing slash/backslash if present
+	result := filepath.Join(user.HomeDir, rest)
+	if (strings.HasSuffix(input, "/") && !strings.HasSuffix(result, "/")) ||
+		(strings.HasSuffix(input, "\\") && !strings.HasSuffix(result, "\\")) {
+		// Add the appropriate separator based on the input
+		if strings.HasSuffix(input, "/") {
+			result += "/"
+		} else {
+			result += "\\"
+		}
+	}
+	return result, nil
 }
 
 // expandGlob expands glob patterns like *.txt, ?, etc.

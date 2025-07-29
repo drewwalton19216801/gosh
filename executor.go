@@ -174,16 +174,16 @@ func (s *Shell) ExecutePipeline(commands []*Command) error {
 		cmdPath, err := s.resolvePath(cmd.Name)
 		if err != nil {
 			// Check if it's a builtin (case-insensitive)
-		builtinFound := false
-		for builtinName := range builtins {
-			if strings.EqualFold(cmd.Name, builtinName) {
-				builtinFound = true
-				break
+			builtinFound := false
+			for builtinName := range builtins {
+				if strings.EqualFold(cmd.Name, builtinName) {
+					builtinFound = true
+					break
+				}
 			}
-		}
-		if !builtinFound {
-			return err
-		}
+			if !builtinFound {
+				return err
+			}
 			// Builtins in pipelines are not supported for now
 			return fmt.Errorf("builtin commands not supported in pipelines: %s", cmd.Name)
 		}
