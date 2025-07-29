@@ -288,6 +288,15 @@ func (s *Shell) expandTilde(input string) (string, error) {
 	}
 
 	if rest == "" {
+		// Check if the original input had a trailing separator
+		if strings.HasSuffix(input, "/") || strings.HasSuffix(input, "\\") {
+			// Preserve the trailing separator
+			if strings.HasSuffix(input, "/") {
+				return user.HomeDir + "/", nil
+			} else {
+				return user.HomeDir + "\\", nil
+			}
+		}
 		return user.HomeDir, nil
 	}
 	// Preserve trailing slash/backslash if present

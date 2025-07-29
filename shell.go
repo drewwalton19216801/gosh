@@ -1071,6 +1071,32 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 		return []string{}
 	}
 
+	// Special case: if the original prefix is "~user" (without trailing separator),
+	// complete it to "~user/" instead of listing files from the user's directory
+	// But don't apply this to patterns like "~user/path" that already have a path component
+	if strings.HasPrefix(prefix, "~") && !strings.HasSuffix(prefix, "/") && !strings.HasSuffix(prefix, "\\") && prefix != expandedPrefix {
+		// Check if this is just ~user without any path component
+		// Count separators after the ~
+		separatorCount := 0
+		for _, char := range prefix[1:] {
+			if char == '/' || char == '\\' {
+				separatorCount++
+			}
+		}
+		
+		// Only apply this special case if there are no separators (just ~user)
+		if separatorCount == 0 {
+			// This is a ~user pattern that was successfully expanded
+			// Complete it to ~user/ instead of listing directory contents
+			userSeparator := getPathSeparator(prefix)
+			if userSeparator == "\\" {
+				return []string{prefix + "\\"}
+			} else {
+				return []string{prefix + "/"}
+			}
+		}
+	}
+
 	if containsPathSeparator(expandedPrefix) {
 		// Check if the prefix ends with a separator - this means we want to list contents of that directory
 		if strings.HasSuffix(expandedPrefix, "/") || strings.HasSuffix(expandedPrefix, "\\") {
@@ -1165,7 +1191,22 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 						// Directory listing case
 						completion = prefix + name
 					} else {
-						completion = prefix + userSeparator + name
+						// Check for case-insensitive prefix matching
+						prefixBase := filepath.Base(prefix)
+						if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
+							// Case-insensitive match - complete the full name
+							prefixDir := filepath.Dir(prefix)
+							if prefixDir == "." {
+								// Simple ~user/filename case
+								completion = strings.TrimSuffix(prefix, prefixBase) + prefixBase + name[len(prefixBase):]
+							} else {
+								// ~user/path/filename case
+								completion = prefixDir + userSeparator + prefixBase + name[len(prefixBase):]
+							}
+						} else {
+							// Exact match or no prefix match
+							completion = prefix + userSeparator + name
+						}
 					}
 				}
 			} else if containsPathSeparator(prefix) {
