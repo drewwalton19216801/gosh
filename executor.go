@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -108,6 +110,11 @@ func (s *Shell) executeExternal(cmd *Command) error {
 	cmdPath, err := s.resolvePath(cmd.Name)
 	if err != nil {
 		return err
+	}
+
+	// On Windows, check if this is a shell script and handle it specially
+	if runtime.GOOS == "windows" && s.isShellScript(cmdPath) {
+		return s.executeShellScriptOnWindows(cmdPath, cmd)
 	}
 
 	// Create the command
@@ -286,8 +293,8 @@ func (s *Shell) ExecutePipeline(commands []*Command) error {
 
 // resolvePath finds the full path to a command
 func (s *Shell) resolvePath(cmdName string) (string, error) {
-	// If it contains a slash, treat as relative/absolute path
-	if strings.Contains(cmdName, "/") {
+	// If it contains a slash or backslash, treat as relative/absolute path
+	if strings.Contains(cmdName, "/") || strings.Contains(cmdName, "\\") {
 		if filepath.IsAbs(cmdName) {
 			return cmdName, nil
 		}
@@ -306,4 +313,85 @@ func (s *Shell) resolvePath(cmdName string) (string, error) {
 	}
 
 	return path, nil
+}
+
+// isShellScript checks if a file is a shell script by examining its extension and shebang
+func (s *Shell) isShellScript(filePath string) bool {
+	// Check file extension
+	ext := strings.ToLower(filepath.Ext(filePath))
+	if ext == ".sh" {
+		return true
+	}
+
+	// Check for shebang line
+	file, err := os.Open(filePath)
+	if err != nil {
+		return false
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	if scanner.Scan() {
+		firstLine := strings.TrimSpace(scanner.Text())
+		// Check for common shell shebangs
+		if strings.HasPrefix(firstLine, "#!/bin/sh") ||
+			strings.HasPrefix(firstLine, "#!/bin/bash") ||
+			strings.HasPrefix(firstLine, "#!/usr/bin/env sh") ||
+			strings.HasPrefix(firstLine, "#!/usr/bin/env bash") ||
+			strings.HasPrefix(firstLine, "#!/usr/bin/env gosh") ||
+			strings.Contains(firstLine, "gosh") {
+			return true
+		}
+	}
+
+	return false
+}
+
+// executeShellScriptOnWindows executes a shell script on Windows by running it through gosh
+func (s *Shell) executeShellScriptOnWindows(scriptPath string, cmd *Command) error {
+	// Get the current executable path (gosh.exe)
+	goshPath, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("cannot find gosh executable: %v", err)
+	}
+
+	// Prepare arguments: gosh.exe scriptPath [script args...]
+	args := []string{scriptPath}
+	args = append(args, cmd.Args...)
+
+	// Create the command to run gosh with the script
+	execCmd := exec.Command(goshPath, args...)
+
+	// Use current stdin/stdout/stderr (which may be redirected)
+	execCmd.Stdin = os.Stdin
+	execCmd.Stdout = os.Stdout
+	execCmd.Stderr = os.Stderr
+
+	// Set environment variables
+	execCmd.Env = os.Environ()
+	for key, value := range s.env {
+		execCmd.Env = append(execCmd.Env, fmt.Sprintf("%s=%s", key, value))
+	}
+
+	// Execute the command
+	if cmd.Background {
+		return execCmd.Start()
+	}
+
+	// Start the command and track it for signal handling
+	err = execCmd.Start()
+	if err != nil {
+		return err
+	}
+
+	// Set the current command for signal handling
+	s.currentCmd = execCmd.Process
+
+	// Wait for the command to complete
+	err = execCmd.Wait()
+
+	// Clear the current command
+	s.currentCmd = nil
+
+	return err
 }

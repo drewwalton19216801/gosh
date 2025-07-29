@@ -2,24 +2,55 @@
 
 This guide covers how to write shell scripts using gosh, including syntax, features, and best practices.
 
-## Getting Started
+## Getting Started with Gosh Scripts
 
-### Script Mode
-Run gosh scripts by passing the script file as an argument:
-```bash
-./gosh script.sh
-```
+### Creating Your First Script
 
-### Shebang Line
-Start your scripts with a shebang line to make them executable:
+Gosh scripts are text files containing shell commands. They work seamlessly across all platforms, including Windows.
+
+#### Basic Script Structure
 ```bash
 #!/usr/bin/env gosh
+# This is a comment
+
+echo "Hello from gosh!"
+echo "Current directory: $(pwd)"
 ```
 
-Then make the script executable:
+#### Platform Compatibility
+Gosh provides excellent cross-platform script execution:
+
+- **Windows**: Scripts with `.sh` extension or shell shebangs are automatically detected and executed through gosh
+- **macOS/Linux**: Scripts work natively with standard Unix conventions
+- **Cross-platform commands**: Use gosh's dual command support for maximum compatibility
+
+#### Running Scripts
+
+**On all platforms:**
 ```bash
-chmod +x script.sh
-./script.sh
+# Make script executable (Unix/macOS)
+chmod +x myscript.sh
+./myscript.sh
+
+# Or run directly with gosh
+gosh myscript.sh
+
+# Command mode
+gosh -c "myscript.sh arg1 arg2"
+```
+
+**Windows-specific notes:**
+- No need to make scripts executable
+- Scripts are automatically detected by extension (`.sh`) or shebang
+- Both forward slashes and backslashes work in paths
+
+#### Shebang Lines
+Gosh recognizes various shebang formats:
+```bash
+#!/usr/bin/env gosh    # Recommended for cross-platform scripts
+#!/bin/gosh            # Direct path (if gosh is in /bin)
+#!/bin/sh              # Generic shell (works with gosh)
+#!/bin/bash            # Bash-compatible (works with gosh)
 ```
 
 ## Basic Script Structure

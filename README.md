@@ -95,6 +95,8 @@ Examples:
 ```
 By gosh, scripting has never been simpler!
 
+**Windows Note**: Gosh automatically detects and executes shell scripts on Windows, even though they're not native Windows executables. Scripts with `.sh` extensions or shell shebang lines work seamlessly across all platforms.
+
 ### Example Script
 ```bash
 #!/usr/bin/env gosh
@@ -222,9 +224,14 @@ Gosh is organized into multiple modules for maximum readability and maintainabil
 ## Compatibility
 
 **Cross-Platform Support**: Gosh is designed and tested to work seamlessly across multiple operating systems:
-- **Windows**: Full support with both Unix-style (`ls`, `cat`, `cp`) and Windows-style (`dir`, `type`, `copy`) commands
+- **Windows**: Full support with both Unix-style (`ls`, `cat`, `cp`) and Windows-style (`dir`, `type`, `copy`) commands, plus automatic shell script execution
 - **macOS**: Native support with all Unix-style commands
 - **Linux**: Complete compatibility with standard Unix commands
+
+**Shell Script Execution**: Gosh automatically handles shell scripts on all platforms:
+- Scripts with `.sh` extension work on Windows without modification
+- Shebang lines (`#!/bin/sh`, `#!/usr/bin/env gosh`, etc.) are properly recognized
+- No "not a valid Win32 application" errors on Windows
 
 The shell automatically handles platform-specific differences like file paths, permissions, and command conventions. Gosh, it's truly portable!
 

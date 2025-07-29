@@ -64,6 +64,44 @@ Both commands clear the terminal screen completely.
 
 ## Platform-Specific Adaptations
 
+### Shell Script Execution
+Gosh provides seamless shell script execution across all platforms:
+
+#### Windows Shell Script Support
+On Windows, gosh automatically detects and executes shell scripts that would normally fail with "not a valid Win32 application" errors:
+
+- **Automatic Detection**: Scripts with `.sh` extension or shell shebang lines are automatically recognized
+- **Transparent Execution**: Shell scripts are executed through gosh itself, providing full compatibility
+- **Shebang Support**: Scripts with `#!/bin/sh`, `#!/bin/bash`, `#!/usr/bin/env gosh`, etc. work seamlessly
+- **Argument Passing**: All script arguments are properly passed through
+
+```bash
+# These all work on Windows now:
+./script.sh arg1 arg2
+gosh script.sh arg1 arg2
+gosh -c "script.sh arg1 arg2"
+
+# Even scripts without .sh extension work if they have a shebang:
+./my_script  # Works if it starts with #!/usr/bin/env gosh
+```
+
+#### Cross-Platform Script Examples
+```bash
+#!/usr/bin/env gosh
+# This script works identically on Windows, macOS, and Linux
+
+echo "Running on: $(uname -s 2>/dev/null || echo 'Windows')"
+echo "Script arguments: $@"
+
+# Use cross-platform commands
+ls -la          # Works on all platforms
+echo "Files listed above"
+
+# Environment variables work the same way
+export MY_VAR="cross-platform value"
+echo "MY_VAR: $MY_VAR"
+```
+
 ### File Paths
 Gosh automatically handles different path conventions:
 - **Windows**: Supports both `C:\path\to\file` and `C:/path/to/file`
