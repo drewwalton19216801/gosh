@@ -1,4 +1,4 @@
 ./gosh
 gosh
 *.sh
-gosh.exe
+gosh.exe*
