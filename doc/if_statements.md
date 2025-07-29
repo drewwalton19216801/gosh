@@ -166,16 +166,25 @@ backup_file $1
 ```bash
 #!/usr/local/bin/gosh
 
-if test $(uname) = Darwin
+# Detect operating system safely
+if command -v uname >/dev/null 2>&1; then
+    OS_NAME=$(uname)
+    KERNEL_VERSION=$(uname -r)
+else
+    OS_NAME="Windows"
+    KERNEL_VERSION="Unknown"
+fi
+
+if test $OS_NAME = Darwin
 then
     echo "Running on macOS"
     echo "System version: $(sw_vers -productVersion)"
-elif test $(uname) = Linux
+elif test $OS_NAME = Linux
 then
     echo "Running on Linux"
-    echo "Kernel version: $(uname -r)"
+    echo "Kernel version: $KERNEL_VERSION"
 else
-    echo "Unknown operating system: $(uname)"
+    echo "Unknown operating system: $OS_NAME"
 fi
 ```
 
