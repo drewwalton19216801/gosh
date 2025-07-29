@@ -73,6 +73,12 @@
                         <div class="terminal-line output">Cross-platform!</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
+                            <span class="command">./script.sh</span>
+                        </div>
+                        <div class="terminal-line output">Hello from gosh script!</div>
+                        <div class="terminal-line output">Script works on Windows too!</div>
+                        <div class="terminal-line">
+                            <span class="prompt">gosh> </span>
                             <span class="cursor">_</span>
                         </div>
                     </div>
@@ -114,6 +120,12 @@
                         <div class="terminal-line output">Cross-platform!</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
+                            <span class="command">./script.sh</span>
+                        </div>
+                        <div class="terminal-line output">Hello from gosh script!</div>
+                        <div class="terminal-line output">Script works on Windows too!</div>
+                        <div class="terminal-line">
+                            <span class="prompt">gosh> </span>
                             <span class="cursor">_</span>
                         </div>
                     </div>
@@ -139,7 +151,12 @@
                 <div class="feature-card">
                     <div class="feature-icon">📝</div>
                     <h3>Shell Scripting</h3>
-                    <p>Write powerful shell scripts with functions, control structures (if/case), variable expansion, and command substitution</p>
+                    <p>Write powerful shell scripts with functions, control structures (if/case), variable expansion, and command substitution. Works seamlessly on Windows with automatic script detection!</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🪟</div>
+                    <h3>Windows Shell Script Support</h3>
+                    <p>Automatic detection and execution of .sh files and shebang scripts on Windows. No more "not a valid Win32 application" errors - gosh handles it all!</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">⚡</div>
@@ -212,7 +229,11 @@
                         <div class="code-block">
                             <code>./gosh script.sh</code>
                         </div>
+                        <div class="code-block">
+                            <code>gosh script.sh arg1 arg2</code>
+                        </div>
                         <p>By gosh, scripting has never been simpler!</p>
+                        <p><strong>Windows users:</strong> Gosh automatically detects and runs .sh files and shebang scripts - no "not a valid Win32 application" errors. Gosh darn it, that's convenient!</p>
                     </div>
                 </div>
             </div>
@@ -232,6 +253,11 @@
                     <div class="doc-icon">📝</div>
                     <h3>Scripting Guide</h3>
                     <p>Learn how to write shell scripts using gosh</p>
+                </a>
+                <a href="cross-platform.html" class="doc-card">
+                    <div class="doc-icon">🌍</div>
+                    <h3>Cross-Platform Features</h3>
+                    <p>Windows shell script support and dual command compatibility - gosh, it works everywhere!</p>
                 </a>
                 <a href="advanced-topics.html" class="doc-card">
                     <div class="doc-icon">🔧</div>

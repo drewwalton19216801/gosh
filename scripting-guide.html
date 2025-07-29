@@ -42,6 +42,7 @@
             <h3>Table of Contents</h3>
             <ul>
                 <li><a href="#getting-started">Getting Started</a></li>
+                <li><a href="#windows-features">Windows-Specific Features</a></li>
                 <li><a href="#basic-structure">Basic Script Structure</a></li>
                 <li><a href="#variable-expansion">Variable Expansion</a></li>
                 <li><a href="#command-substitution">Command Substitution</a></li>
@@ -63,14 +64,106 @@
             <h3>Script Mode</h3>
             <p>Run gosh scripts by passing the script file as an argument:</p>
             <pre><code>./gosh script.sh</code></pre>
+            <p>Or directly with gosh:</p>
+            <pre><code>gosh script.sh arg1 arg2</code></pre>
+
+            <h3>Cross-Platform Script Execution</h3>
+            <p>Gosh provides seamless script execution across all platforms:</p>
+            <ul>
+                <li><strong>Windows:</strong> Scripts with <code>.sh</code> extension or shell shebangs are automatically detected and executed through gosh - no "not a valid Win32 application" errors!</li>
+                <li><strong>macOS/Linux:</strong> Scripts work natively with standard Unix conventions</li>
+                <li><strong>Cross-platform commands:</strong> Use gosh's dual command support for maximum compatibility</li>
+            </ul>
 
             <h3>Shebang Line</h3>
-            <p>Start your scripts with a shebang line to make them executable:</p>
-            <pre><code>#!/usr/bin/env gosh</code></pre>
+            <p>Start your scripts with a shebang line to make them executable. Gosh recognizes various shebang formats:</p>
+            <pre><code>#!/usr/bin/env gosh    # Recommended for cross-platform scripts
+#!/bin/gosh            # Direct path (if gosh is in /bin)
+#!/bin/sh              # Generic shell (works with gosh)
+#!/bin/bash            # Bash-compatible (works with gosh)</code></pre>
 
-            <p>Then make the script executable:</p>
+            <h3>Making Scripts Executable</h3>
+            <p><strong>On Unix/macOS:</strong></p>
             <pre><code>chmod +x script.sh
 ./script.sh</code></pre>
+            
+            <p><strong>On Windows:</strong></p>
+            <p>No need to make scripts executable - gosh automatically detects and runs them! Gosh, that's convenient!</p>
+            <pre><code># All of these work on Windows:
+./script.sh
+gosh script.sh
+script.sh  # If gosh is in PATH</code></pre>
+        </section>
+
+        <section id="windows-features">
+            <h2>Windows-Specific Features</h2>
+            
+            <p>Gosh provides excellent Windows support with automatic shell script execution - gosh, it's about time!</p>
+
+            <h3>Automatic Script Detection</h3>
+            <p>On Windows, gosh automatically detects and executes shell scripts that would normally fail with "not a valid Win32 application" errors:</p>
+            <ul>
+                <li><strong>File Extension Detection:</strong> Scripts with <code>.sh</code> extension are automatically recognized</li>
+                <li><strong>Shebang Detection:</strong> Scripts with shell shebang lines (<code>#!/bin/sh</code>, <code>#!/usr/bin/env gosh</code>, etc.) work seamlessly</li>
+                <li><strong>Transparent Execution:</strong> Scripts are executed through gosh itself, providing full compatibility</li>
+            </ul>
+
+            <h3>Cross-Platform Script Examples</h3>
+            <pre><code>#!/usr/bin/env gosh
+# This script works identically on Windows, macOS, and Linux
+# Gosh, cross-platform scripting has never been easier!
+
+echo "Running on Windows with gosh!"
+echo "Script arguments: $@"
+
+# Use cross-platform commands
+ls -la          # Works on all platforms
+echo "Files listed above"
+
+# Windows-compatible commands also work
+dir -l          # Windows-style listing
+type README.md  # Windows-style file display
+
+# Environment variables work the same way
+export MY_VAR="cross-platform value"
+echo "MY_VAR: $MY_VAR"
+
+echo "Gosh darn it, that's some fine cross-platform scripting!"</code></pre>
+
+            <h3>Windows Path Handling</h3>
+            <p>Gosh handles both forward slashes and backslashes on Windows:</p>
+            <pre><code># Both path styles work on Windows
+cd ~/Documents     # Unix-style (works everywhere)
+cd ~\Documents     # Windows-style (works on Windows)
+
+# Script paths work with both separators
+./scripts/build.sh      # Forward slashes
+.\scripts\build.sh      # Backslashes
+
+# Gosh automatically handles the differences!</code></pre>
+
+            <h3>No More "Not a Valid Win32 Application" Errors</h3>
+            <p>Before gosh's Windows shell script support:</p>
+            <pre><code># This would fail on Windows:
+C:\> script.sh
+'script.sh' is not recognized as an internal or external command,
+operable program or batch file.
+
+# Or worse:
+C:\> .\script.sh
+Access is denied.</code></pre>
+
+            <p>With gosh's automatic detection - gosh, it just works!</p>
+            <pre><code># All of these work seamlessly on Windows:
+gosh> ./script.sh arg1 arg2
+gosh> script.sh arg1 arg2
+gosh> gosh script.sh arg1 arg2
+
+# Output:
+Hello from gosh script!
+Arguments: arg1 arg2
+Gosh, that was easy!</code></pre>
+
         </section>
 
         <section id="basic-structure">

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cross-Platform Features - gosh</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="images/gosh_logo.png" alt="gosh logo" class="nav-logo">
+                <div class="nav-text">
+                    <h1><a href="index.html" style="color: inherit; text-decoration: none;">gosh</a></h1>
+                    <span class="tagline">A Cross-Platform Shell</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="command-reference.html">Commands</a></li>
+                <li><a href="scripting-guide.html">Scripting</a></li>
+                <li><a href="cross-platform.html" class="active">Cross-Platform</a></li>
+                <li><a href="https://github.com/drewwalton19216801/gosh" target="_blank">GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="page-header">
+        <div class="container">
+            <h1>Cross-Platform Features</h1>
+            <p>Learn about gosh's dual command support and platform compatibility - gosh, it works everywhere!</p>
+        </div>
+    </header>
+
+    <main class="page-content">
+        <a href="index.html" class="back-link">← Back to Home</a>
+        
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#shell-script-execution">Shell Script Execution</a></li>
+                <li><a href="#dual-commands">Dual Command Support</a></li>
+                <li><a href="#file-paths">File Path Handling</a></li>
+                <li><a href="#environment-variables">Environment Variables</a></li>
+                <li><a href="#examples">Cross-Platform Examples</a></li>
+            </ul>
+        </div>
+
+        <section id="shell-script-execution">
+            <h2>Shell Script Execution</h2>
+            
+            <p>Gosh provides seamless shell script execution across all platforms - gosh, cross-platform scripting has never been easier!</p>
+
+            <h3>Windows Shell Script Support</h3>
+            <p>On Windows, gosh automatically detects and executes shell scripts that would normally fail with "not a valid Win32 application" errors:</p>
+            
+            <ul>
+                <li><strong>Automatic Detection:</strong> Scripts with <code>.sh</code> extension or shell shebang lines are automatically recognized</li>
+                <li><strong>Transparent Execution:</strong> Shell scripts are executed through gosh itself, providing full compatibility</li>
+                <li><strong>Shebang Support:</strong> Scripts with <code>#!/bin/sh</code>, <code>#!/bin/bash</code>, <code>#!/usr/bin/env gosh</code>, etc. work seamlessly</li>
+                <li><strong>Argument Passing:</strong> All script arguments are properly passed through</li>
+            </ul>
+
+            <pre><code># These all work on Windows now:
+./script.sh arg1 arg2
+gosh script.sh arg1 arg2
+gosh -c "script.sh arg1 arg2"
+
+# Even scripts without .sh extension work if they have a shebang:
+./my_script  # Works if it starts with #!/usr/bin/env gosh</code></pre>
+
+            <h3>Cross-Platform Script Examples</h3>
+            <pre><code>#!/usr/bin/env gosh
+# This script works identically on Windows, macOS, and Linux
+# Gosh, it's truly portable!
+
+echo "Running on: $(uname -s 2>/dev/null || echo 'Windows')"
+echo "Script arguments: $@"
+
+# Use cross-platform commands
+ls -la          # Works on all platforms
+echo "Files listed above"
+
+# Environment variables work the same way
+export MY_VAR="cross-platform value"
+echo "MY_VAR: $MY_VAR"
+
+echo "Gosh darn it, that's some fine cross-platform scripting!"</code></pre>
+
+            <h3>Before and After</h3>
+            <p><strong>Before gosh's Windows shell script support:</strong></p>
+            <pre><code>C:\> script.sh
+'script.sh' is not recognized as an internal or external command,
+operable program or batch file.
+
+C:\> .\script.sh
+Access is denied.</code></pre>
+
+            <p><strong>With gosh - gosh, it just works!</strong></p>
+            <pre><code>gosh> ./script.sh
+Hello from gosh script!
+Cross-platform execution successful!
+Gosh, that was easy!</code></pre>
+        </section>
+
+        <section id="dual-commands">
+            <h2>Dual Command Support</h2>
+            
+            <p>Gosh supports both Unix-style and Windows-style commands, allowing you to use whichever style you prefer:</p>
+
+            <h3>File Operations</h3>
+            <table class="command-table">
+                <thead>
+                    <tr>
+                        <th>Operation</th>
+                        <th>Unix Style</th>
+                        <th>Windows Style</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>List files</td>
+                        <td><code>ls -la</code></td>
+                        <td><code>dir -l</code></td>
+                        <td>Both work on all platforms</td>
+                    </tr>
+                    <tr>
+                        <td>Display file</td>
+                        <td><code>cat file.txt</code></td>
+                        <td><code>type file.txt</code></td>
+                        <td>Show file contents</td>
+                    </tr>
+                    <tr>
+                        <td>Copy files</td>
+                        <td><code>cp src dest</code></td>
+                        <td><code>copy src dest</code></td>
+                        <td>Copy files or directories</td>
+                    </tr>
+                    <tr>
+                        <td>Move files</td>
+                        <td><code>mv old new</code></td>
+                        <td><code>move old new</code></td>
+                        <td>Move or rename files</td>
+                    </tr>
+                    <tr>
+                        <td>Clear screen</td>
+                        <td><code>clear</code></td>
+                        <td><code>cls</code></td>
+                        <td>Clear the terminal screen</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Example Usage</h3>
+            <pre><code># Use either style - both work everywhere!
+ls -la                    # Unix-style file listing
+dir -l                   # Windows-style file listing
+
+cat README.md            # Unix-style file display  
+type README.md           # Windows-style file display
+
+cp file.txt backup.txt   # Unix-style copy
+copy file.txt backup.txt # Windows-style copy
+
+# Mix and match as you prefer
+ls *.txt | head -5       # Unix-style listing with Unix head
+dir *.txt | head -5      # Windows-style listing with Unix head</code></pre>
+        </section>
+
+        <section id="file-paths">
+            <h2>File Path Handling</h2>
+            
+            <p>Gosh automatically handles different path conventions across platforms:</p>
+
+            <h3>Path Separators</h3>
+            <ul>
+                <li><strong>Unix/macOS:</strong> Forward slashes (<code>/</code>)</li>
+                <li><strong>Windows:</strong> Both forward slashes (<code>/</code>) and backslashes (<code>\</code>)</li>
+            </ul>
+
+            <pre><code># These all work on Windows:
+cd /path/to/directory     # Forward slashes
+cd \path\to\directory     # Backslashes  
+cd path/to/directory      # Relative with forward slashes
+cd path\to\directory      # Relative with backslashes
+
+# Tilde expansion works with both separators on Windows:
+cd ~/Documents            # Unix-style
+cd ~\Documents            # Windows-style</code></pre>
+
+            <h3>Cross-Platform Path Examples</h3>
+            <pre><code># Scripts that work everywhere
+export PROJECT_DIR="$HOME/projects/myapp"    # Unix-style (works everywhere)
+export CONFIG_DIR="$HOME/.config/myapp"      # Unix-style config
+
+# Windows-specific paths (when needed)
+export WINDOWS_CONFIG="$HOME\AppData\Local\myapp"  # Windows-style
+
+# Gosh handles the differences automatically!</code></pre>
+        </section>
+
+        <section id="environment-variables">
+            <h2>Environment Variables</h2>
+            
+            <p>Environment variables work consistently across all platforms in gosh:</p>
+
+            <pre><code># Set environment variables (works everywhere)
+export MY_VAR="Hello World"
+export PATH="$PATH:/new/path"
+
+# Use environment variables
+echo $MY_VAR
+echo "Current PATH: $PATH"
+
+# Platform detection in scripts
+export PLATFORM="$(uname -s 2>/dev/null || echo 'Windows')"
+echo "Running on: $PLATFORM"</code></pre>
+        </section>
+
+        <section id="examples">
+            <h2>Cross-Platform Examples</h2>
+            
+            <h3>Complete Cross-Platform Script</h3>
+            <pre><code>#!/usr/bin/env gosh
+# Cross-platform build script - gosh, it works everywhere!
+
+echo "=== Cross-Platform Build Script ==="
+echo "Platform: $(uname -s 2>/dev/null || echo 'Windows')"
+
+# Create project structure (works on all platforms)
+mkdir -p build/src
+mkdir -p build/dist
+
+# Copy source files using both command styles
+echo "Copying source files..."
+cp -r src/* build/src/          # Unix-style
+copy README.md build/           # Windows-style
+
+# List files using preferred style
+echo "=== Build Directory (Unix-style) ==="
+ls -la build/
+
+echo "=== Build Directory (Windows-style) ==="  
+dir -l build/
+
+# Environment setup
+export BUILD_DATE="$(date +%Y-%m-%d 2>/dev/null || echo 'today')"
+export BUILD_VERSION="1.0.0"
+
+echo "Build completed on $BUILD_DATE"
+echo "Version: $BUILD_VERSION"
+echo "Gosh, that was a successful cross-platform build!"</code></pre>
+
+            <h3>File Processing Script</h3>
+            <pre><code>#!/usr/bin/env gosh
+# Process files across platforms - by gosh, it's universal!
+
+# Works with both path separators
+for file in logs/*.txt logs\*.log; do
+    if [ -f "$file" ]; then
+        echo "Processing: $file"
+        
+        # Use both command styles
+        echo "=== File info (Unix-style) ==="
+        cat "$file" | head -5
+        
+        echo "=== File info (Windows-style) ==="
+        type "$file" | head -5
+        
+        # Create backup with timestamp
+        local backup_name="backup_$(basename "$file")_$(date +%Y%m%d 2>/dev/null || echo 'backup')"
+        cp "$file" "backups/$backup_name"
+    fi
+done
+
+echo "File processing complete - gosh, that was efficient!"</code></pre>
+        </section>
+
+        <div class="note">
+            <h3>💡 Pro Tip</h3>
+            <p>Write your scripts using Unix-style commands and paths for maximum portability. Gosh will handle the platform differences automatically. When you need Windows-specific behavior, you can mix in Windows-style commands as needed. Gosh, it's the best of both worlds!</p>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 gosh. Open source and available under the MIT License.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
