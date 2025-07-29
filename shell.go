@@ -974,6 +974,33 @@ func (s *Shell) getPathCompletions(prefix string) []string {
 	return completions
 }
 
+// containsPathSeparator checks if a path contains any path separator (/ or \)
+func containsPathSeparator(path string) bool {
+	return strings.ContainsAny(path, "/\\")
+}
+
+// getPathSeparator returns the path separator used in the given path
+// Returns the first separator found, defaulting to forward slash
+func getPathSeparator(path string) string {
+	if strings.Contains(path, "\\") {
+		return "\\"
+	}
+	return "/"
+}
+
+// joinPathWithSeparator joins path components using the specified separator
+func joinPathWithSeparator(dir, file, separator string) string {
+	if separator == "\\" {
+		// Use filepath.Join for Windows-style paths to handle edge cases
+		return filepath.Join(dir, file)
+	}
+	// Use forward slash for Unix-style paths
+	if dir == "" || dir == "." {
+		return file
+	}
+	return dir + "/" + file
+}
+
 // getFileCompletions returns file and directory completions
 func (s *Shell) getFileCompletions(prefix string) []string {
 	var completions []string
@@ -1007,10 +1034,17 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 		return []string{}
 	}
 
-	if strings.Contains(expandedPrefix, "/") {
-		// Path contains directory separator
-		searchDir = filepath.Dir(expandedPrefix)
-		filePrefix = filepath.Base(expandedPrefix)
+	if containsPathSeparator(expandedPrefix) {
+		// Check if the prefix ends with a separator - this means we want to list contents of that directory
+		if strings.HasSuffix(expandedPrefix, "/") || strings.HasSuffix(expandedPrefix, "\\") {
+			// User wants to see contents of the directory, not complete the directory name
+			searchDir = expandedPrefix
+			filePrefix = ""
+		} else {
+			// Normal path completion - extract directory and file prefix
+			searchDir = filepath.Dir(expandedPrefix)
+			filePrefix = filepath.Base(expandedPrefix)
+		}
 
 		// Handle absolute vs relative paths
 		if !filepath.IsAbs(searchDir) {
@@ -1044,8 +1078,13 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 			continue
 		}
 
-		if strings.HasPrefix(strings.ToLower(name), strings.ToLower(filePrefix)) {
+		// If filePrefix is empty, we're listing directory contents, so include all files
+		// Otherwise, check if the name matches the prefix
+		if filePrefix == "" || strings.HasPrefix(strings.ToLower(name), strings.ToLower(filePrefix)) {
 			var completion string
+			
+			// Detect the path separator style used by the user
+			userSeparator := getPathSeparator(prefix)
 
 			// Handle tilde expansion case first
 			if strings.HasPrefix(prefix, "~") && prefix != expandedPrefix {
@@ -1062,21 +1101,21 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 						if prefixDir == "." {
 							// prefix is just ~/something without slashes
 							prefixBase := filepath.Base(prefix)
-							if strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
+							if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
 								// Case-insensitive match - construct completion that starts with original prefix
 								completion = "~/" + prefixBase + name[len(prefixBase):]
 							} else {
-								// Exact match
+								// Exact match or directory listing
 								completion = "~/" + name
 							}
 						} else {
 							// Handle cases like ~/Documents/PR completing to ~/Documents/Projects
 							prefixBase := filepath.Base(prefix)
-							if strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
+							if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
 								// Case-insensitive match - construct completion that starts with original prefix
 								completion = prefixDir + "/" + prefixBase + name[len(prefixBase):]
 							} else {
-								// Exact match
+								// Exact match or directory listing
 								completion = prefixDir + "/" + name
 							}
 						}
@@ -1085,32 +1124,38 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 					// Handle ~user case
 					completion = prefix + "/" + name
 				}
-			} else if strings.Contains(prefix, "/") {
-				// Reconstruct the full path, preserving the original prefix format
-				prefixDir := filepath.Dir(prefix)
-				prefixBase := filepath.Base(prefix)
-				if prefixDir == "." && strings.HasPrefix(prefix, "./") {
-					// Preserve './' prefix format
-					if strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
-						// Case-insensitive match
-						completion = "./" + prefixBase + name[len(prefixBase):]
-					} else {
-						// Exact match
-						completion = "./" + name
-					}
+			} else if containsPathSeparator(prefix) {
+				// Check if we're doing directory listing (prefix ends with separator)
+				if strings.HasSuffix(prefix, "/") || strings.HasSuffix(prefix, "\\") {
+					// Directory listing - just append the filename to the prefix
+					completion = prefix + name
 				} else {
-					// Use the correct filesystem case but preserve prefix structure
-					if strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
-						// Case-insensitive match
-						completion = filepath.Join(prefixDir, prefixBase+name[len(prefixBase):])
+					// Reconstruct the full path, preserving the original prefix format
+					prefixDir := filepath.Dir(prefix)
+					prefixBase := filepath.Base(prefix)
+					if prefixDir == "." && strings.HasPrefix(prefix, "./") {
+						// Preserve './' prefix format
+						if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
+							// Case-insensitive match
+							completion = "./" + prefixBase + name[len(prefixBase):]
+						} else {
+							// Exact match
+							completion = "./" + name
+						}
 					} else {
-						// Exact match
-						completion = filepath.Join(prefixDir, name)
+						// Use the correct filesystem case but preserve prefix structure and separator style
+						if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
+							// Case-insensitive match - preserve user's separator style
+							completion = joinPathWithSeparator(prefixDir, prefixBase+name[len(prefixBase):], userSeparator)
+						} else {
+							// Exact match - preserve user's separator style
+							completion = joinPathWithSeparator(prefixDir, name, userSeparator)
+						}
 					}
 				}
 			} else {
 				// Simple filename completion
-				if strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefix)) {
+				if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefix)) {
 					// Case-insensitive match - construct completion that starts with original prefix
 					completion = prefix + name[len(prefix):]
 				} else {
@@ -1164,7 +1209,7 @@ func (s *Shell) getGlobCompletions(pattern string) []string {
 	// Convert absolute paths back to relative if needed
 	for _, match := range matches {
 		var completion string
-		if strings.Contains(pattern, "/") {
+		if containsPathSeparator(pattern) {
 			// Keep the path structure from the original pattern
 			if filepath.IsAbs(pattern) {
 				completion = match
@@ -1190,7 +1235,13 @@ func (s *Shell) getGlobCompletions(pattern string) []string {
 				if err != nil {
 					completion = match
 				} else {
-					completion = relPath
+					// Preserve the user's original path separator style
+					userSeparator := getPathSeparator(pattern)
+					if userSeparator == "\\" && strings.Contains(relPath, "/") {
+						completion = strings.ReplaceAll(relPath, "/", "\\")
+					} else {
+						completion = relPath
+					}
 				}
 			}
 		} else {

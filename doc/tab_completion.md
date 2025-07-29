@@ -50,6 +50,25 @@ This guide demonstrates the tab completion functionality in gosh.
 6. Type `LS` and press TAB - should complete to `LSls`
 7. Type `GIT` and press TAB - should show git commands with preserved case
 
+## Testing Windows Path Completion
+
+**Windows Backslash Support:**
+1. Type `cd Projects\` and press TAB - should show subdirectories using backslashes
+2. Type `cd Projects\g` and press TAB - should complete to `Projects\go\` (preserving backslash style)
+3. Type `ls Documents\` and press TAB - should show files in Documents using backslashes
+4. Type `cat README.md` then `copy README.md backup\` and press TAB - should complete backup directory path
+
+**Mixed Path Separator Handling:**
+1. Type `cd Projects/` and press TAB - should show subdirectories using forward slashes
+2. Type `cd Projects\g` and press TAB - should complete using backslashes (preserving user's style)
+3. Type `ls ./` and press TAB - should show current directory contents with forward slashes
+4. Type `ls .\` and press TAB - should show current directory contents with backslashes
+
+**Cross-Platform Compatibility:**
+- Both `cd Projects/go` and `cd Projects\go` work on Windows
+- Tab completion preserves your preferred path separator style
+- No mixed separators in completion results (e.g., no `Projects/gProjects\go/`)
+
 ### Case-Insensitive Completion and Execution Behavior
 
 The shell supports case-insensitive completion and execution for built-in commands, aliases, and user-defined functions.
@@ -95,3 +114,7 @@ This behavior ensures that:
 - ✅ Directory trailing slash addition
 - ✅ Duplicate removal and sorting
 - ✅ Case-insensitive completion for commands, aliases, and files
+- ✅ Cross-platform path separator support (both / and \ on Windows)
+- ✅ Path separator style preservation (maintains user's preferred style)
+- ✅ Windows backslash path completion
+- ✅ Mixed path separator handling without corruption
