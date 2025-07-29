@@ -91,8 +91,9 @@ gosh -c "script.sh arg1 arg2"
 # This script works identically on Windows, macOS, and Linux
 
 # Detect platform in a way that works with gosh
-local PLATFORM=$(uname -s 2>/dev/null)
-if [ -z "$PLATFORM" ]; then
+if command -v uname >/dev/null 2>&1; then
+    local PLATFORM=$(uname -s)
+else
     local PLATFORM="Windows"
 fi
 echo "Running on: $PLATFORM"
