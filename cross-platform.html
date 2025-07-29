@@ -79,9 +79,9 @@ gosh -c "script.sh arg1 arg2"
 # Gosh, it's truly portable!
 
 # Detect platform in a way that works with gosh
-PLATFORM=$(uname -s 2>/dev/null)
+local PLATFORM=$(uname -s 2>/dev/null)
 if [ -z "$PLATFORM" ]; then
-    PLATFORM="Windows"
+    local PLATFORM="Windows"
 fi
 echo "Running on: $PLATFORM"
 echo "Script arguments: $@"
@@ -223,9 +223,9 @@ echo $MY_VAR
 echo "Current PATH: $PATH"
 
 # Platform detection in scripts
-PLATFORM=$(uname -s 2>/dev/null)
+local PLATFORM=$(uname -s 2>/dev/null)
 if [ -z "$PLATFORM" ]; then
-    PLATFORM="Windows"
+    local PLATFORM="Windows"
 fi
 export PLATFORM
 echo "Running on: $PLATFORM"</code></pre>
@@ -240,9 +240,9 @@ echo "Running on: $PLATFORM"</code></pre>
 
 echo "=== Cross-Platform Build Script ==="
 # Detect platform in a way that works with gosh
-PLATFORM=$(uname -s 2>/dev/null)
+local PLATFORM=$(uname -s 2>/dev/null)
 if [ -z "$PLATFORM" ]; then
-    PLATFORM="Windows"
+    local PLATFORM="Windows"
 fi
 echo "Platform: $PLATFORM"
 
@@ -263,9 +263,9 @@ echo "=== Build Directory (Windows-style) ==="
 dir -l build/
 
 # Environment setup
-BUILD_DATE=$(date +%Y-%m-%d 2>/dev/null)
+local BUILD_DATE=$(date +%Y-%m-%d 2>/dev/null)
 if [ -z "$BUILD_DATE" ]; then
-    BUILD_DATE="today"
+    local BUILD_DATE="today"
 fi
 export BUILD_DATE
 export BUILD_VERSION="1.0.0"
@@ -291,9 +291,9 @@ for file in logs/*.txt logs\*.log; do
         type "$file" | head -5
         
         # Create backup with timestamp
-        BACKUP_DATE=$(date +%Y%m%d 2>/dev/null)
+        local BACKUP_DATE=$(date +%Y%m%d 2>/dev/null)
         if [ -z "$BACKUP_DATE" ]; then
-            BACKUP_DATE="backup"
+            local BACKUP_DATE="backup"
         fi
         local backup_name="backup_$(basename "$file")_$BACKUP_DATE"
         cp "$file" "backups/$backup_name"
