@@ -194,7 +194,7 @@
 
         <section id="tilde-expansion">
             <h2>Testing Tilde Expansion Completion</h2>
-            <p>Test tilde expansion and home directory completion:</p>
+            <p>Test tilde expansion and home directory completion with cross-platform path separator support:</p>
             
             <ol>
                 <li>Type <code>ls ~/</code> and press <kbd>TAB</kbd> - should show files and directories in your home directory</li>
@@ -203,6 +203,14 @@
                 <li>Type <code>echo ~</code> and press <kbd>TAB</kbd> - should complete to <code>echo ~/</code></li>
                 <li>Type <code>cd ~/</code> and press <kbd>TAB</kbd> - should not expand further (no completions shown)</li>
                 <li>Type <code>cat ~/.*</code> and press <kbd>TAB</kbd> - should show hidden files in home directory</li>
+            </ol>
+
+            <h3>Windows Backslash Support</h3>
+            <p>On Windows, gosh also supports backslash path separators for tilde expansion:</p>
+            <ol>
+                <li>Type <code>cd ~\</code> and press <kbd>TAB</kbd> - should show directories in your home directory</li>
+                <li>Type <code>ls ~\Documents\</code> and press <kbd>TAB</kbd> - should show contents of ~\Documents\ directory</li>
+                <li>Type <code>cd ~\D</code> and press <kbd>TAB</kbd> - should complete to directories starting with 'D' in your home</li>
             </ol>
 
             <div class="terminal">

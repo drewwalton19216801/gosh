@@ -178,7 +178,7 @@ echo "Home: $HOME"</code></pre>
         <section id="tilde-expansion">
             <h2>Tilde Expansion</h2>
 
-            <p>Gosh expands tilde (<code>~</code>) to represent home directories:</p>
+            <p>Gosh expands tilde (<code>~</code>) to represent home directories with cross-platform path separator support:</p>
 
             <pre><code># Expand to current user's home
 ls ~/Documents
@@ -189,13 +189,38 @@ cd ~
 cd ~user/projects
 ls ~admin/logs</code></pre>
 
+            <h3>Windows Backslash Support</h3>
+            <p>On Windows, gosh supports both forward slashes and backslashes for tilde expansion:</p>
+            <pre><code># Windows-style paths with backslashes
+cd ~\Documents
+ls ~\backup\
+cp file.txt ~\Projects\myapp\
+
+# Mixed separators work too
+cd ~user\projects
+ls ~admin\logs</code></pre>
+
+            <h3>Cross-Platform Compatibility</h3>
+            <p>Your scripts can use either path separator style and work across platforms:</p>
+            <pre><code># Both styles work on Windows
+cd ~/Documents    # Unix-style (works everywhere)
+cd ~\Documents    # Windows-style (works on Windows)
+
+# The path separator style is preserved in expansions
+echo ~/path       # Expands to /home/user/path on Unix
+echo ~\path       # Expands to C:\Users\user\path on Windows</code></pre>
+
             <h3>Practical Examples</h3>
             <pre><code># Backup to home directory
 tar -czf ~/backups/project_$(date +%Y%m%d).tar.gz .
 
-# Configuration files
+# Configuration files (cross-platform)
 cp config.ini ~/.config/myapp/
-echo "export PATH=\$PATH:~/bin" >> ~/.bashrc</code></pre>
+echo "export PATH=\$PATH:~/bin" >> ~/.bashrc
+
+# Windows-specific examples
+copy config.ini ~\AppData\Local\myapp\
+xcopy /s source\* ~\backup\</code></pre>
         </section>
 
         <section id="glob-patterns">

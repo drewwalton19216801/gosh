@@ -270,10 +270,16 @@ echo "Today is $(date +%Y-%m-%d)"
 echo "Files: `ls | wc -l`"</code></pre>
 
             <h3>Tilde Expansion</h3>
-            <p>Expand <code>~</code> to home directory and user paths:</p>
-            <pre><code>ls ~/Documents
+            <p>Expand <code>~</code> to home directory and user paths with cross-platform path separator support:</p>
+            <pre><code># Unix-style paths (work everywhere)
+ls ~/Documents
 cp file.txt ~/backup/
-cd ~user/projects</code></pre>
+cd ~user/projects
+
+# Windows-style paths (work on Windows)
+ls ~\Documents
+cp file.txt ~\backup\
+cd ~user\projects</code></pre>
 
             <h3>Glob Patterns</h3>
             <p>Use wildcards for filename matching:</p>
