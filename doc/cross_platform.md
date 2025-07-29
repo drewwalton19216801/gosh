@@ -90,7 +90,12 @@ gosh -c "script.sh arg1 arg2"
 #!/usr/bin/env gosh
 # This script works identically on Windows, macOS, and Linux
 
-echo "Running on: $(uname -s 2>/dev/null || echo 'Windows')"
+# Detect platform in a way that works with gosh
+PLATFORM=$(uname -s 2>/dev/null)
+if [ -z "$PLATFORM" ]; then
+    PLATFORM="Windows"
+fi
+echo "Running on: $PLATFORM"
 echo "Script arguments: $@"
 
 # Use cross-platform commands
