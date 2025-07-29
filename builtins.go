@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // BuiltinFunc represents a built-in command function
@@ -41,6 +44,22 @@ func init() {
 		"elif":    cmdElif,
 		"esac":    cmdEsac,
 		"gosh":    cmdGosh,
+		"ls":      cmdLs,
+		"dir":     cmdDir,
+		"cls":     cmdClear,
+		"clear":   cmdClear,
+		"cat":     cmdCat,
+		"type":    cmdCat,
+		"cp":      cmdCopy,
+		"copy":    cmdCopy,
+		"mv":      cmdMove,
+		"move":    cmdMove,
+		"rm":      cmdRemove,
+		"del":     cmdRemove,
+		"mkdir":   cmdMkdir,
+		"md":      cmdMkdir,
+		"rmdir":   cmdRmdir,
+		"rd":      cmdRmdir,
 	}
 }
 
@@ -53,6 +72,519 @@ func cmdExit(s *Shell, cmd *Command) error {
 		}
 	}
 	s.Exit(code)
+	return nil
+}
+
+// FileInfo represents file information for listing
+type FileInfo struct {
+	Name    string
+	Size    int64
+	Mode    os.FileMode
+	ModTime time.Time
+	IsDir   bool
+}
+
+// cmdLs implements the ls command with Unix-style output
+func cmdLs(s *Shell, cmd *Command) error {
+	return listFiles(cmd.Args, false)
+}
+
+// cmdDir implements the dir command with Windows-style output
+func cmdDir(s *Shell, cmd *Command) error {
+	return listFiles(cmd.Args, true)
+}
+
+// listFiles implements file listing functionality
+func listFiles(args []string, windowsStyle bool) error {
+	var paths []string
+	var showAll bool
+	var longFormat bool
+	var humanReadable bool
+	
+	// Parse arguments
+	for _, arg := range args {
+		if strings.HasPrefix(arg, "-") {
+			// Handle flags
+			for _, flag := range arg[1:] {
+				switch flag {
+				case 'a':
+					showAll = true
+				case 'l':
+					longFormat = true
+				case 'h':
+					humanReadable = true
+				}
+			}
+		} else {
+			paths = append(paths, arg)
+		}
+	}
+	
+	// Default to current directory if no paths specified
+	if len(paths) == 0 {
+		paths = []string{"."}
+	}
+	
+	for i, path := range paths {
+		if i > 0 {
+			fmt.Println() // Blank line between multiple directories
+		}
+		
+		if len(paths) > 1 {
+			fmt.Printf("%s:\n", path)
+		}
+		
+		if err := listDirectory(path, showAll, longFormat, humanReadable, windowsStyle); err != nil {
+			fmt.Fprintf(os.Stderr, "ls: %v\n", err)
+		}
+	}
+	
+	return nil
+}
+
+// listDirectory lists the contents of a single directory
+func listDirectory(path string, showAll, longFormat, humanReadable, windowsStyle bool) error {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return err
+	}
+	
+	var files []FileInfo
+	
+	// Collect file information
+	for _, entry := range entries {
+		name := entry.Name()
+		
+		// Skip hidden files unless -a flag is used
+		if !showAll && strings.HasPrefix(name, ".") {
+			continue
+		}
+		
+		info, err := entry.Info()
+		if err != nil {
+			continue
+		}
+		
+		files = append(files, FileInfo{
+			Name:    name,
+			Size:    info.Size(),
+			Mode:    info.Mode(),
+			ModTime: info.ModTime(),
+			IsDir:   info.IsDir(),
+		})
+	}
+	
+	// Sort files alphabetically
+	sort.Slice(files, func(i, j int) bool {
+		return strings.ToLower(files[i].Name) < strings.ToLower(files[j].Name)
+	})
+	
+	if windowsStyle {
+		return printWindowsStyle(files, longFormat, humanReadable)
+	} else {
+		return printUnixStyle(files, longFormat, humanReadable)
+	}
+}
+
+// printUnixStyle prints files in Unix ls style
+func printUnixStyle(files []FileInfo, longFormat, humanReadable bool) error {
+	if longFormat {
+		// Long format: permissions size date name
+		for _, file := range files {
+			permissions := formatPermissions(file.Mode)
+			size := formatSize(file.Size, humanReadable)
+			date := file.ModTime.Format("Jan 02 15:04")
+			
+			fmt.Printf("%s %8s %s %s\n", permissions, size, date, file.Name)
+		}
+	} else {
+		// Simple format: just names in columns
+		const maxCols = 4
+		cols := 0
+		for _, file := range files {
+			name := file.Name
+			if file.IsDir {
+				name += "/"
+			}
+			fmt.Printf("%-20s", name)
+			cols++
+			if cols >= maxCols {
+				fmt.Println()
+				cols = 0
+			}
+		}
+		if cols > 0 {
+			fmt.Println()
+		}
+	}
+	return nil
+}
+
+// printWindowsStyle prints files in Windows dir style
+func printWindowsStyle(files []FileInfo, longFormat, humanReadable bool) error {
+	if longFormat {
+		// Windows dir style header
+		fmt.Printf(" Directory of %s\n\n", ".")
+		
+		var totalSize int64
+		fileCount := 0
+		dirCount := 0
+		
+		for _, file := range files {
+			date := file.ModTime.Format("01/02/2006  03:04 PM")
+			
+			if file.IsDir {
+				fmt.Printf("%s    <DIR>          %s\n", date, file.Name)
+				dirCount++
+			} else {
+				size := formatSize(file.Size, humanReadable)
+				fmt.Printf("%s %13s %s\n", date, size, file.Name)
+				totalSize += file.Size
+				fileCount++
+			}
+		}
+		
+		fmt.Printf("\n%15d File(s) %s bytes\n", fileCount, formatSize(totalSize, false))
+		fmt.Printf("%15d Dir(s)\n", dirCount)
+	} else {
+		// Simple format similar to Unix
+		return printUnixStyle(files, false, humanReadable)
+	}
+	return nil
+}
+
+// formatPermissions converts file mode to Unix-style permission string
+func formatPermissions(mode os.FileMode) string {
+	perms := make([]byte, 10)
+	
+	// File type
+	if mode.IsDir() {
+		perms[0] = 'd'
+	} else if mode&os.ModeSymlink != 0 {
+		perms[0] = 'l'
+	} else {
+		perms[0] = '-'
+	}
+	
+	// Owner permissions
+	if mode&0400 != 0 {
+		perms[1] = 'r'
+	} else {
+		perms[1] = '-'
+	}
+	if mode&0200 != 0 {
+		perms[2] = 'w'
+	} else {
+		perms[2] = '-'
+	}
+	if mode&0100 != 0 {
+		perms[3] = 'x'
+	} else {
+		perms[3] = '-'
+	}
+	
+	// Group permissions
+	if mode&0040 != 0 {
+		perms[4] = 'r'
+	} else {
+		perms[4] = '-'
+	}
+	if mode&0020 != 0 {
+		perms[5] = 'w'
+	} else {
+		perms[5] = '-'
+	}
+	if mode&0010 != 0 {
+		perms[6] = 'x'
+	} else {
+		perms[6] = '-'
+	}
+	
+	// Other permissions
+	if mode&0004 != 0 {
+		perms[7] = 'r'
+	} else {
+		perms[7] = '-'
+	}
+	if mode&0002 != 0 {
+		perms[8] = 'w'
+	} else {
+		perms[8] = '-'
+	}
+	if mode&0001 != 0 {
+		perms[9] = 'x'
+	} else {
+		perms[9] = '-'
+	}
+	
+	return string(perms)
+}
+
+// formatSize formats file size with optional human-readable format
+func formatSize(size int64, humanReadable bool) string {
+	if !humanReadable {
+		return fmt.Sprintf("%d", size)
+	}
+	
+	const unit = 1024
+	if size < unit {
+		return fmt.Sprintf("%d", size)
+	}
+	
+	div, exp := int64(unit), 0
+	for n := size / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	
+	units := []string{"K", "M", "G", "T", "P", "E"}
+	return fmt.Sprintf("%.1f%s", float64(size)/float64(div), units[exp])
+}
+
+// cmdClear implements both cls and clear commands
+func cmdClear(s *Shell, cmd *Command) error {
+	// ANSI escape sequence to clear screen and move cursor to top-left
+	fmt.Print("\033[2J\033[H")
+	return nil
+}
+
+// cmdCat implements both cat and type commands
+func cmdCat(s *Shell, cmd *Command) error {
+	if len(cmd.Args) == 0 {
+		return fmt.Errorf("cat: missing file operand")
+	}
+	
+	for _, filename := range cmd.Args {
+		file, err := os.Open(filename)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "cat: %v\n", err)
+			continue
+		}
+		
+		_, err = io.Copy(os.Stdout, file)
+		file.Close()
+		
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "cat: error reading %s: %v\n", filename, err)
+		}
+	}
+	
+	return nil
+}
+
+// cmdCopy implements both cp and copy commands
+func cmdCopy(s *Shell, cmd *Command) error {
+	if len(cmd.Args) < 2 {
+		return fmt.Errorf("copy: missing destination file operand")
+	}
+	
+	src := cmd.Args[0]
+	dst := cmd.Args[1]
+	
+	// Check if source exists
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return fmt.Errorf("copy: cannot stat '%s': %v", src, err)
+	}
+	
+	// If destination is a directory, copy into it
+	if dstInfo, err := os.Stat(dst); err == nil && dstInfo.IsDir() {
+		dst = filepath.Join(dst, filepath.Base(src))
+	}
+	
+	// Handle directory copying
+	if srcInfo.IsDir() {
+		return copyDirectory(src, dst)
+	}
+	
+	// Copy single file
+	return copyFile(src, dst)
+}
+
+// copyFile copies a single file
+func copyFile(src, dst string) error {
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+	
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer dstFile.Close()
+	
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return err
+	}
+	
+	// Copy file permissions
+	srcInfo, err := srcFile.Stat()
+	if err != nil {
+		return err
+	}
+	
+	return os.Chmod(dst, srcInfo.Mode())
+}
+
+// copyDirectory recursively copies a directory
+func copyDirectory(src, dst string) error {
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+	
+	// Create destination directory
+	if err := os.MkdirAll(dst, srcInfo.Mode()); err != nil {
+		return err
+	}
+	
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+	
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		dstPath := filepath.Join(dst, entry.Name())
+		
+		if entry.IsDir() {
+			if err := copyDirectory(srcPath, dstPath); err != nil {
+				return err
+			}
+		} else {
+			if err := copyFile(srcPath, dstPath); err != nil {
+				return err
+			}
+		}
+	}
+	
+	return nil
+}
+
+// cmdMove implements both mv and move commands
+func cmdMove(s *Shell, cmd *Command) error {
+	if len(cmd.Args) < 2 {
+		return fmt.Errorf("move: missing destination file operand")
+	}
+	
+	src := cmd.Args[0]
+	dst := cmd.Args[1]
+	
+	// Check if destination is a directory
+	if dstInfo, err := os.Stat(dst); err == nil && dstInfo.IsDir() {
+		dst = filepath.Join(dst, filepath.Base(src))
+	}
+	
+	return os.Rename(src, dst)
+}
+
+// cmdRemove implements both rm and del commands
+func cmdRemove(s *Shell, cmd *Command) error {
+	if len(cmd.Args) == 0 {
+		return fmt.Errorf("rm: missing file operand")
+	}
+	
+	var recursive bool
+	var force bool
+	var files []string
+	
+	// Parse arguments
+	for _, arg := range cmd.Args {
+		if strings.HasPrefix(arg, "-") {
+			for _, flag := range arg[1:] {
+				switch flag {
+				case 'r', 'R':
+					recursive = true
+				case 'f':
+					force = true
+				}
+			}
+		} else {
+			files = append(files, arg)
+		}
+	}
+	
+	for _, file := range files {
+		info, err := os.Stat(file)
+		if err != nil {
+			if !force {
+				fmt.Fprintf(os.Stderr, "rm: cannot remove '%s': %v\n", file, err)
+			}
+			continue
+		}
+		
+		if info.IsDir() {
+			if recursive {
+				err = os.RemoveAll(file)
+			} else {
+				err = fmt.Errorf("is a directory")
+			}
+		} else {
+			err = os.Remove(file)
+		}
+		
+		if err != nil && !force {
+			fmt.Fprintf(os.Stderr, "rm: cannot remove '%s': %v\n", file, err)
+		}
+	}
+	
+	return nil
+}
+
+// cmdMkdir implements both mkdir and md commands
+func cmdMkdir(s *Shell, cmd *Command) error {
+	if len(cmd.Args) == 0 {
+		return fmt.Errorf("mkdir: missing operand")
+	}
+	
+	var parents bool
+	var dirs []string
+	
+	// Parse arguments
+	for _, arg := range cmd.Args {
+		if strings.HasPrefix(arg, "-") {
+			for _, flag := range arg[1:] {
+				switch flag {
+				case 'p':
+					parents = true
+				}
+			}
+		} else {
+			dirs = append(dirs, arg)
+		}
+	}
+	
+	for _, dir := range dirs {
+		var err error
+		if parents {
+			err = os.MkdirAll(dir, 0755)
+		} else {
+			err = os.Mkdir(dir, 0755)
+		}
+		
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "mkdir: cannot create directory '%s': %v\n", dir, err)
+		}
+	}
+	
+	return nil
+}
+
+// cmdRmdir implements both rmdir and rd commands
+func cmdRmdir(s *Shell, cmd *Command) error {
+	if len(cmd.Args) == 0 {
+		return fmt.Errorf("rmdir: missing operand")
+	}
+	
+	for _, dir := range cmd.Args {
+		if err := os.Remove(dir); err != nil {
+			fmt.Fprintf(os.Stderr, "rmdir: failed to remove '%s': %v\n", dir, err)
+		}
+	}
+	
 	return nil
 }
 

@@ -1,13 +1,23 @@
-# gosh - A Simple Shell
+# gosh - A Cross-Platform Shell
 
 <img src="images/gosh_logo.png" alt="Gosh Logo" width="50%" style="display: block; margin: 20px auto;">
 
-A basic command-line shell written in Go with sh-style scripting support, designed for macOS compatibility. Gosh, it's good to have a reliable shell!
+A powerful command-line shell written in Go with sh-style scripting support, designed for cross-platform compatibility. Works seamlessly on Windows, macOS, and Linux. Gosh, it's good to have a reliable shell everywhere!
 
 ## Features
 
 ### Built-in Commands
 Gosh provides a comprehensive set of built-in commands for shell operations. See the [Command Reference](doc/command_reference.md) for detailed documentation of all available commands.
+
+### Cross-Platform File Operations
+Gosh includes built-in implementations of essential file operations that work consistently across all platforms:
+- **File Listing**: `ls` (Unix-style) and `dir` (Windows-style) with support for long format, hidden files, and human-readable sizes
+- **File Display**: `cat` (Unix) and `type` (Windows) for viewing file contents
+- **File Operations**: `cp`/`copy`, `mv`/`move`, `rm`/`del` for copying, moving, and removing files and directories
+- **Directory Operations**: `mkdir`/`md`, `rmdir`/`rd` for creating and removing directories
+- **Screen Management**: `clear` (Unix) and `cls` (Windows) for clearing the terminal
+
+Both Unix-style and Windows-style command names are supported, making the shell familiar to users from any platform!
 
 ### Shell Features
 - **Interactive Mode**: Run `./gosh` for an interactive shell session
@@ -35,6 +45,7 @@ For detailed information on scripting and advanced features, see the [Scripting 
 
 ## Documentation
 
+- [Cross-Platform Features](doc/cross_platform.md) - Learn about dual command support and platform compatibility
 - [Tab Completion Test Guide](doc/tab_completion.md) - Test and verify tab completion features
 - [Command Reference](doc/command_reference.md) - List of all built-in commands and their usage
 - [Scripting Guide](doc/scripting_guide.md) - Learn how to write shell scripts using gosh
@@ -42,9 +53,19 @@ For detailed information on scripting and advanced features, see the [Scripting 
 
 ## Building
 
+Build gosh for your platform:
+
 ```bash
+# Build for current platform
 go build -o gosh
+
+# Cross-compile for different platforms
+go build -o gosh.exe                    # Windows
+GOOS=linux go build -o gosh-linux       # Linux
+GOOS=darwin go build -o gosh-macos      # macOS
 ```
+
+The resulting binary will include all cross-platform built-in commands and work consistently across different operating systems.
 
 ## Usage
 
@@ -77,10 +98,35 @@ By gosh, scripting has never been simpler!
 ### Example Script
 ```bash
 #!/usr/bin/env gosh
-# Example gosh script - gosh, this is neat!
+# Example gosh script - showcasing cross-platform features!
 
 echo "Hello from gosh!"
 pwd
+
+# Cross-platform file operations
+echo "=== File Listing (Unix-style) ==="
+ls -la
+
+echo "=== File Listing (Windows-style) ==="
+dir -l
+
+# Create test directory and files
+mkdir -p test_project/src
+echo "console.log('Hello World');" > test_project/src/app.js
+echo "# Test Project" > test_project/README.md
+
+# Show file contents using both styles
+echo "=== File Contents (Unix-style) ==="
+cat test_project/README.md
+
+echo "=== File Contents (Windows-style) ==="
+type test_project/src/app.js
+
+# Copy and move operations
+cp test_project/README.md test_project/README_backup.md
+copy test_project/src/app.js test_project/app_copy.js
+
+# Environment variables
 export MY_VAR=test
 echo "MY_VAR is: $MY_VAR"
 
@@ -91,9 +137,15 @@ echo "TEMP_VAR is: $TEMP_VAR"
 # Pipe examples - gosh, pipes are powerful!
 echo "testing pipe functionality" | wc -w
 ls -la | head -5
-cat /etc/passwd | grep root | wc -l
 
-# Gosh darn it, that's some fine scripting!
+# Clean up
+rm -rf test_project
+
+# Clear screen (choose your style!)
+# clear    # Unix-style
+# cls      # Windows-style
+
+echo "Gosh darn it, that's some fine cross-platform scripting!"
 ```
 
 ## Quick Examples
@@ -102,6 +154,14 @@ cat /etc/passwd | grep root | wc -l
 # Basic usage
 ls -la
 echo "Hello, World!"
+
+# Cross-platform file operations - use either style!
+ls -l                    # Unix-style file listing
+dir -l                   # Windows-style file listing
+cat README.md            # Unix-style file display
+type README.md           # Windows-style file display
+cp file.txt backup.txt   # Unix-style copy
+copy file.txt backup.txt # Windows-style copy
 
 # Pipes and redirection
 ls | grep ".go" > go_files.txt
@@ -115,6 +175,13 @@ echo "Temp: $TEMP_VAR"
 
 # Command chaining
 echo "Starting..."; pwd; echo "Done!"
+
+# Cross-platform directory operations
+mkdir -p projects/gosh     # Create nested directories
+cp -r src/ backup/         # Copy directory recursively
+rm -rf temp/               # Remove directory and contents
+clear                      # Clear screen (Unix-style)
+cls                        # Clear screen (Windows-style)
 
 # Line continuation for long commands
 echo "This is a very long command" \
@@ -154,7 +221,12 @@ Gosh is organized into multiple modules for maximum readability and maintainabil
 
 ## Compatibility
 
-Designed and tested for macOS. Gosh, the shell uses Go's standard library for cross-platform compatibility where possible - oh my gosh, it's portable!
+**Cross-Platform Support**: Gosh is designed and tested to work seamlessly across multiple operating systems:
+- **Windows**: Full support with both Unix-style (`ls`, `cat`, `cp`) and Windows-style (`dir`, `type`, `copy`) commands
+- **macOS**: Native support with all Unix-style commands
+- **Linux**: Complete compatibility with standard Unix commands
+
+The shell automatically handles platform-specific differences like file paths, permissions, and command conventions. Gosh, it's truly portable!
 
 ## License
 

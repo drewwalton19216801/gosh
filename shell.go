@@ -56,10 +56,13 @@ func NewShell() *Shell {
 	signal.Notify(s.sigChan, syscall.SIGINT)
 	go s.handleSignals()
 
+	// Get cross-platform history file path
+	historyFile := getHistoryFilePath()
+
 	// Initialize readline with history support and tab completion
 	rl, err := readline.NewEx(&readline.Config{
 		Prompt:          "gosh> ",
-		HistoryFile:     "/tmp/.gosh_history",
+		HistoryFile:     historyFile,
 		AutoComplete:    s.createCompleter(),
 		InterruptPrompt: "^C",
 		EOFPrompt:       "exit",
@@ -1405,4 +1408,17 @@ func (s *Shell) handleVariableAssignment(line string) error {
 
 	// Reject bare variable assignments - require 'local' or 'export'
 	return fmt.Errorf("variable assignment without declaration: %s\nUse 'local %s' for local variables or 'export %s' for environment variables", varName, trimmed, trimmed)
+}
+
+// getHistoryFilePath returns a cross-platform path for the history file
+func getHistoryFilePath() string {
+	// Try to get user home directory
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		// Fallback to current directory if home directory is not available
+		return ".gosh_history"
+	}
+	
+	// Use home directory with hidden file
+	return filepath.Join(homeDir, ".gosh_history")
 }
