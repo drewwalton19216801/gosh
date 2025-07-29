@@ -78,7 +78,12 @@ gosh -c "script.sh arg1 arg2"
 # This script works identically on Windows, macOS, and Linux
 # Gosh, it's truly portable!
 
-echo "Running on: $(uname -s 2>/dev/null || echo 'Windows')"
+# Detect platform in a way that works with gosh
+PLATFORM=$(uname -s 2>/dev/null)
+if [ -z "$PLATFORM" ]; then
+    PLATFORM="Windows"
+fi
+echo "Running on: $PLATFORM"
 echo "Script arguments: $@"
 
 # Use cross-platform commands
@@ -218,7 +223,11 @@ echo $MY_VAR
 echo "Current PATH: $PATH"
 
 # Platform detection in scripts
-export PLATFORM="$(uname -s 2>/dev/null || echo 'Windows')"
+PLATFORM=$(uname -s 2>/dev/null)
+if [ -z "$PLATFORM" ]; then
+    PLATFORM="Windows"
+fi
+export PLATFORM
 echo "Running on: $PLATFORM"</code></pre>
         </section>
 
@@ -230,7 +239,12 @@ echo "Running on: $PLATFORM"</code></pre>
 # Cross-platform build script - gosh, it works everywhere!
 
 echo "=== Cross-Platform Build Script ==="
-echo "Platform: $(uname -s 2>/dev/null || echo 'Windows')"
+# Detect platform in a way that works with gosh
+PLATFORM=$(uname -s 2>/dev/null)
+if [ -z "$PLATFORM" ]; then
+    PLATFORM="Windows"
+fi
+echo "Platform: $PLATFORM"
 
 # Create project structure (works on all platforms)
 mkdir -p build/src
@@ -249,7 +263,11 @@ echo "=== Build Directory (Windows-style) ==="
 dir -l build/
 
 # Environment setup
-export BUILD_DATE="$(date +%Y-%m-%d 2>/dev/null || echo 'today')"
+BUILD_DATE=$(date +%Y-%m-%d 2>/dev/null)
+if [ -z "$BUILD_DATE" ]; then
+    BUILD_DATE="today"
+fi
+export BUILD_DATE
 export BUILD_VERSION="1.0.0"
 
 echo "Build completed on $BUILD_DATE"
@@ -273,7 +291,11 @@ for file in logs/*.txt logs\*.log; do
         type "$file" | head -5
         
         # Create backup with timestamp
-        local backup_name="backup_$(basename "$file")_$(date +%Y%m%d 2>/dev/null || echo 'backup')"
+        BACKUP_DATE=$(date +%Y%m%d 2>/dev/null)
+        if [ -z "$BACKUP_DATE" ]; then
+            BACKUP_DATE="backup"
+        fi
+        local backup_name="backup_$(basename "$file")_$BACKUP_DATE"
         cp "$file" "backups/$backup_name"
     fi
 done
