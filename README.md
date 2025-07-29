@@ -228,6 +228,11 @@ Gosh is organized into multiple modules for maximum readability and maintainabil
 
 The shell automatically handles platform-specific differences like file paths, permissions, and command conventions. Gosh, it's truly portable!
 
+## Bugs
+
+There are probably many bugs in gosh. Please report any bugs or issues to the [GitHub issue tracker](https://github.com/drewwalton19216801/gosh/issues).
+
+
 ## License
 
 This project is open source and available under the MIT License.
