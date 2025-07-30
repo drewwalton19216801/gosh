@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strings"
 	"syscall"
@@ -795,24 +794,24 @@ func (s *Shell) isLineContinuationBackslash(line string) bool {
 	if !strings.HasSuffix(line, "\\") {
 		return false
 	}
-
+	
 	// If the line is just a backslash, it's continuation
 	if line == "\\" {
 		return true
 	}
-
+	
 	// Get the character before the backslash
 	if len(line) < 2 {
 		return true
 	}
-
+	
 	prevChar := line[len(line)-2]
-
+	
 	// If preceded by a space or tab, it's likely line continuation
 	if prevChar == ' ' || prevChar == '\t' {
 		return true
 	}
-
+	
 	// If preceded by alphanumeric, dot, tilde, colon, or another backslash,
 	// it's likely a path separator (especially on Windows)
 	if (prevChar >= 'a' && prevChar <= 'z') ||
@@ -821,7 +820,7 @@ func (s *Shell) isLineContinuationBackslash(line string) bool {
 		prevChar == '.' || prevChar == '~' || prevChar == ':' || prevChar == '\\' {
 		return false
 	}
-
+	
 	// For other characters, assume it's line continuation
 	return true
 }
@@ -1039,12 +1038,6 @@ func joinPathWithSeparator(dir, file, separator string) string {
 	return dir + "/" + file
 }
 
-// isCaseSensitiveFilesystem returns true if the filesystem is case-sensitive
-// Linux filesystems are typically case-sensitive, while Windows and macOS are not
-func isCaseSensitiveFilesystem() bool {
-	return runtime.GOOS == "linux"
-}
-
 // getFileCompletions returns file and directory completions
 func (s *Shell) getFileCompletions(prefix string) []string {
 	var completions []string
@@ -1090,7 +1083,7 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 				separatorCount++
 			}
 		}
-
+		
 		// Only apply this special case if there are no separators (just ~user)
 		if separatorCount == 0 {
 			// This is a ~user pattern that was successfully expanded
@@ -1174,13 +1167,8 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 							// prefix is just ~/something without slashes
 							prefixBase := filepath.Base(prefix)
 							if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
-								// Case-insensitive match - on case-sensitive filesystems, use actual name
-								if isCaseSensitiveFilesystem() {
-									completion = "~/" + name
-								} else {
-									// On case-insensitive filesystems, preserve user's case
-									completion = "~/" + prefixBase + name[len(prefixBase):]
-								}
+								// Case-insensitive match - construct completion that starts with original prefix
+								completion = "~/" + prefixBase + name[len(prefixBase):]
 							} else {
 								// Exact match or directory listing
 								completion = "~/" + name
@@ -1189,13 +1177,8 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 							// Handle cases like ~/Documents/PR completing to ~/Documents/Projects
 							prefixBase := filepath.Base(prefix)
 							if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
-								// Case-insensitive match - on case-sensitive filesystems, use actual name
-								if isCaseSensitiveFilesystem() {
-									completion = prefixDir + userSeparator + name
-								} else {
-									// On case-insensitive filesystems, preserve user's case
-									completion = prefixDir + userSeparator + prefixBase + name[len(prefixBase):]
-								}
+								// Case-insensitive match - construct completion that starts with original prefix
+								completion = prefixDir + userSeparator + prefixBase + name[len(prefixBase):]
 							} else {
 								// Exact match or directory listing
 								completion = prefixDir + userSeparator + name
@@ -1211,25 +1194,14 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 						// Check for case-insensitive prefix matching
 						prefixBase := filepath.Base(prefix)
 						if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
-							// Case-insensitive match - on case-sensitive filesystems, use actual name
+							// Case-insensitive match - complete the full name
 							prefixDir := filepath.Dir(prefix)
-							if isCaseSensitiveFilesystem() {
-								if prefixDir == "." {
-									// Simple ~user/filename case
-									completion = strings.TrimSuffix(prefix, prefixBase) + name
-								} else {
-									// ~user/path/filename case
-									completion = prefixDir + userSeparator + name
-								}
+							if prefixDir == "." {
+								// Simple ~user/filename case
+								completion = strings.TrimSuffix(prefix, prefixBase) + prefixBase + name[len(prefixBase):]
 							} else {
-								// On case-insensitive filesystems, preserve user's case
-								if prefixDir == "." {
-									// Simple ~user/filename case
-									completion = strings.TrimSuffix(prefix, prefixBase) + prefixBase + name[len(prefixBase):]
-								} else {
-									// ~user/path/filename case
-									completion = prefixDir + userSeparator + prefixBase + name[len(prefixBase):]
-								}
+								// ~user/path/filename case
+								completion = prefixDir + userSeparator + prefixBase + name[len(prefixBase):]
 							}
 						} else {
 							// Exact match or no prefix match
@@ -1249,13 +1221,8 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 					if prefixDir == "." && strings.HasPrefix(prefix, "./") {
 						// Preserve './' prefix format
 						if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
-							// Case-insensitive match - on case-sensitive filesystems, use actual name
-							if isCaseSensitiveFilesystem() {
-								completion = "./" + name
-							} else {
-								// On case-insensitive filesystems, preserve user's case
-								completion = "./" + prefixBase + name[len(prefixBase):]
-							}
+							// Case-insensitive match
+							completion = "./" + prefixBase + name[len(prefixBase):]
 						} else {
 							// Exact match
 							completion = "./" + name
@@ -1263,13 +1230,8 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 					} else {
 						// Use the correct filesystem case but preserve prefix structure and separator style
 						if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefixBase)) {
-							// Case-insensitive match - on case-sensitive filesystems, use actual name
-							if isCaseSensitiveFilesystem() {
-								completion = joinPathWithSeparator(prefixDir, name, userSeparator)
-							} else {
-								// On case-insensitive filesystems, preserve user's case
-								completion = joinPathWithSeparator(prefixDir, prefixBase+name[len(prefixBase):], userSeparator)
-							}
+							// Case-insensitive match - preserve user's separator style
+							completion = joinPathWithSeparator(prefixDir, prefixBase+name[len(prefixBase):], userSeparator)
 						} else {
 							// Exact match - preserve user's separator style
 							completion = joinPathWithSeparator(prefixDir, name, userSeparator)
@@ -1279,13 +1241,8 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 			} else {
 				// Simple filename completion
 				if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(prefix)) {
-					// Case-insensitive match - on case-sensitive filesystems, use actual name
-					if isCaseSensitiveFilesystem() {
-						completion = name
-					} else {
-						// On case-insensitive filesystems, preserve user's case
-						completion = prefix + name[len(prefix):]
-					}
+					// Case-insensitive match - construct completion that starts with original prefix
+					completion = prefix + name[len(prefix):]
 				} else {
 					// Exact match
 					completion = name
