@@ -167,7 +167,7 @@ backup_file $1
 #!/usr/local/bin/gosh
 
 # Detect operating system safely
-if command -v uname >/dev/null 2>&1; then
+if uname ; then
     OS_NAME=$(uname)
     KERNEL_VERSION=$(uname -r)
 else

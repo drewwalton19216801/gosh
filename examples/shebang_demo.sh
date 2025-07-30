@@ -7,7 +7,7 @@ echo "This script has shebang: #!/usr/bin/env gosh"
 echo ""
 
 echo "Platform detection:"
-if command -v uname >/dev/null 2>&1; then
+if uname ; then
     local PLATFORM=$(uname -s)
     echo "Running on Unix-like system: $PLATFORM"
     echo "On this platform, gosh respects shebangs and would run this script with gosh."

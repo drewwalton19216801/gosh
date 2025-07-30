@@ -359,7 +359,7 @@ Gosh is designed and tested for macOS, taking advantage of:
 ### Cross-Platform Scripting
 ```bash
 # Detect operating system
-if command -v uname >/dev/null 2>&1; then
+if uname ; then
     export OS_TYPE=$(uname -s)
 else
     export OS_TYPE="Windows"

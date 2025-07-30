@@ -2,7 +2,7 @@
 # This script works identically on Windows, macOS, and Linux
 
 # Detect platform in a way that works with gosh
-if command -v uname >/dev/null 2>&1; then
+if uname ; then
     local PLATFORM=$(uname -s)
 else
     local PLATFORM="Windows"
