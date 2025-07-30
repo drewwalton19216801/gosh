@@ -8,7 +8,9 @@ import (
 
 func main() {
 	var command string
+	var useBubbleTea bool
 	flag.StringVar(&command, "c", "", "execute command and exit")
+	flag.BoolVar(&useBubbleTea, "bubbletea", false, "use Bubble Tea interface for better tab completion")
 	flag.Parse()
 
 	shell := NewShell()
@@ -29,6 +31,13 @@ func main() {
 		}
 	} else {
 		// Interactive mode
-		shell.Run()
+		if useBubbleTea {
+			if err := shell.RunBubbleTeaShell(); err != nil {
+				fmt.Fprintf(os.Stderr, "gosh: %v\n", err)
+				os.Exit(1)
+			}
+		} else {
+			shell.Run()
+		}
 	}
 }
