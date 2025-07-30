@@ -128,6 +128,21 @@ Human-readable file sizes adapt to local conventions:
 - Supports KB, MB, GB, TB units
 - Consistent formatting across all platforms
 
+### Tab Completion Behavior
+Gosh adapts its tab completion behavior to match platform conventions:
+
+#### Windows
+- **Case-Insensitive**: Tab completion works regardless of case
+- **Examples**: `EC[TAB]` completes to `ECho`, `cd proj[TAB]` completes to `cd projects`
+- **Behavior**: Preserves your input case and appends the remaining characters
+
+#### Linux/Unix/macOS
+- **Case-Sensitive**: Tab completion requires exact case matching
+- **Examples**: `EC[TAB]` does not complete to `echo`, `cd proj[TAB]` does not complete to `Projects`
+- **Behavior**: Only completes when the case exactly matches available options
+
+This ensures that tab completion feels natural on each platform while maintaining the expected behavior that users are accustomed to.
+
 ## Cross-Platform Examples
 
 ### Basic File Operations
@@ -233,4 +248,4 @@ Planned improvements for cross-platform support:
 - Pipeline support for built-in commands
 - Additional Windows-style commands (`attrib`, `xcopy`, etc.)
 - Better integration with platform-specific features
-- Enhanced tab completion for both command styles
+- Enhanced tab completion for both command styles with platform-appropriate case sensitivity (case-insensitive on Windows, case-sensitive on Unix/Linux)

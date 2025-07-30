@@ -40,8 +40,11 @@ This guide demonstrates the tab completion functionality in gosh.
 1. Type `l` and press TAB - should show commands like `ls`, `ln`, etc.
 2. Type `g` and press TAB - should show commands like `git`, `grep`, etc.
 
-## Testing Case-Insensitive Completion
+## Testing Case-Insensitive Completion (Windows Only)
 
+**Note: Case-insensitive completion is only available on Windows. On Linux and other Unix-like systems, tab completion is case-sensitive.**
+
+### Windows Testing:
 1. Type `EC` and press TAB - should complete to `ECho`
 2. Type `EX` and press TAB - should complete to `EXit`
 3. Type `exi` and press TAB - should complete to `exit`
@@ -49,6 +52,12 @@ This guide demonstrates the tab completion functionality in gosh.
 5. Type `cd ~/PROJ` and press TAB - should complete to `~/PROJects` (if Projects exists)
 6. Type `LS` and press TAB - should complete to `LSls`
 7. Type `GIT` and press TAB - should show git commands with preserved case
+
+### Linux/Unix Testing:
+1. Type `EC` and press TAB - should NOT complete to `echo` (case-sensitive)
+2. Type `ec` and press TAB - should complete to `echo`
+3. Type `cd ~/PROJ` and press TAB - should NOT complete to `~/Projects` (case-sensitive)
+4. Type `cd ~/Proj` and press TAB - should complete to `~/Projects` (if exact case match exists)
 
 ## Testing Windows Path Completion
 
@@ -70,9 +79,12 @@ This guide demonstrates the tab completion functionality in gosh.
 - No mixed separators in completion results (e.g., no `Projects/gProjects\go/`)
 - Windows paths ending with backslashes (e.g., `cd Projects\`) work correctly without triggering line continuation mode
 
-### Case-Insensitive Completion and Execution Behavior
+### Platform-Specific Completion and Execution Behavior
 
-The shell supports case-insensitive completion and execution for built-in commands, aliases, and user-defined functions.
+The shell's tab completion behavior varies by operating system to match platform conventions:
+
+#### Windows: Case-Insensitive Completion
+On Windows, the shell supports case-insensitive completion and execution for built-in commands, aliases, and user-defined functions.
 
 **Tab Completion Behavior:**
 When using case-insensitive completion, the shell preserves your input case and appends the remaining part from the filesystem or command name:
@@ -88,18 +100,32 @@ When using case-insensitive completion, the shell preserves your input case and 
 - Input: `EC` → Completion: `ECho` (your case + command remainder)
 - Input: `exit` → Completion: `exit` (exact match uses actual command case)
 
-**Command Execution:**
-Commands can be executed regardless of case:
+#### Linux/Unix: Case-Sensitive Completion
+On Linux and other Unix-like systems, the shell uses case-sensitive completion to match traditional Unix behavior:
+
+**File/Directory Completions:**
+- Input: `proj` → Completion: `projects` (only if exact case match exists)
+- Input: `PROJ` → No completion (unless `PROJ*` files exist)
+- Input: `Projects` → Completion: `Projects` (exact case match)
+
+**Command Completions:**
+- Input: `exi` → Completion: `exit` (exact case match)
+- Input: `EXI` → No completion (commands are case-sensitive)
+- Input: `EC` → No completion (commands are case-sensitive)
+
+#### Command Execution (All Platforms)
+Commands can be executed regardless of case on all platforms:
 - `exit`, `EXIT`, `Exit`, `EXit` all work
 - `echo`, `ECHO`, `Echo`, `ECho` all work
 - `pwd`, `PWD`, `Pwd`, `PWd` all work
 - Aliases and user-defined functions also support case-insensitive execution
 
 This behavior ensures that:
-- Tab completion works regardless of case
-- Commands execute regardless of case
-- Your typing style is respected
-- The completion clearly shows it found a case-insensitive match
+- **Windows**: Tab completion works regardless of case, matching Windows conventions
+- **Linux/Unix**: Tab completion is case-sensitive, matching Unix conventions
+- **All platforms**: Commands execute regardless of case for convenience
+- Your typing style is respected during completion
+- The completion clearly shows it found a match
 - No duplication bugs occur (like `PROJProjects` or `EXIexit`)
 
 ## Features Implemented
@@ -114,7 +140,9 @@ This behavior ensures that:
 - ✅ Hidden file completion (when prefix starts with dot)
 - ✅ Directory trailing slash addition
 - ✅ Duplicate removal and sorting
-- ✅ Case-insensitive completion for commands, aliases, and files
+- ✅ Platform-specific case sensitivity:
+  - Windows: Case-insensitive completion for commands, aliases, and files
+  - Linux/Unix: Case-sensitive completion (traditional Unix behavior)
 - ✅ Cross-platform path separator support (both / and \ on Windows)
 - ✅ Path separator style preservation (maintains user's preferred style)
 - ✅ Windows backslash path completion
