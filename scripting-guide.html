@@ -69,19 +69,29 @@
             <pre><code>gosh script.sh arg1 arg2</code></pre>
 
             <h3>Cross-Platform Script Execution</h3>
-            <p>Gosh provides seamless script execution across all platforms:</p>
+            <p>Gosh provides seamless script execution across all platforms with platform-specific shebang handling:</p>
             <ul>
+                <li><strong>Unix/Linux/macOS:</strong> Scripts with shebangs run with their specified interpreters (bash, zsh, etc.). Missing interpreters show errors, missing shebangs get a gosh pun warning!</li>
                 <li><strong>Windows:</strong> Scripts with <code>.sh</code> extension or shell shebangs are automatically detected and executed through gosh - no "not a valid Win32 application" errors!</li>
-                <li><strong>macOS/Linux:</strong> Scripts work natively with standard Unix conventions</li>
                 <li><strong>Cross-platform commands:</strong> Use gosh's dual command support for maximum compatibility</li>
             </ul>
 
             <h3>Shebang Line</h3>
-            <p>Start your scripts with a shebang line to make them executable. Gosh recognizes various shebang formats:</p>
+            <p>Start your scripts with a shebang line to specify the interpreter. Gosh handles shebangs differently on each platform:</p>
+            
+            <h4>Unix-like Platforms (Linux, macOS)</h4>
+            <p>Shebangs are respected and scripts run with the specified interpreter:</p>
+            <pre><code>#!/bin/bash            # Runs with bash
+#!/usr/bin/env zsh     # Runs with zsh
+#!/usr/bin/env python3 # Runs with python3
+#!/usr/bin/env gosh    # Runs with gosh</code></pre>
+            
+            <h4>Windows Platform</h4>
+            <p>Shebangs are recognized but all scripts run through gosh for compatibility:</p>
             <pre><code>#!/usr/bin/env gosh    # Recommended for cross-platform scripts
-#!/bin/gosh            # Direct path (if gosh is in /bin)
-#!/bin/sh              # Generic shell (works with gosh)
-#!/bin/bash            # Bash-compatible (works with gosh)</code></pre>
+#!/bin/gosh            # Direct path (recognized but runs through gosh)
+#!/bin/sh              # Generic shell (recognized but runs through gosh)
+#!/bin/bash            # Bash-compatible (recognized but runs through gosh)</code></pre>
 
             <h3>Making Scripts Executable</h3>
             <p><strong>On Unix/macOS:</strong></p>

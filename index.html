@@ -79,6 +79,18 @@
                         <div class="terminal-line output">Script works on Windows too!</div>
                         <div class="terminal-line">
                             <span class="prompt">gosh> </span>
+                            <span class="command">./bash_script.sh</span>
+                        </div>
+                        <div class="terminal-line output">Running with bash interpreter!</div>
+                        <div class="terminal-line output">Shebang support works!</div>
+                        <div class="terminal-line">
+                            <span class="prompt">gosh> </span>
+                            <span class="command">./bash_script.sh</span>
+                        </div>
+                        <div class="terminal-line output">Running with bash interpreter!</div>
+                        <div class="terminal-line output">Shebang support works!</div>
+                        <div class="terminal-line">
+                            <span class="prompt">gosh> </span>
                             <span class="cursor">_</span>
                         </div>
                     </div>
@@ -159,6 +171,11 @@
                     <p>Automatic detection and execution of .sh files and shebang scripts on Windows. No more "not a valid Win32 application" errors - gosh handles it all!</p>
                 </div>
                 <div class="feature-card">
+                    <div class="feature-icon">🔧</div>
+                    <h3>Shebang Support</h3>
+                    <p>On Unix-like platforms, scripts run with their specified interpreters (bash, zsh, etc.). Missing interpreters show errors, missing shebangs get a gosh pun warning!</p>
+                </div>
+                <div class="feature-card">
                     <div class="feature-icon">⚡</div>
                     <h3>Cross-Platform File Operations</h3>
                     <p>Built-in commands that work on Windows, macOS, and Linux with both Unix (ls, cat, cp) and Windows (dir, type, copy) style commands</p>
@@ -233,6 +250,7 @@
                             <code>gosh script.sh arg1 arg2</code>
                         </div>
                         <p>By gosh, scripting has never been simpler!</p>
+                        <p><strong>Unix/Linux/macOS:</strong> Scripts with shebangs (#!/bin/bash, #!/usr/bin/env zsh) run with their specified interpreters. Missing shebangs get a gosh pun warning!</p>
                         <p><strong>Windows users:</strong> Gosh automatically detects and runs .sh files and shebang scripts - no "not a valid Win32 application" errors. Gosh darn it, that's convenient!</p>
                     </div>
                 </div>

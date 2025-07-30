@@ -56,13 +56,29 @@
             
             <p>Gosh provides seamless shell script execution across all platforms - gosh, cross-platform scripting has never been easier!</p>
 
+            <h3>Unix-like Platform Shebang Support</h3>
+            <p>On Unix-like platforms (Linux, macOS), gosh now respects shebang lines and executes scripts with their specified interpreters:</p>
+            
+            <ul>
+                <li><strong>Shebang Detection:</strong> Scripts with shebangs like <code>#!/bin/bash</code>, <code>#!/usr/bin/env zsh</code> are detected automatically</li>
+                <li><strong>Interpreter Execution:</strong> Scripts run with their specified interpreters (bash, zsh, python, etc.)</li>
+                <li><strong>Error Handling:</strong> If the specified interpreter isn't found, gosh shows an error message</li>
+                <li><strong>Missing Shebang Warning:</strong> Scripts without shebangs get a gosh pun warning and run with gosh</li>
+                <li><strong>Supported Formats:</strong> Both direct paths (<code>#!/bin/bash</code>) and env-style (<code>#!/usr/bin/env bash</code>)</li>
+            </ul>
+
+            <pre><code># On Unix-like platforms:
+./bash_script.sh     # Runs with bash if shebang is #!/bin/bash
+./zsh_script.sh      # Runs with zsh if shebang is #!/usr/bin/env zsh
+./no_shebang.sh      # Shows warning: "By gosh, I'll run it with gosh and hope for the best!"</code></pre>
+
             <h3>Windows Shell Script Support</h3>
             <p>On Windows, gosh automatically detects and executes shell scripts that would normally fail with "not a valid Win32 application" errors:</p>
             
             <ul>
                 <li><strong>Automatic Detection:</strong> Scripts with <code>.sh</code> extension or shell shebang lines are automatically recognized</li>
-                <li><strong>Transparent Execution:</strong> Shell scripts are executed through gosh itself, providing full compatibility</li>
-                <li><strong>Shebang Support:</strong> Scripts with <code>#!/bin/sh</code>, <code>#!/bin/bash</code>, <code>#!/usr/bin/env gosh</code>, etc. work seamlessly</li>
+                <li><strong>Transparent Execution:</strong> All shell scripts are executed through gosh itself, providing full compatibility</li>
+                <li><strong>Shebang Recognition:</strong> Scripts with <code>#!/bin/sh</code>, <code>#!/bin/bash</code>, <code>#!/usr/bin/env gosh</code>, etc. are recognized but run through gosh</li>
                 <li><strong>Argument Passing:</strong> All script arguments are properly passed through</li>
             </ul>
 
