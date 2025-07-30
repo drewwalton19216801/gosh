@@ -45,6 +45,7 @@
                 <li><a href="#shell-script-execution">Shell Script Execution</a></li>
                 <li><a href="#dual-commands">Dual Command Support</a></li>
                 <li><a href="#file-paths">File Path Handling</a></li>
+                <li><a href="#tab-completion">Tab Completion Behavior</a></li>
                 <li><a href="#environment-variables">Environment Variables</a></li>
                 <li><a href="#examples">Cross-Platform Examples</a></li>
             </ul>
@@ -210,6 +211,67 @@ export WINDOWS_CONFIG="$HOME\AppData\Local\myapp"  # Windows-style
 # Gosh handles the differences automatically!</code></pre>
         </section>
 
+        <section id="tab-completion">
+            <h2>Tab Completion Behavior</h2>
+            
+            <p>Gosh adapts its tab completion behavior to match platform conventions - gosh, it's like having a native shell everywhere!</p>
+
+            <h3>Platform-Specific Case Sensitivity</h3>
+            <table class="command-table">
+                <thead>
+                    <tr>
+                        <th>Platform</th>
+                        <th>Tab Completion</th>
+                        <th>Command Execution</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Windows</td>
+                        <td>Case-insensitive</td>
+                        <td>Case-insensitive</td>
+                        <td><code>EC[TAB]</code> → <code>echo</code></td>
+                    </tr>
+                    <tr>
+                        <td>Linux/Unix/macOS</td>
+                        <td>Case-sensitive</td>
+                        <td>Case-insensitive</td>
+                        <td><code>ec[TAB]</code> → <code>echo</code></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Why Platform-Specific?</h3>
+            <p>This design respects user expectations on each platform:</p>
+            <ul>
+                <li><strong>Windows Users:</strong> Accustomed to case-insensitive file systems (NTFS) and shells (cmd.exe, PowerShell)</li>
+                <li><strong>Unix Users:</strong> Expect case-sensitive behavior like bash, zsh, and traditional Unix tools</li>
+                <li><strong>Universal Execution:</strong> Commands execute case-insensitively everywhere for convenience</li>
+            </ul>
+
+            <h3>Examples in Action</h3>
+            <pre><code># Windows behavior - gosh, it's forgiving!
+gosh> EC[TAB]        # Completes to "echo"
+gosh> ECho "Hello"   # Executes successfully
+Hello
+
+# Linux/Unix/macOS behavior - gosh, it's precise!
+gosh> EC[TAB]        # No completion (case-sensitive)
+gosh> ec[TAB]        # Completes to "echo"
+gosh> ECho "Hello"   # Still executes successfully!
+Hello
+
+# File completion respects platform conventions too
+# Windows: README[TAB] → README.md (case-insensitive)
+# Unix:    readme[TAB] → readme.txt (case-sensitive)</code></pre>
+
+            <div class="note">
+                <h3>💡 Best of Both Worlds</h3>
+                <p>Tab completion follows platform conventions for familiarity, while command execution remains case-insensitive everywhere for maximum usability. Gosh darn it, that's smart design!</p>
+            </div>
+        </section>
+
         <section id="environment-variables">
             <h2>Environment Variables</h2>
             
@@ -281,12 +343,12 @@ echo "Gosh, that was a successful cross-platform build!"</code></pre>
             <pre><code>#!/usr/bin/env gosh
 # Process files across platforms - by gosh, it's universal!
 
-# Works with both path separators
+# Works with both path separators - gosh, that's flexible!
 for file in logs/*.txt logs\*.log; do
     if [ -f "$file" ]; then
         echo "Processing: $file"
         
-        # Use both command styles
+        # Use both command styles - gosh, variety is the spice of life!
         echo "=== File info (Unix-style) ==="
         cat "$file" | head -5
         
@@ -304,11 +366,37 @@ for file in logs/*.txt logs\*.log; do
 done
 
 echo "File processing complete - gosh, that was efficient!"</code></pre>
+
+            <h3>Tab Completion Demo Script</h3>
+            <pre><code>#!/usr/bin/env gosh
+# Demonstrate platform-aware tab completion - gosh, it's educational!
+
+echo "=== Tab Completion Demo ==="
+
+# Detect platform for demonstration
+if command -v uname >/dev/null 2>&1; then
+    local PLATFORM=$(uname -s)
+else
+    local PLATFORM="Windows"
+fi
+
+echo "Platform: $PLATFORM"
+
+if [ "$PLATFORM" = "Windows" ]; then
+    echo "On Windows, try typing 'EC' and press TAB - it should complete to 'echo'"
+    echo "Gosh, case-insensitive completion makes Windows users feel at home!"
+else
+    echo "On Unix/Linux/macOS, try typing 'ec' and press TAB - it should complete to 'echo'"
+    echo "But 'EC' won't complete - gosh, that's Unix precision for you!"
+fi
+
+echo "On ALL platforms, 'ECho Hello' will execute successfully!"
+echo "Gosh darn it, that's the best of both worlds!"</code></pre>
         </section>
 
         <div class="note">
-            <h3>💡 Pro Tip</h3>
-            <p>Write your scripts using Unix-style commands and paths for maximum portability. Gosh will handle the platform differences automatically. When you need Windows-specific behavior, you can mix in Windows-style commands as needed. Gosh, it's the best of both worlds!</p>
+            <h3>💡 Pro Tip - Gosh, That's Helpful!</h3>
+            <p>Write your scripts using Unix-style commands and paths for maximum portability. Gosh will handle the platform differences automatically. When you need Windows-specific behavior, you can mix in Windows-style commands as needed. And remember - tab completion adapts to your platform, but command execution is forgiving everywhere. Gosh, it's the best of both worlds!</p>
         </div>
     </main>
 

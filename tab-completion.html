@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tab Completion & Case-Insensitive Execution - gosh</title>
+    <title>Tab Completion & Platform-Aware Features - gosh</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,8 +31,8 @@
 
     <header class="page-header">
         <div class="container">
-            <h1>Tab Completion & Case-Insensitive Execution</h1>
-            <p>Test and verify tab completion and case-insensitive execution features in gosh</p>
+            <h1>Tab Completion & Platform-Aware Features</h1>
+            <p>Test and verify tab completion and platform-specific execution features in gosh - by gosh, it adapts to your OS!</p>
         </div>
     </header>
 
@@ -43,7 +43,8 @@
             <h3>Table of Contents</h3>
             <ul>
                 <li><a href="#command-completion">Testing Command Completion</a></li>
-                <li><a href="#case-insensitive">Case-Insensitive Completion and Execution</a></li>
+                <li><a href="#platform-behavior">Platform-Specific Tab Completion Behavior</a></li>
+                <li><a href="#case-insensitive">Case-Insensitive Execution (All Platforms)</a></li>
                 <li><a href="#file-completion">Testing File/Directory Completion</a></li>
                 <li><a href="#tilde-expansion">Testing Tilde Expansion Completion</a></li>
                 <li><a href="#glob-patterns">Testing Glob Pattern Completion</a></li>
@@ -52,7 +53,7 @@
             </ul>
         </div>
 
-        <p>This guide demonstrates the tab completion and case-insensitive execution functionality in gosh. Tab completion helps you work more efficiently by automatically completing commands, file names, and paths, while case-insensitive execution allows you to run commands regardless of capitalization.</p>
+        <p>This guide demonstrates the tab completion and platform-aware execution functionality in gosh. Tab completion helps you work more efficiently by automatically completing commands, file names, and paths. Gosh adapts its tab completion behavior to match your operating system's conventions - by gosh, it's smart!</p>
 
         <section id="command-completion">
             <h2>Testing Command Completion</h2>
@@ -93,24 +94,35 @@
             </div>
         </section>
 
-        <section id="case-insensitive">
-            <h2>Case-Insensitive Completion and Execution</h2>
-            <p>gosh supports case-insensitive completion and execution for built-in commands, aliases, and user-defined functions. This means you can type commands in any case and they will work correctly.</p>
+        <section id="platform-behavior">
+            <h2>Platform-Specific Tab Completion Behavior</h2>
+            <p>Gosh adapts its tab completion behavior to match your operating system's conventions - gosh, it's like having a native shell on every platform!</p>
             
-            <h3>Testing Case-Insensitive Completion</h3>
+            <div class="info-box">
+                <h4>🖥️ Platform-Aware Tab Completion</h4>
+                <ul>
+                    <li><strong>Windows:</strong> Case-insensitive tab completion (EC[TAB] → echo)</li>
+                    <li><strong>Linux/Unix/macOS:</strong> Case-sensitive tab completion (EC[TAB] → no match, ec[TAB] → echo)</li>
+                    <li><strong>Command Execution:</strong> Case-insensitive on ALL platforms (ECho works everywhere!)</li>
+                </ul>
+            </div>
+
+            <h3>Testing on Windows</h3>
+            <p>On Windows, tab completion is case-insensitive to match Windows conventions:</p>
             <ol>
                 <li>Type <code>EC</code> and press <kbd>TAB</kbd> - should complete to <code>echo</code></li>
                 <li>Type <code>EX</code> and press <kbd>TAB</kbd> - should show <code>exit</code> and <code>export</code></li>
                 <li>Type <code>PW</code> and press <kbd>TAB</kbd> - should complete to <code>pwd</code></li>
-                <li>Type <code>hel</code> and press <kbd>TAB</kbd> - should complete to <code>help</code></li>
+                <li>Type <code>HEL</code> and press <kbd>TAB</kbd> - should complete to <code>help</code></li>
             </ol>
 
-            <h3>Testing Case-Insensitive Execution</h3>
+            <h3>Testing on Linux/Unix/macOS</h3>
+            <p>On Unix-like systems, tab completion is case-sensitive to match Unix conventions:</p>
             <ol>
-                <li>Type <code>EXit</code> and press <kbd>ENTER</kbd> - should exit the shell</li>
-                <li>Type <code>ECho "Hello World"</code> and press <kbd>ENTER</kbd> - should print "Hello World"</li>
-                <li>Type <code>PWd</code> and press <kbd>ENTER</kbd> - should print current directory</li>
-                <li>Type <code>HeLp</code> and press <kbd>ENTER</kbd> - should show help information</li>
+                <li>Type <code>EC</code> and press <kbd>TAB</kbd> - should NOT complete (no matches)</li>
+                <li>Type <code>ec</code> and press <kbd>TAB</kbd> - should complete to <code>echo</code></li>
+                <li>Type <code>EX</code> and press <kbd>TAB</kbd> - should NOT complete (no matches)</li>
+                <li>Type <code>ex</code> and press <kbd>TAB</kbd> - should show <code>exit</code> and <code>export</code></li>
             </ol>
 
             <div class="terminal">
@@ -120,9 +132,12 @@
                         <span class="btn-minimize"></span>
                         <span class="btn-maximize"></span>
                     </div>
-                    <div class="terminal-title">gosh - Case-Insensitive Features</div>
+                    <div class="terminal-title">gosh - Platform-Specific Completion</div>
                 </div>
                 <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="comment"># On Windows:</span>
+                    </div>
                     <div class="terminal-line">
                         <span class="prompt">gosh> </span>
                         <span class="command">EC[TAB]</span>
@@ -131,6 +146,55 @@
                         <span class="prompt">gosh> </span>
                         <span class="command">echo</span>
                     </div>
+                    <div class="terminal-line">
+                        <span class="comment"># On Linux/Unix/macOS:</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">EC[TAB]</span>
+                    </div>
+                    <div class="terminal-line output"># No completion - case sensitive!</div>
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">ec[TAB]</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">echo</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="note">
+                <h4>🎯 Why Platform-Specific?</h4>
+                <p>This behavior matches what users expect on each platform. Windows users are accustomed to case-insensitive file systems and commands, while Unix users expect case-sensitive behavior. Gosh respects these conventions - gosh, it's intuitive!</p>
+            </div>
+        </section>
+
+        <section id="case-insensitive">
+            <h2>Case-Insensitive Execution (All Platforms)</h2>
+            <p>While tab completion behavior varies by platform, command execution is case-insensitive on ALL platforms! Gosh supports case-insensitive execution for built-in commands, aliases, and user-defined functions. This means you can type commands in any case and they will work correctly - gosh, that's convenient!</p>
+            
+            <h3>Testing Case-Insensitive Execution</h3>
+            <p>These work the same way on Windows, Linux, Unix, and macOS:</p>
+            <ol>
+                <li>Type <code>EXit</code> and press <kbd>ENTER</kbd> - should exit the shell</li>
+                <li>Type <code>ECho "Hello World"</code> and press <kbd>ENTER</kbd> - should print "Hello World"</li>
+                <li>Type <code>PWd</code> and press <kbd>ENTER</kbd> - should print current directory</li>
+                <li>Type <code>HeLp</code> and press <kbd>ENTER</kbd> - should show help information</li>
+                <li>Type <code>CLEAR</code> and press <kbd>ENTER</kbd> - should clear the screen</li>
+            </ol>
+
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-buttons">
+                        <span class="btn-close"></span>
+                        <span class="btn-minimize"></span>
+                        <span class="btn-maximize"></span>
+                    </div>
+                    <div class="terminal-title">gosh - Case-Insensitive Execution (All Platforms)</div>
+                </div>
+                <div class="terminal-body">
                     <div class="terminal-line">
                         <span class="prompt">gosh> </span>
                         <span class="command">ECho "Hello World"</span>
@@ -141,16 +205,21 @@
                         <span class="command">PWd</span>
                     </div>
                     <div class="terminal-line output">/Users/user/Projects/go/gosh</div>
+                    <div class="terminal-line">
+                        <span class="prompt">gosh> </span>
+                        <span class="command">HeLp</span>
+                    </div>
+                    <div class="terminal-line output">Available commands: cd, echo, exit, help, pwd...</div>
                 </div>
             </div>
 
             <div class="info-box">
-                <h4>💡 Case-Insensitive Benefits</h4>
+                <h4>💡 Case-Insensitive Execution Benefits</h4>
                 <ul>
-                    <li><strong>User-Friendly</strong>: No need to remember exact capitalization</li>
-                    <li><strong>Consistent</strong>: Works for built-ins, aliases, and user functions</li>
+                    <li><strong>User-Friendly</strong>: No need to remember exact capitalization - gosh, that's forgiving!</li>
+                    <li><strong>Consistent</strong>: Works for built-ins, aliases, and user functions on all platforms</li>
                     <li><strong>Flexible</strong>: Type commands however feels natural</li>
-                    <li><strong>Error Prevention</strong>: Reduces "command not found" errors</li>
+                    <li><strong>Error Prevention</strong>: Reduces "command not found" errors - gosh darn it, that's helpful!</li>
                 </ul>
             </div>
         </section>
@@ -314,13 +383,13 @@
 
         <section id="features">
             <h2>Features Implemented</h2>
-            <p>Gosh includes comprehensive tab completion support:</p>
+            <p>Gosh includes comprehensive tab completion support - gosh, it's feature-packed!</p>
             
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon">✅</div>
                     <h3>Built-in Commands</h3>
-                    <p>Complete built-in commands like exit, cd, pwd, echo, etc.</p>
+                    <p>Complete built-in commands like exit, cd, pwd, echo, etc. - gosh, that's handy!</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">✅</div>
@@ -369,27 +438,38 @@
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🆕</div>
+                    <h3>Platform-Aware Completion</h3>
+                    <p>Case-insensitive on Windows, case-sensitive on Unix - gosh, it's adaptive!</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🆕</div>
                     <h3>Case-Insensitive Execution</h3>
-                    <p>Execute commands, aliases, and functions regardless of case</p>
+                    <p>Execute commands, aliases, and functions regardless of case on all platforms</p>
                 </div>
             </div>
 
             <h3>Tips for Effective Tab Completion and Execution</h3>
             <ul>
-                <li><strong>Double TAB</strong>: Press TAB twice to see all available completions when there are multiple matches</li>
+                <li><strong>Double TAB</strong>: Press TAB twice to see all available completions when there are multiple matches - gosh, that's thorough!</li>
                 <li><strong>Partial Typing</strong>: Type a few characters before pressing TAB to narrow down completions</li>
                 <li><strong>Context Matters</strong>: The shell understands whether you're typing a command or an argument</li>
-                <li><strong>Case Insensitive Commands</strong>: Built-in commands, aliases, and functions work regardless of case (e.g., "EXIT", "exit", "Exit")</li>
-                <li><strong>File System Case</strong>: File and directory completion respects case sensitivity on file systems that support it</li>
-                <li><strong>Hidden Files</strong>: Start with a dot (.) to complete hidden files and directories</li>
+                <li><strong>Platform-Aware Completion</strong>: Tab completion adapts to your OS (case-insensitive on Windows, case-sensitive on Unix)</li>
+                <li><strong>Universal Case-Insensitive Execution</strong>: Built-in commands, aliases, and functions work regardless of case on ALL platforms (e.g., "EXIT", "exit", "Exit")</li>
+                <li><strong>File System Case</strong>: File and directory completion respects your platform's case sensitivity conventions</li>
+                <li><strong>Hidden Files</strong>: Start with a dot (.) to complete hidden files and directories - gosh, even the secrets are accessible!</li>
             </ul>
 
             <h3>Keyboard Shortcuts</h3>
             <div class="code-block">
-                <code>TAB        - Complete current word
+                <code>TAB        - Complete current word (platform-aware case sensitivity)
 TAB TAB    - Show all possible completions
 Ctrl+C     - Cancel current completion
 Ctrl+L     - Clear screen (preserves current line)</code>
+            </div>
+
+            <div class="note">
+                <h4>🎉 Gosh, That's Smart!</h4>
+                <p>The platform-aware tab completion means you get the behavior you expect on each operating system. Windows users get case-insensitive completion (just like cmd.exe and PowerShell), while Unix users get case-sensitive completion (just like bash and zsh). Meanwhile, command execution remains case-insensitive everywhere for maximum convenience. Gosh darn it, that's the best of both worlds!</p>
             </div>
         </section>
     </main>
