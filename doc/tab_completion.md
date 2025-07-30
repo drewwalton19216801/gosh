@@ -84,7 +84,7 @@ This guide demonstrates the tab completion functionality in gosh.
 The shell's tab completion behavior varies by operating system to match platform conventions:
 
 #### Windows: Case-Insensitive Completion
-On Windows, the shell supports case-insensitive completion and execution for built-in commands, aliases, and user-defined functions.
+On Windows, the shell supports case-insensitive completion and execution for built-in commands, aliases, user-defined functions, and external commands.
 
 **Tab Completion Behavior:**
 When using case-insensitive completion, the shell preserves your input case and appends the remaining part from the filesystem or command name:
@@ -113,12 +113,31 @@ On Linux and other Unix-like systems, the shell uses case-sensitive completion t
 - Input: `EXI` → No completion (commands are case-sensitive)
 - Input: `EC` → No completion (commands are case-sensitive)
 
-#### Command Execution (All Platforms)
-Commands can be executed regardless of case on all platforms:
+#### Command Execution
+**Built-in Commands, Aliases, and User-Defined Functions (All Platforms):**
+Built-in gosh commands can be executed regardless of case on all platforms:
 - `exit`, `EXIT`, `Exit`, `EXit` all work
 - `echo`, `ECHO`, `Echo`, `ECho` all work
 - `pwd`, `PWD`, `Pwd`, `PWd` all work
 - Aliases and user-defined functions also support case-insensitive execution
+
+**External Commands (Platform-Dependent):**
+External commands follow platform conventions:
+- **Windows**: Case-insensitive (`DIR`, `dir`, `Dir` all work)
+- **Linux/Unix/macOS**: Case-sensitive (`ls` works, `LS` may not work)
+
+**Testing Examples:**
+```bash
+# Built-in commands (work everywhere)
+ECho "Hello World"    # ✅ Works on all platforms
+CD /tmp               # ✅ Works on all platforms
+PWD                   # ✅ Works on all platforms
+
+# External commands (platform-dependent)
+DIR                   # ✅ Windows: works, 🐧 Unix: may fail
+LS -la                # ✅ Windows: works, 🐧 Unix: may fail
+ls -la                # ✅ Works on all platforms
+```
 
 This behavior ensures that:
 - **Windows**: Tab completion works regardless of case, matching Windows conventions

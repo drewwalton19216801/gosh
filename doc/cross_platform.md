@@ -128,20 +128,34 @@ Human-readable file sizes adapt to local conventions:
 - Supports KB, MB, GB, TB units
 - Consistent formatting across all platforms
 
-### Tab Completion Behavior
-Gosh adapts its tab completion behavior to match platform conventions:
+### Tab Completion and Command Execution Behavior
+Gosh adapts its tab completion behavior to match platform conventions while providing consistent execution for built-in commands:
 
-#### Windows
-- **Case-Insensitive**: Tab completion works regardless of case
+#### Tab Completion
+**Windows:**
+- **Case-Insensitive**: Tab completion works regardless of case for all commands and files
 - **Examples**: `EC[TAB]` completes to `ECho`, `cd proj[TAB]` completes to `cd projects`
 - **Behavior**: Preserves your input case and appends the remaining characters
 
-#### Linux/Unix/macOS
+**Linux/Unix/macOS:**
 - **Case-Sensitive**: Tab completion requires exact case matching
 - **Examples**: `EC[TAB]` does not complete to `echo`, `cd proj[TAB]` does not complete to `Projects`
 - **Behavior**: Only completes when the case exactly matches available options
 
-This ensures that tab completion feels natural on each platform while maintaining the expected behavior that users are accustomed to.
+#### Command Execution
+**Built-in Commands, Aliases, and User-Defined Functions (All Platforms):**
+Built-in gosh commands work case-insensitively on all platforms:
+- `echo`, `ECHO`, `Echo`, `ECho` all work
+- `cd`, `CD`, `Cd`, `cD` all work
+- `ls`, `LS`, `Ls`, `lS` all work (gosh built-in)
+- `dir`, `DIR`, `Dir`, `dIR` all work (gosh built-in)
+
+**External Commands (Platform-Dependent):**
+External commands follow platform conventions:
+- **Windows**: Case-insensitive (`DIR.exe`, `dir.exe`, `Dir.exe` all work)
+- **Linux/Unix/macOS**: Case-sensitive (`ls` works, `LS` may not work)
+
+This ensures that tab completion feels natural on each platform while maintaining convenient case-insensitive execution for gosh's built-in commands.
 
 ## Cross-Platform Examples
 
@@ -169,6 +183,31 @@ type myproject/README.md   # Windows-style
 
 # Clean up
 rm -rf myproject/          # Unix-style recursive removal
+```
+
+### Command Execution Examples
+```bash
+#!/usr/bin/env gosh
+
+# Built-in commands work case-insensitively on ALL platforms
+ECho "Built-in commands work everywhere!"    # ✅ All platforms
+CD /tmp                                      # ✅ All platforms  
+PWD                                          # ✅ All platforms
+LS -la                                       # ✅ All platforms (gosh built-in)
+DIR -l                                       # ✅ All platforms (gosh built-in)
+
+# External commands follow platform conventions
+echo "Testing external commands..."
+if command -v uname >/dev/null 2>&1; then
+    echo "On Unix/Linux/macOS:"
+    echo "  ls -la     # ✅ Works (lowercase)"
+    echo "  LS -la     # ❌ May fail (external ls is case-sensitive)"
+else
+    echo "On Windows:"
+    echo "  dir        # ✅ Works"
+    echo "  DIR        # ✅ Works (Windows is case-insensitive)"
+    echo "  Dir        # ✅ Works"
+fi
 ```
 
 ### Script Compatibility
