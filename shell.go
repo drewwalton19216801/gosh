@@ -869,17 +869,23 @@ func (tc *TabCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) 
 			suffix := completion[len(currentWord):]
 			result = append(result, []rune(suffix))
 		} else {
-			// Completion doesn't start with current word (e.g., case mismatch)
-			// Return the full completion and signal to replace the current word
+			// Case where completion doesn't start with current word
+			// This happens on case-sensitive filesystems where user typed "PR" but file is "Projects"
+			// We need to return the full completion and let readline replace the current word
 			result = append(result, []rune(completion))
 		}
 	}
 
-	// If any completion doesn't start with the current word, we need to replace it
-	for _, completion := range completions {
-		if !strings.HasPrefix(completion, currentWord) {
-			// Signal readline to delete the current word and replace with completion
-			return result, len(currentWord)
+	// If we have completions that don't start with the current word,
+	// we need to tell readline to replace the current word entirely
+	// This is done by returning the length of the current word as the second parameter
+	if len(result) > 0 && currentWord != "" {
+		for _, completion := range completions {
+			if !strings.HasPrefix(completion, currentWord) {
+				// At least one completion doesn't start with current word
+				// Return the length of current word to signal replacement
+				return result, len(currentWord)
+			}
 		}
 	}
 
@@ -1289,8 +1295,8 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 				if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(filePrefix)) {
 					// Case-insensitive match found
 					if isCaseSensitiveFilesystem() {
-						// On case-sensitive filesystems, show the actual filename
-						// This allows users to see the correct case
+						// On case-sensitive filesystems, return the actual filename
+						// This will be handled by the tab completion system to replace the user's input
 						completion = name
 					} else {
 						// On case-insensitive filesystems, preserve user's case
