@@ -222,7 +222,8 @@ export WINDOWS_CONFIG="$HOME\AppData\Local\myapp"  # Windows-style
                     <tr>
                         <th>Platform</th>
                         <th>Tab Completion</th>
-                        <th>Command Execution</th>
+                        <th>Built-in Commands</th>
+                        <th>External Commands</th>
                         <th>Example</th>
                     </tr>
                 </thead>
@@ -231,12 +232,14 @@ export WINDOWS_CONFIG="$HOME\AppData\Local\myapp"  # Windows-style
                         <td>Windows</td>
                         <td>Case-insensitive</td>
                         <td>Case-insensitive</td>
+                        <td>Case-insensitive</td>
                         <td><code>EC[TAB]</code> → <code>echo</code></td>
                     </tr>
                     <tr>
                         <td>Linux/Unix/macOS</td>
                         <td>Case-sensitive</td>
                         <td>Case-insensitive</td>
+                        <td>Case-sensitive</td>
                         <td><code>ec[TAB]</code> → <code>echo</code></td>
                     </tr>
                 </tbody>
@@ -247,20 +250,25 @@ export WINDOWS_CONFIG="$HOME\AppData\Local\myapp"  # Windows-style
             <ul>
                 <li><strong>Windows Users:</strong> Accustomed to case-insensitive file systems (NTFS) and shells (cmd.exe, PowerShell)</li>
                 <li><strong>Unix Users:</strong> Expect case-sensitive behavior like bash, zsh, and traditional Unix tools</li>
-                <li><strong>Universal Execution:</strong> Commands execute case-insensitively everywhere for convenience</li>
+                <li><strong>Built-in Commands:</strong> Always case-insensitive for convenience (echo, cd, pwd, etc.)</li>
+                <li><strong>External Commands:</strong> Follow platform conventions (case-insensitive on Windows, case-sensitive on Unix)</li>
             </ul>
 
             <h3>Examples in Action</h3>
-            <pre><code># Windows behavior - gosh, it's forgiving!
+            <pre><code># Windows behavior - gosh, it's forgiving everywhere!
 gosh> EC[TAB]        # Completes to "echo"
-gosh> ECho "Hello"   # Executes successfully
+gosh> ECho "Hello"   # Built-in: executes successfully
 Hello
+gosh> DIR            # External: executes successfully (Windows is case-insensitive)
 
-# Linux/Unix/macOS behavior - gosh, it's precise!
+# Linux/Unix/macOS behavior - gosh, it's precise where it matters!
 gosh> EC[TAB]        # No completion (case-sensitive)
 gosh> ec[TAB]        # Completes to "echo"
-gosh> ECho "Hello"   # Still executes successfully!
+gosh> ECho "Hello"   # Built-in: still executes successfully!
 Hello
+gosh> LS             # External: may fail (case-sensitive)
+bash: LS: command not found
+gosh> ls             # External: works correctly
 
 # File completion respects platform conventions too
 # Windows: README[TAB] → README.md (case-insensitive)
@@ -385,18 +393,34 @@ echo "Platform: $PLATFORM"
 if [ "$PLATFORM" = "Windows" ]; then
     echo "On Windows, try typing 'EC' and press TAB - it should complete to 'echo'"
     echo "Gosh, case-insensitive completion makes Windows users feel at home!"
+    echo ""
+    echo "Command execution examples:"
+    echo "  ECho Hello    # Built-in: works"
+    echo "  DIR           # External: works (Windows is case-insensitive)"
 else
     echo "On Unix/Linux/macOS, try typing 'ec' and press TAB - it should complete to 'echo'"
     echo "But 'EC' won't complete - gosh, that's Unix precision for you!"
+    echo ""
+    echo "Command execution examples:"
+    echo "  ECho Hello    # Built-in: works (gosh built-ins are always case-insensitive)"
+    echo "  LS            # External: may fail (Unix is case-sensitive for external commands)"
+    echo "  ls            # External: works correctly"
 fi
 
-echo "On ALL platforms, 'ECho Hello' will execute successfully!"
-echo "Gosh darn it, that's the best of both worlds!"</code></pre>
+echo ""
+echo "Built-in commands work case-insensitively on ALL platforms!"
+echo "External commands follow platform conventions - gosh darn it, that's smart!"</code></pre>
         </section>
 
         <div class="note">
             <h3>💡 Pro Tip - Gosh, That's Helpful!</h3>
-            <p>Write your scripts using Unix-style commands and paths for maximum portability. Gosh will handle the platform differences automatically. When you need Windows-specific behavior, you can mix in Windows-style commands as needed. And remember - tab completion adapts to your platform, but command execution is forgiving everywhere. Gosh, it's the best of both worlds!</p>
+            <p>Write your scripts using Unix-style commands and paths for maximum portability. Gosh will handle the platform differences automatically. When you need Windows-specific behavior, you can mix in Windows-style commands as needed. Remember:</p>
+            <ul>
+                <li><strong>Built-in commands</strong> (echo, cd, pwd, etc.) work case-insensitively everywhere</li>
+                <li><strong>External commands</strong> follow platform conventions (case-insensitive on Windows, case-sensitive on Unix)</li>
+                <li><strong>Tab completion</strong> adapts to your platform for natural behavior</li>
+            </ul>
+            <p>Gosh, it's the best of both worlds!</p>
         </div>
     </main>
 

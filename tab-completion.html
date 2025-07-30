@@ -44,7 +44,7 @@
             <ul>
                 <li><a href="#command-completion">Testing Command Completion</a></li>
                 <li><a href="#platform-behavior">Platform-Specific Tab Completion Behavior</a></li>
-                <li><a href="#case-insensitive">Case-Insensitive Execution (All Platforms)</a></li>
+                <li><a href="#case-insensitive">Case-Insensitive Execution</a></li>
                 <li><a href="#file-completion">Testing File/Directory Completion</a></li>
                 <li><a href="#tilde-expansion">Testing Tilde Expansion Completion</a></li>
                 <li><a href="#glob-patterns">Testing Glob Pattern Completion</a></li>
@@ -172,11 +172,18 @@
         </section>
 
         <section id="case-insensitive">
-            <h2>Case-Insensitive Execution (All Platforms)</h2>
-            <p>While tab completion behavior varies by platform, command execution is case-insensitive on ALL platforms! Gosh supports case-insensitive execution for built-in commands, aliases, and user-defined functions. This means you can type commands in any case and they will work correctly - gosh, that's convenient!</p>
+            <h2>Case-Insensitive Execution</h2>
+            <p>Gosh provides case-insensitive execution with platform-specific behavior:</p>
+            
+            <ul>
+                <li><strong>Windows:</strong> All commands (built-ins and external) are case-insensitive</li>
+                <li><strong>Linux/Unix/macOS:</strong> Only built-in commands, aliases, and user-defined functions are case-insensitive. External commands follow the platform's case-sensitive nature</li>
+            </ul>
+            
+            <p>This approach respects platform conventions while providing convenience for gosh's built-in functionality. Gosh, that's the best of both worlds!</p>
             
             <h3>Testing Case-Insensitive Execution</h3>
-            <p>These work the same way on Windows, Linux, Unix, and macOS:</p>
+            <p><strong>Built-in commands work case-insensitively on ALL platforms:</strong></p>
             <ol>
                 <li>Type <code>EXit</code> and press <kbd>ENTER</kbd> - should exit the shell</li>
                 <li>Type <code>ECho "Hello World"</code> and press <kbd>ENTER</kbd> - should print "Hello World"</li>
@@ -184,6 +191,14 @@
                 <li>Type <code>HeLp</code> and press <kbd>ENTER</kbd> - should show help information</li>
                 <li>Type <code>CLEAR</code> and press <kbd>ENTER</kbd> - should clear the screen</li>
             </ol>
+            
+            <p><strong>External commands on Unix/Linux/macOS:</strong></p>
+            <ul>
+                <li><code>LS</code> - may not work (depends on system PATH)</li>
+                <li><code>ls</code> - works correctly</li>
+                <li><code>CAT file.txt</code> - may not work</li>
+                <li><code>cat file.txt</code> - works correctly</li>
+            </ul>
 
             <div class="terminal">
                 <div class="terminal-header">
@@ -192,7 +207,7 @@
                         <span class="btn-minimize"></span>
                         <span class="btn-maximize"></span>
                     </div>
-                    <div class="terminal-title">gosh - Case-Insensitive Execution (All Platforms)</div>
+                    <div class="terminal-title">gosh - Case-Insensitive Built-ins (All Platforms)</div>
                 </div>
                 <div class="terminal-body">
                     <div class="terminal-line">
@@ -216,10 +231,10 @@
             <div class="info-box">
                 <h4>💡 Case-Insensitive Execution Benefits</h4>
                 <ul>
-                    <li><strong>User-Friendly</strong>: No need to remember exact capitalization - gosh, that's forgiving!</li>
-                    <li><strong>Consistent</strong>: Works for built-ins, aliases, and user functions on all platforms</li>
-                    <li><strong>Flexible</strong>: Type commands however feels natural</li>
-                    <li><strong>Error Prevention</strong>: Reduces "command not found" errors - gosh darn it, that's helpful!</li>
+                    <li><strong>User-Friendly</strong>: No need to remember exact capitalization for built-ins - gosh, that's forgiving!</li>
+                    <li><strong>Platform-Aware</strong>: Respects OS conventions for external commands</li>
+                    <li><strong>Flexible</strong>: Type built-in commands however feels natural</li>
+                    <li><strong>Error Prevention</strong>: Reduces "command not found" errors for gosh built-ins - gosh darn it, that's helpful!</li>
                 </ul>
             </div>
         </section>
@@ -468,8 +483,14 @@ Ctrl+L     - Clear screen (preserves current line)</code>
             </div>
 
             <div class="note">
-                <h4>🎉 Gosh, That's Smart!</h4>
-                <p>The platform-aware tab completion means you get the behavior you expect on each operating system. Windows users get case-insensitive completion (just like cmd.exe and PowerShell), while Unix users get case-sensitive completion (just like bash and zsh). Meanwhile, command execution remains case-insensitive everywhere for maximum convenience. Gosh darn it, that's the best of both worlds!</p>
+                <h4>🧠 Gosh, That's Smart!</h4>
+                <p>The platform-aware tab completion means you get the behavior you expect on each operating system. Windows users get case-insensitive completion (just like cmd.exe and PowerShell), while Unix users get case-sensitive completion (just like bash and zsh).</p>
+                <p>For command execution, gosh strikes the perfect balance:</p>
+                <ul>
+                    <li><strong>Built-in commands</strong> are always case-insensitive for convenience</li>
+                    <li><strong>External commands</strong> respect platform conventions</li>
+                </ul>
+                <p>This gives you the familiarity of your native shell with the convenience of gosh's built-in features!</p>
             </div>
         </section>
     </main>
