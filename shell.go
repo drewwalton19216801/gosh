@@ -862,34 +862,20 @@ func (tc *TabCompleter) Do(line []rune, pos int) (newLine [][]rune, length int) 
 	}
 
 	// Convert completions to [][]rune format expected by readline
+	// We need to return only the suffix that completes the current word
 	var result [][]rune
 	for _, completion := range completions {
+		// Only return the part that extends beyond the current word
 		if strings.HasPrefix(completion, currentWord) {
-			// Normal case: return the suffix
 			suffix := completion[len(currentWord):]
 			result = append(result, []rune(suffix))
 		} else {
-			// Case where completion doesn't start with current word
-			// This happens on case-sensitive filesystems where user typed "PR" but file is "Projects"
-			// We need to return the full completion and let readline replace the current word
+			// Fallback: return the full completion
 			result = append(result, []rune(completion))
 		}
 	}
 
-	// If we have completions that don't start with the current word,
-	// we need to tell readline to replace the current word entirely
-	// This is done by returning the length of the current word as the second parameter
-	if len(result) > 0 && currentWord != "" {
-		for _, completion := range completions {
-			if !strings.HasPrefix(completion, currentWord) {
-				// At least one completion doesn't start with current word
-				// Return the length of current word to signal replacement
-				return result, len(currentWord)
-			}
-		}
-	}
-
-	return result, 0
+	return result, 0 // Return 0 for length since we're providing suffixes
 }
 
 // getCompletions returns completion suggestions for the given input
@@ -1293,10 +1279,8 @@ func (s *Shell) getFileCompletions(prefix string) []string {
 			} else {
 				// Simple filename completion
 				if filePrefix != "" && strings.HasPrefix(strings.ToLower(name), strings.ToLower(filePrefix)) {
-					// Case-insensitive match found
+					// Case-insensitive match - on case-sensitive filesystems, use actual name
 					if isCaseSensitiveFilesystem() {
-						// On case-sensitive filesystems, return the actual filename
-						// This will be handled by the tab completion system to replace the user's input
 						completion = name
 					} else {
 						// On case-insensitive filesystems, preserve user's case
