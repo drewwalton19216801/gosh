@@ -230,7 +230,9 @@ Gosh is organized into multiple modules for maximum readability and maintainabil
 
 **Shell Script Execution**: Gosh automatically handles shell scripts on all platforms:
 - Scripts with `.sh` extension work on Windows without modification
-- Shebang lines (`#!/bin/sh`, `#!/usr/bin/env gosh`, etc.) are properly recognized
+- **Unix/Linux/macOS**: Shebang lines are respected and scripts run with the specified interpreter (bash, zsh, etc.)
+- **Windows**: Shebang lines are recognized but all scripts run through gosh (Windows doesn't support shebangs natively)
+- Scripts without shebangs show a warning on Unix-like systems and run with gosh
 - No "not a valid Win32 application" errors on Windows
 
 The shell automatically handles platform-specific differences like file paths, permissions, and command conventions. Gosh, it's truly portable!

@@ -75,6 +75,32 @@ On Windows, gosh automatically detects and executes shell scripts that would nor
 - **Shebang Support**: Scripts with `#!/bin/sh`, `#!/bin/bash`, `#!/usr/bin/env gosh`, etc. work seamlessly
 - **Argument Passing**: All script arguments are properly passed through
 
+#### Unix/Linux/macOS Shebang Support
+On Unix-like platforms, gosh respects shebang lines and executes scripts with the appropriate interpreter:
+
+- **Shebang Detection**: Scripts starting with `#!` are executed with the specified interpreter
+- **Interpreter Validation**: Gosh verifies that the interpreter exists before execution
+- **Error Handling**: If the interpreter is not found, gosh returns an error
+- **Fallback Warning**: Scripts without shebangs show a warning and run in gosh
+
+**Supported Shebang Formats:**
+```bash
+#!/bin/bash              # Direct path to bash
+#!/usr/bin/env bash      # Use env to find bash in PATH
+#!/bin/zsh               # Direct path to zsh
+#!/usr/bin/env zsh       # Use env to find zsh in PATH
+#!/usr/bin/env gosh      # Run with gosh (recommended for gosh scripts)
+```
+
+**Example Usage:**
+```bash
+# These all work on Unix/Linux/macOS:
+./script_bash.sh         # Runs with bash if shebang is #!/bin/bash
+./script_zsh.sh          # Runs with zsh if shebang is #!/usr/bin/env zsh
+./script_gosh.sh         # Runs with gosh if shebang is #!/usr/bin/env gosh
+./no_shebang.sh          # Shows warning, runs with gosh
+```
+
 ```bash
 # These all work on Windows now:
 ./script.sh arg1 arg2

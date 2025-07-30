@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"runtime"
@@ -193,6 +194,58 @@ func (s *Shell) ExecuteScript(filename string, args []string) error {
 	}
 	if err := scanner.Err(); err != nil {
 		return err
+	}
+
+	// Check for shebang on Unix-like platforms
+	if runtime.GOOS != "windows" && len(allLines) > 0 {
+		firstLine := strings.TrimSpace(allLines[0])
+		if strings.HasPrefix(firstLine, "#!") {
+			// Extract the interpreter path from the shebang
+			shebang := firstLine[2:] // Remove "#!"
+			shebang = strings.TrimSpace(shebang)
+			
+			// Handle "#!/usr/bin/env interpreter" format
+			var interpreterPath string
+			if strings.HasPrefix(shebang, "/usr/bin/env ") {
+				// Extract interpreter name after "env "
+				parts := strings.Fields(shebang)
+				if len(parts) >= 2 {
+					interpreterName := parts[1]
+					// Find the interpreter in PATH
+					path, err := exec.LookPath(interpreterName)
+					if err != nil {
+						return fmt.Errorf("interpreter '%s' not found in PATH", interpreterName)
+					}
+					interpreterPath = path
+				} else {
+					return fmt.Errorf("invalid shebang format: %s", firstLine)
+				}
+			} else {
+				// Direct path to interpreter
+				interpreterPath = shebang
+				// Check if the interpreter exists
+				if _, err := os.Stat(interpreterPath); os.IsNotExist(err) {
+					return fmt.Errorf("interpreter '%s' not found", interpreterPath)
+				}
+			}
+
+			// If the interpreter is gosh itself, continue with normal execution
+			if strings.Contains(interpreterPath, "gosh") {
+				// Continue with gosh execution below
+			} else {
+				// Execute the script with the specified interpreter
+				cmd := exec.Command(interpreterPath, filename)
+				cmd.Args = append(cmd.Args, args...)
+				cmd.Stdin = os.Stdin
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+				return cmd.Run()
+			}
+		} else {
+			// No shebang found - show warning with gosh pun
+			fmt.Fprintf(os.Stderr, "gosh: Warning - No shebang found in script '%s'.\n", filename)
+			fmt.Fprintf(os.Stderr, "gosh: By gosh, I'll run it with gosh and hope for the best!\n")
+		}
 	}
 
 	// Set up script context for positional parameters

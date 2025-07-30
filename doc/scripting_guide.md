@@ -45,12 +45,41 @@ gosh -c "myscript.sh arg1 arg2"
 - Both forward slashes and backslashes work in paths
 
 #### Shebang Lines
-Gosh recognizes various shebang formats:
+Gosh recognizes various shebang formats and handles them differently based on the platform:
+
+**On Unix/Linux/macOS:**
+- Shebangs are respected and scripts are executed with the specified interpreter
+- If the interpreter is not found, gosh returns an error
+- Scripts without shebangs show a warning and run in gosh
+
+**On Windows:**
+- Shebangs are recognized but not enforced (Windows doesn't support shebangs natively)
+- All scripts run through gosh regardless of shebang
+
+**Supported Shebang Formats:**
 ```bash
-#!/usr/bin/env gosh    # Recommended for cross-platform scripts
+#!/usr/bin/env gosh    # Recommended for cross-platform gosh scripts
 #!/bin/gosh            # Direct path (if gosh is in /bin)
-#!/bin/sh              # Generic shell (works with gosh)
-#!/bin/bash            # Bash-compatible (works with gosh)
+#!/bin/bash            # Runs with bash on Unix/Linux/macOS
+#!/usr/bin/env bash    # Uses env to find bash in PATH
+#!/bin/zsh             # Runs with zsh on Unix/Linux/macOS
+#!/usr/bin/env zsh     # Uses env to find zsh in PATH
+#!/bin/sh              # Runs with sh on Unix/Linux/macOS
+```
+
+**Examples:**
+```bash
+# This script will run with bash on Unix/Linux/macOS, gosh on Windows
+#!/bin/bash
+echo "Running in: $0"
+
+# This script will run with gosh on all platforms
+#!/usr/bin/env gosh
+echo "Running in gosh!"
+
+# This script will show a warning on Unix/Linux/macOS, then run with gosh
+# No shebang line
+echo "No shebang - gosh will show a warning and run anyway!"
 ```
 
 ## Basic Script Structure
